@@ -62,12 +62,14 @@ const StellarNavbar = () => {
   };
 
   const linkVariants = {
-    hidden: { y: -20, opacity: 0 },
+    hidden: { x: -20, opacity: 0 },
     visible: {
-      y: 0,
+      x: 0,
       opacity: 1,
       transition: {
-        y: { stiffness: 1000, velocity: -100 }
+        type: 'spring',
+        stiffness: 300,
+        damping: 20
       }
     }
   };
@@ -79,8 +81,8 @@ const StellarNavbar = () => {
   };
 
   const middleLine = {
-    closed: { opacity: 1,y:5 },
-    open: { opacity: 0,y:2 },
+    closed: { opacity: 1, y: 5 },
+    open: { opacity: 0, y: 2 },
   };
 
   const bottomLine = {
@@ -184,7 +186,7 @@ const StellarNavbar = () => {
           </motion.button>
         </div>
 
-        {/* Enhanced Mobile Menu */}
+        {/* Enhanced Mobile Menu with Slide Animations */}
         <AnimatePresence>
           {isMenuOpen && (
             <>
@@ -219,7 +221,10 @@ const StellarNavbar = () => {
                   </div>
                   
                   <div className="flex flex-col p-8 pt-14">
-                    <div className="mb-8 text-center">
+                    <motion.div 
+                      className="mb-8 text-center"
+                      variants={linkVariants}
+                    >
                       <div className="inline-block p-4 rounded-2xl mb-4" style={{ backgroundColor: dimRoseGold }}>
                         <img 
                           src="/logo.png" 
@@ -228,11 +233,17 @@ const StellarNavbar = () => {
                         />
                       </div>
                       <h3 className="text-2xl font-bold" style={{ color: roseGold,fontFamily: "'Dancing Script', cursive" }}>SalonSphere Menu</h3>
-                    </div>
+                    </motion.div>
 
                     <div className="flex flex-col space-y-4">
                       {navLinks.map((link) => (
-                        <motion.div key={link.name} variants={linkVariants}>
+                        <motion.div 
+                          key={link.name} 
+                          variants={linkVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="hidden"
+                        >
                           <Link href={link.path} passHref>
                             <motion.div
                               className="group flex items-center px-6 py-4 rounded-xl hover:bg-rose-50 transition-all"
@@ -257,18 +268,25 @@ const StellarNavbar = () => {
                       ))}
                     </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="mt-8 w-full px-6 py-4 rounded-xl text-lg font-semibold transition-all"
-                      style={{ 
-                        background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
-                        color: 'white',
-                        boxShadow: `0 4px 24px ${roseGold}30`
-                      }}
+                    <motion.div
+                      variants={linkVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
                     >
-                      Get Started
-                    </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="mt-8 w-full px-6 py-4 rounded-xl text-lg font-semibold transition-all"
+                        style={{ 
+                          background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
+                          color: 'white',
+                          boxShadow: `0 4px 24px ${roseGold}30`
+                        }}
+                      >
+                        Get Started
+                      </motion.button>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
