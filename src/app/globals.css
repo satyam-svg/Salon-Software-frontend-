@@ -19,8 +19,32 @@
   }
 }
 
+
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  background-color: black;
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+:root {
+  --rose-gold: #b76e79;
+}
+
+.hover-rose-gold:hover {
+  color: var(--rose-gold);
+}
+
+
+
+.bg-rose-gold { background-color: #b76e79; }
+.text-rose-gold { color: #b76e79; }
+.shadow-rose-sm { box-shadow: 0 2px 8px rgba(183, 110, 121, 0.1); }
