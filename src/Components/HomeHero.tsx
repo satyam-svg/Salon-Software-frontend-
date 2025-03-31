@@ -37,38 +37,37 @@ const HomeHero = () => {
     '/Finance.png',
     '/branch.png'
   ];
+
   useEffect(() => {
+    if (typeof window === "undefined") return; // Prevent running on server
+  
     setMounted(true);
     const updateMousePosition = (e: MouseEvent) => {
-      mouseX.set(e.clientX / window.screen.width);
-      mouseY.set(e.clientY / window.screen.height);
+      mouseX.set(e.clientX / window.innerWidth);
+      mouseY.set(e.clientY / window.innerHeight);
     };
-    
-    
+  
+    window.addEventListener("mousemove", updateMousePosition);
+    return () => window.removeEventListener("mousemove", updateMousePosition);
+  }, []);
+  
+  useEffect(() => {
+    if (typeof window === "undefined") return; // Ensure it's running on client
+  
     const updatePerspective = () => {
-      if (window.screen.width <= 1280) {
-        setPerspective(600);
-      }
-      if (window.screen.width > 1280) {
-        setPerspective(420);
-      }
-      if(window.screen.width <= 1000){
-        setMobileview(true)
-      }
-      if(window.screen.width > 1000){
-        setMobileview(false)
-      }
+      const screenWidth = window.innerWidth;
+  
+      setPerspective(screenWidth <= 1280 ? 600 : 420);
+      setMobileview(screenWidth <= 1000);
     };
-
+  
     updatePerspective();
-    window.addEventListener('mousemove', updateMousePosition);
-    window.addEventListener('resize', updatePerspective);
+    window.addEventListener("resize", updatePerspective);
+  
+    return () => window.removeEventListener("resize", updatePerspective);
+  }, []);
+    
 
-    return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-      window.removeEventListener('resize', updatePerspective);
-    };
-  }, [window.screen.width]);
 
   if (!mounted) return null;
 
