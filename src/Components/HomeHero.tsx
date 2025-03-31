@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
-
+import Image from 'next/image';
 const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const roseGold = '#b76e79';
@@ -28,12 +28,12 @@ const HomeHero = () => {
   const galleryImages = [
     '/salon.png',
     '/Client.png',
-    '/salon.png',
-    '/salon.png',
-    '/salon.png',
-    '/salon.png',
-    '/salon.png',
-    '/salon.png'
+    '/Staff.png',
+    '/dashboard.png',
+    '/appointment.png',
+    '/Feedback.png',
+    '/Finance.png',
+    '/branch.png'
   ];
 
   if (!mounted) return null;
@@ -121,24 +121,31 @@ const HomeHero = () => {
               }}
               style={{ transformStyle: 'preserve-3d' }}
             >
-              {galleryImages.map((img, i) => (
-                <motion.div
-                  key={i}
-                  className="gallery-item"
-                  style={{ 
-                    '--i': i+1,
-                    transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
-                  } as React.CSSProperties}
-                  
-                >
-                  <img
-                    src={img}
-                    alt={`Gallery image ${i+1}`}
-                    className="gallery-image"
-                  />
-                  <div className="gallery-overlay" />
-                </motion.div>
-              ))}
+              {/* Inside your gallery mapping function */}
+{galleryImages.map((img, i) => (
+  <motion.div
+    key={i}
+    className="gallery-item"
+    style={{ 
+      '--i': i+1,
+      transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
+    } as React.CSSProperties}
+  >
+    <Image
+      src={img}
+      alt={`Gallery image ${i+1}`}
+      className="gallery-image"
+      width={200}  // Set explicit width
+      height={300} // Set explicit height
+      loading={i < 3 ? "eager" : "lazy"} // First 3 load eagerly, rest lazy load
+      priority={i < 2} // Highest priority for first 2 images
+      quality={85} // Good balance between quality and size
+      placeholder="blur" // Add blur placeholder
+      blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
+    />
+    <div className="gallery-overlay" />
+  </motion.div>
+))}
             </motion.div>
           </motion.div>
         </div>
