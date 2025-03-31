@@ -4,8 +4,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 const StellarNavbar = () => {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const roseGold = '#b76e79';
@@ -26,7 +29,7 @@ const StellarNavbar = () => {
     { name: 'Contact', path: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   ];
 
-  // Animation variants
+  // Animation variants remain unchanged
   const navVariants = {
     hidden: { y: -100, opacity: 0 },
     visible: { 
@@ -74,7 +77,7 @@ const StellarNavbar = () => {
     }
   };
 
-  // Hamburger icon animation
+  // Hamburger icon animation remains unchanged
   const topLine = {
     closed: { rotate: 0, y: 0 },
     open: { rotate: 45, y: 7 },
@@ -93,7 +96,7 @@ const StellarNavbar = () => {
   return (
     <>
     <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
       `}</style>
     <motion.nav
       initial="hidden"
@@ -103,7 +106,7 @@ const StellarNavbar = () => {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
+          {/* Logo remains unchanged */}
           <Link href="/" className="flex items-center space-x-3 group">
             <motion.img 
               src="/logo.png" 
@@ -122,26 +125,30 @@ const StellarNavbar = () => {
             </motion.span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation with active link indicator */}
           <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
               <motion.div key={link.name} variants={linkVariants}>
-                <Link href={link.path} passHref>
-                  <motion.div
-                    className="relative group"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <p className="text-gray-500  hover:text-[#b76e79] transition-colors duration-300">
-                      {link.name}
-                      <motion.span
-                        className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
-                        style={{ backgroundColor: roseGold }}
-                      />
-                    </p>
-                  </motion.div>
-                </Link>
-              </motion.div>
+              <Link href={link.path} passHref>
+                <motion.div
+                  className="relative group"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <p className={`transition-colors duration-300 ${
+                    pathname === link.path ? 'text-[#b76e79]' : 'text-gray-500 hover:text-[#b76e79]'
+                  }`} style={{fontFamily:"IBM Plex Mono"}}>
+                    {link.name}
+                    <motion.span
+                      className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                        pathname === link.path ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`}
+                      style={{ backgroundColor: roseGold }}
+                    />
+                  </p>
+                </motion.div>
+              </Link>
+            </motion.div>
             ))}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -156,7 +163,7 @@ const StellarNavbar = () => {
             </motion.button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button remains unchanged */}
           <motion.button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="lg:hidden p-2 rounded-lg focus:outline-none"
@@ -186,7 +193,7 @@ const StellarNavbar = () => {
           </motion.button>
         </div>
 
-        {/* Enhanced Mobile Menu with Slide Animations */}
+        {/* Mobile Menu remains unchanged */}
         <AnimatePresence>
           {isMenuOpen && (
             <>
@@ -226,11 +233,14 @@ const StellarNavbar = () => {
                       variants={linkVariants}
                     >
                       <div className="inline-block p-4 rounded-2xl mb-4" style={{ backgroundColor: dimRoseGold }}>
-                        <img 
-                          src="/logo.png" 
-                          alt="Logo" 
-                          className="h-12 w-12 mx-auto"
-                        />
+                      <Image 
+      src="/logo.png" 
+      alt="Logo" 
+      width={48}
+      height={48}
+      className="object-contain"
+      priority
+    />
                       </div>
                       <h3 className="text-2xl font-bold" style={{ color: roseGold,fontFamily: "'Dancing Script', cursive" }}>SalonSphere Menu</h3>
                     </motion.div>

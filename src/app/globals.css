@@ -24,6 +24,7 @@
 body {
   font-family: 'Inter', sans-serif;
   background-color: black;
+  
 }
 
 @keyframes pulse {
@@ -48,3 +49,5 @@ body {
 .bg-rose-gold { background-color: #b76e79; }
 .text-rose-gold { color: #b76e79; }
 .shadow-rose-sm { box-shadow: 0 2px 8px rgba(183, 110, 121, 0.1); }
+
+
