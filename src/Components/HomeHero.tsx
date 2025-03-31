@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
+  const [perspective, setPerspective] = useState(420);
+  const [mobileview, setMobileview] = useState(false);
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   
@@ -17,8 +19,8 @@ const HomeHero = () => {
   useEffect(() => {
     setMounted(true);
     const updateMousePosition = (e: MouseEvent) => {
-      mouseX.set(e.clientX / window.innerWidth);
-      mouseY.set(e.clientY / window.innerHeight);
+      mouseX.set(e.clientX / window.screen.width);
+      mouseY.set(e.clientY / window.screen.height);
     };
     
     window.addEventListener('mousemove', updateMousePosition);
@@ -35,6 +37,38 @@ const HomeHero = () => {
     '/Finance.png',
     '/branch.png'
   ];
+  useEffect(() => {
+    setMounted(true);
+    const updateMousePosition = (e: MouseEvent) => {
+      mouseX.set(e.clientX / window.screen.width);
+      mouseY.set(e.clientY / window.screen.height);
+    };
+    
+    
+    const updatePerspective = () => {
+      if (window.screen.width <= 1280) {
+        setPerspective(600);
+      }
+      if (window.screen.width > 1280) {
+        setPerspective(420);
+      }
+      if(window.screen.width <= 1000){
+        setMobileview(true)
+      }
+      if(window.screen.width > 1000){
+        setMobileview(false)
+      }
+    };
+
+    updatePerspective();
+    window.addEventListener('mousemove', updateMousePosition);
+    window.addEventListener('resize', updatePerspective);
+
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+      window.removeEventListener('resize', updatePerspective);
+    };
+  }, [window.screen.width]);
 
   if (!mounted) return null;
 
@@ -105,48 +139,51 @@ const HomeHero = () => {
           <motion.div 
             className="relative w-full lg:w-1/2 h-[30vh] lg:h-[50vh] flex items-center justify-center"
             style={{
-              perspective: '600px',
+              perspective: `${perspective}px`,
               rotateX,
               rotateY,
             }}
            
           >
-            <motion.div
-              className="gallery-container"
-              animate={{ rotateY: 360 }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              {/* Inside your gallery mapping function */}
-{galleryImages.map((img, i) => (
-  <motion.div
-    key={i}
-    className="gallery-item"
-    style={{ 
-      '--i': i+1,
-      transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
-    } as React.CSSProperties}
-  >
-    <Image
-      src={img}
-      alt={`Gallery image ${i+1}`}
-      className="gallery-image"
-      width={200}  // Set explicit width
-      height={300} // Set explicit height
-      loading={i < 3 ? "eager" : "lazy"} // First 3 load eagerly, rest lazy load
-      priority={i < 2} // Highest priority for first 2 images
-      quality={85} // Good balance between quality and size
-      placeholder="blur" // Add blur placeholder
-      blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
-    />
-    <div className="gallery-overlay" />
-  </motion.div>
-))}
-            </motion.div>
+            {!mobileview && 
+                    <motion.div
+                    className="gallery-container"
+                    animate={{ rotateY: 360 }}
+                    transition={{
+                      duration: 20,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                  >
+                    {/* Inside your gallery mapping function */}
+      {galleryImages.map((img, i) => (
+        <motion.div
+          key={i}
+          className="gallery-item"
+          style={{ 
+            '--i': i+1,
+            transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
+          } as React.CSSProperties}
+        >
+          <Image
+            src={img}
+            alt={`Gallery image ${i+1}`}
+            className="gallery-image"
+            width={200}  // Set explicit width
+            height={300} // Set explicit height
+            loading={i < 3 ? "eager" : "lazy"} // First 3 load eagerly, rest lazy load
+            priority={i < 2} // Highest priority for first 2 images
+            quality={85} // Good balance between quality and size
+            placeholder="blur" // Add blur placeholder
+            blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
+          />
+          <div className="gallery-overlay" />
+        </motion.div>
+      ))}
+                  </motion.div>
+            }
+
           </motion.div>
         </div>
       </div>
@@ -161,6 +198,7 @@ const HomeHero = () => {
           display: flex;
           justify-content: center;
           align-items: center;
+          
         }
 
         .gallery-item {
@@ -199,7 +237,7 @@ const HomeHero = () => {
 
         @media (max-width: 1024px) {
           .gallery-item {
-            width: calc(min(25vw, 180px));
+            width: calc(min(70vw, 180px));
             height: calc(min(35vw, 250px));
             transform: rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(25vw, 250px))) !important;
           }
