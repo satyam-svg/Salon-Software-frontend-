@@ -1,7 +1,6 @@
-// components/HomeHero.tsx
 "use client";
 
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 const HomeHero = () => {
@@ -9,30 +8,39 @@ const HomeHero = () => {
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   
-  useEffect(() => setMounted(true), []);
+  // Mouse interaction values
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useTransform(mouseY, [0, 1], [10, -10]);
+  const rotateY = useTransform(mouseX, [0, 1], [-10, 10]);
 
-  const taglineVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.2 + 1 }
-    })
-  };
+  useEffect(() => {
+    setMounted(true);
+    const updateMousePosition = (e: MouseEvent) => {
+      mouseX.set(e.clientX / window.innerWidth);
+      mouseY.set(e.clientY / window.innerHeight);
+    };
+    
+    window.addEventListener('mousemove', updateMousePosition);
+    return () => window.removeEventListener('mousemove', updateMousePosition);
+  }, []);
 
-  const pathVariants = {
-    hidden: { pathLength: 0 },
-    visible: {
-      pathLength: 1,
-      transition: { duration: 2, ease: "easeInOut" }
-    }
-  };
+  const galleryImages = [
+    '/salon.png',
+    '/Client.png',
+    '/salon.png',
+    '/salon.png',
+    '/salon.png',
+    '/salon.png',
+    '/salon.png',
+    '/salon.png'
+  ];
 
   if (!mounted) return null;
 
   return (
-    <section className="relative min-h-screen bg-black flex items-center justify-center overflow-hidden">
-      {/* Animated Background Elements */}
+    <section className="relative h-[100dvh] max-h-[900px] bg-black flex items-center justify-center overflow-hidden">
+      {/* Animated Background */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -42,71 +50,39 @@ const HomeHero = () => {
         }}
       />
 
-      {/* Floating Logo */}
-      <motion.img
-        src="/logo.png"
-        alt="Decorative logo"
-        className="absolute opacity-5 w-[800px] h-[800px] -top-40 -right-60"
-        animate={{
-          rotate: [0, 360],
-        }}
-        transition={{
-          duration: 120,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      {/* Main Content Container */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
+        <div className="flex flex-col lg:flex-row h-full items-center justify-center gap-4 lg:gap-8 xl:gap-12">
           {/* Left Content */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            className="relative"
+          <motion.div 
+            className="relative w-full lg:w-1/2 flex flex-col justify-center"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1 }}
           >
-            {/* Animated Tagline */}
-            <div className="relative inline-block">
-              <svg
-                viewBox="0 0 500 100"
-                className="absolute -top-20 -left-20 w-[600px] h-[200px]"
-              >
-                <motion.path
-                  d="M20,80 Q100,10 180,80 T340,20 L460,60"
-                  fill="none"
-                  stroke={roseGold}
-                  strokeWidth="2"
-                  variants={pathVariants}
-                  initial="hidden"
-                  animate="visible"
-                />
-              </svg>
-
-              <h1 className="text-5xl md:text-7xl font-bold mb-8 leading-tight">
-                {["Create", "Your Own", "Salon Ecosystem"].map((word, i) => (
-                  <motion.span
-                    key={word}
-                    custom={i}
-                    variants={taglineVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="block bg-gradient-to-r from-rose-200 to-rose-400 bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
-                    }}
-                  >
-                    {word}
-                  </motion.span>
-                ))}
-              </h1>
-            </div>
+            <h1 className="text-[8vw] sm:text-[6vw] md:text-[5vw] lg:text-[4vw] font-bold mb-2 lg:mb-4 leading-[1.1]">
+              {["Create", "Your Own", "Salon Ecosystem"].map((word, i) => (
+                <motion.span
+                  key={word}
+                  custom={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.2 + 1 }}
+                  className="block bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
+                  }}
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 }}
-              className="text-xl text-gray-300 mb-12 max-w-2xl"
-            >
+              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-gray-300 mb-4 lg:mb-8 max-w-full lg:max-w-[90%]">
               Transform your beauty business with our all-in-one platform integrating 
               <span className="text-rose-300"> management, bookings, and community</span>. 
               Elevate your salon to celestial heights.
@@ -115,80 +91,121 @@ const HomeHero = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 rounded-full text-xl font-semibold transition-all relative overflow-hidden group"
+              className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] rounded-full text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] font-semibold transition-all relative overflow-hidden group w-fit mx-auto lg:mx-0"
               style={{
                 background: `linear-gradient(45deg, ${roseGold}, ${lightRoseGold})`,
                 boxShadow: `0 0 40px ${roseGold}40`
-              }}
-            >
+              }}>
               <span className="relative z-10">Launch Your Ecosystem</span>
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
           </motion.div>
 
-          {/* Right Image Container */}
-          <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="relative group"
+          {/* 3D Gallery Container */}
+          <motion.div 
+            className="relative w-full lg:w-1/2 h-[30vh] lg:h-[50vh] flex items-center justify-center"
+            style={{
+              perspective: '600px',
+              rotateX,
+              rotateY,
+            }}
+           
           >
-            {/* Main Image Placeholder */}
-            <div className="relative rounded-3xl overflow-hidden transform perspective-1000">
-              <div className="absolute inset-0 bg-gradient-to-tr from-rose-900/30 to-rose-400/20" />
-              <img
-                src="/salon-ecosystem-image.png" // Replace with your generated image
-                alt="Salon ecosystem visualization"
-                className="w-full h-[600px] object-cover scale-[1.03] group-hover:scale-100 transition-transform duration-700"
-              />
-            </div>
-
-            {/* Floating Elements */}
-            <div className="absolute -bottom-8 -left-12">
-              <div className="relative w-48 h-48">
-                <motion.img
-                  src="/salon-team-image.jpeg" // Replace
-                  alt="Team collaboration"
-                  className="absolute rounded-2xl shadow-xl border-2 border-rose-900/50"
-                  initial={{ y: 0 }}
-                  animate={{ y: [-10, 10, -10] }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-              </div>
-            </div>
+            <motion.div
+              className="gallery-container"
+              animate={{ rotateY: 360 }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {galleryImages.map((img, i) => (
+                <motion.div
+                  key={i}
+                  className="gallery-item"
+                  style={{ 
+                    '--i': i+1,
+                    transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
+                  } as React.CSSProperties}
+                  
+                >
+                  <img
+                    src={img}
+                    alt={`Gallery image ${i+1}`}
+                    className="gallery-image"
+                  />
+                  <div className="gallery-overlay" />
+                </motion.div>
+              ))}
+            </motion.div>
           </motion.div>
         </div>
       </div>
 
-      {/* Animated Particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-rose-500/20"
-            style={{
-              width: Math.random() * 5 + 2 + 'px',
-              height: Math.random() * 5 + 2 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%'
-            }}
-            animate={{
-              y: [0, (Math.random() - 0.5) * 100],
-              x: [0, (Math.random() - 0.5) * 100],
-              opacity: [0.3, 0, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 4 + 4,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
-        ))}
-      </div>
+      {/* Global Styles */}
+      <style jsx global>{`
+        .gallery-container {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .gallery-item {
+          position: absolute;
+           width: calc(min(15vw, 150px));  /* Reduced width */
+  height: calc(min(22vw, 220px)); /* Reduced height */
+          transform-style: preserve-3d;
+          transition: transform 0.5s ease;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .gallery-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.5s ease;
+        }
+
+        .gallery-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-image {
+          transform: scale(1.05);
+        }
+
+        .gallery-item:hover .gallery-overlay {
+          opacity: 1;
+        }
+
+        @media (max-width: 1024px) {
+          .gallery-item {
+            width: calc(min(25vw, 180px));
+            height: calc(min(35vw, 250px));
+            transform: rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(25vw, 250px))) !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .gallery-item {
+            width: calc(min(30vw, 150px));
+            height: calc(min(40vw, 200px));
+            transform: rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px))) !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

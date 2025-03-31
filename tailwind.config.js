@@ -15,6 +15,15 @@ module.exports = {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      screens: {
+        'xs': '480px',
+      },
+      spacing: {
+        '18': '4.5rem',
+      },
+      transitionDuration: {
+        '1500': '1500ms',
+      }
     },
   },
   plugins: [],
