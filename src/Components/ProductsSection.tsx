@@ -14,39 +14,39 @@ const ProductsSection = () => {
     {
       title: "Inventory Management",
       description: "Track all your salon products, their stock levels, and restocking needs effortlessly.",
-      image: "/inventry.png", // 3D isometric view of organized salon product shelves with digital overlay
+      image: "/inventry.png",
     },
     {
       title: "Product Usage Tracking",
       description: "Monitor which products are used for different services and their consumption rates.",
-      image: "/Product_Usage.png", // Abstract visualization of product flow between services with analytics
+      image: "/Product_Usage.png",
     },
     {
       title: "Service Pricing & Offerings",
       description: "Manage your services, set pricing, and update offers dynamically.",
-      image: "/salon_dashbord.png", // Modern dashboard interface showing service cards with price adjustments
+      image: "/salon_dashbord.png",
     },
     {
       title: "Stock Alerts & Insights",
       description: "Get notified when stock is low and receive valuable inventory insights.",
-      image: "/inventry_management.png", // Mobile notification overlay on top of product inventory list
+      image: "/inventry_management.png",
     },
     {
       title: "Multi-Branch Support",
       description: "Manage inventory across multiple locations seamlessly.",
-      image: "/live_stoke.png", // Network map connecting multiple salon locations with real-time data
+      image: "/live_stoke.png",
     },
     {
       title: "Automated Reports",
       description: "Generate reports on product usage, revenue, and salon performance.",
-      image: "/analitik.png", // Data dashboard with charts and graphs in rose gold theme
+      image: "/analitik.png",
     }
   ];
 
   return (
     <section 
       ref={ref}
-      className="relative bg-black text-white py-28 overflow-hidden"
+      className="relative bg-black text-white py-20 md:py-28 overflow-hidden"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 50%, ${roseGold}10 1px, transparent 1px)`,
         backgroundSize: '40px 40px'
@@ -60,10 +60,11 @@ const ProductsSection = () => {
         style={{
           background: `radial-gradient(circle at 50% 50%, ${roseGold} 0%, transparent 70%)`,
         }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
       />
 
       {/* Floating Particles */}
-      {[...Array(20)].map((_, i) => (
+      {[...Array(30)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute bg-[#b76e79] rounded-full"
@@ -73,104 +74,167 @@ const ProductsSection = () => {
             top: Math.random() * 100 + '%',
             left: Math.random() * 100 + '%',
           }}
-          animate={{
-            y: [0, 50, 0],
+          initial={{ y: 0, opacity: 0 }}
+          animate={isInView ? {
+            y: [0, 100, 0],
             opacity: [0.3, 0.8, 0.3],
-          }}
+          } : {}}
           transition={{
-            duration: Math.random() * 4 + 3,
+            duration: Math.random() * 6 + 3,
             repeat: Infinity,
             ease: "easeInOut",
+            delay: Math.random() * 2
           }}
         />
       ))}
 
+      {/* Gradient Blobs */}
+      <motion.div
+        initial={{ scale: 0, rotate: 0 }}
+        animate={isInView ? { scale: 1, rotate: 360 } : {}}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute -top-40 -left-40 w-[800px] h-[800px] opacity-10 blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${roseGold} 0%, transparent 60%)`
+        }}
+      />
+      <motion.div
+        initial={{ scale: 0, rotate: 180 }}
+        animate={isInView ? { scale: 1, rotate: -180 } : {}}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
+        className="absolute -bottom-40 -right-40 w-[800px] h-[800px] opacity-10 blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${lightRoseGold} 0%, transparent 60%)`
+        }}
+      />
+
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Heading */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 0.8, ease: "backOut" }}
+          className="text-center mb-16 md:mb-20"
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent"
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent px-4 leading-tight md:leading-none"
               style={{
                 backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`,
                 textShadow: `0 0 30px ${roseGold}40`
               }}>
-            Smart Product & Service Management
+            Smart Product &<br className="hidden lg:block" /> Service Management
           </h2>
           <motion.p
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3 }}
-            className="text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto"
+            className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-4"
           >
             Organize your salon inventory with ease. Track stock, usage, and availability, while managing your offered services with dynamic pricing & insights.
           </motion.p>
         </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 xl:gap-12 px-4 sm:px-0">
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+              initial={{ opacity: 0, y: 80, rotateX: -30, scale: 0.8 }}
+              animate={isInView ? { 
+                opacity: 1, 
+                y: 0, 
+                rotateX: 0,
+                scale: 1
+              } : {}}
               transition={{ 
                 delay: index * 0.15,
-                duration: 0.6,
-                ease: "backOut"
+                duration: 0.8,
+                ease: "backOut",
+                rotateX: { duration: 0.6 }
               }}
               whileHover={{ 
-                y: -10,
-                scale: 1.02,
-                background: `linear-gradient(45deg, #1a1a1a, #2d1a22)`
+                y: -15,
+                rotateZ: Math.random() * 4 - 2,
+                transition: { 
+                  duration: 0.4,
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 10
+                } 
               }}
-              className="relative group p-1 rounded-3xl bg-gradient-to-br from-[#b76e7930] to-[#d4a37330] hover:shadow-xl hover:shadow-[#b76e7920] transition-all"
+              className="relative group perspective-1000"
             >
-              <div className="h-full bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl p-6">
-                {/* Image Container */}
+              <div className="relative h-full p-1 rounded-3xl bg-gradient-to-br from-[#b76e7930] to-[#d4a37330] hover:shadow-2xl hover:shadow-[#b76e7930] transition-all overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="h-full bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl p-6">
+                  {/* Image Container */}
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={isInView ? { scale: 1, y: 0 } : {}}
+                    transition={{ delay: index * 0.15 + 0.2 }}
+                    className="relative w-full h-48 md:h-56 rounded-xl overflow-hidden mb-6"
+                  >
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover transform transition-transform duration-500 group-hover:scale-105"
+                      style={{ transform: 'translateZ(0)' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 border border-white/5 rounded-xl" />
+                  </motion.div>
+
+                  {/* Content */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : {}}
+                    transition={{ delay: index * 0.15 + 0.4 }}
+                  >
+                    <h3 className="text-xl md:text-2xl font-semibold mb-3 bg-clip-text text-transparent"
+                        style={{
+                          backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
+                        }}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </motion.div>
+
+                  {/* Hover Glow */}
+                  <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity"
+                       style={{
+                         boxShadow: `0 0 80px 20px ${roseGold}40`
+                       }} />
+                </div>
+
+                {/* Floating Border Animation */}
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="relative w-full h-48 rounded-xl overflow-hidden mb-6"
-                >
-                  <Image
-                    src={feature.image}
-                    alt={feature.title}
-                    fill
-                    className="object-cover"
-                    style={{ transform: 'translateZ(0)' }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                </motion.div>
-
-                {/* Content */}
-                <h3 className="text-xl font-semibold mb-3 bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
-                    }}>
-                  {feature.title}
-                </h3>
-                <p className="text-gray-400 leading-relaxed">
-                  {feature.description}
-                </p>
-
-                {/* Hover Border Effect */}
-                <div className="absolute inset-0 rounded-2xl pointer-events-none border border-transparent group-hover:border-[#b76e7940] transition-all" />
+                  className="absolute inset-0 rounded-2xl pointer-events-none border border-white/10"
+                  initial={{ opacity: 0 }}
+                  animate={isInView ? { opacity: 1 } : {}}
+                  whileHover={{
+                    borderColor: [`${roseGold}40`, `${lightRoseGold}80`, `${roseGold}40`],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Section CTA */}
+        {/* Animated Divider */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-20"
-        >
-        </motion.div>
+          initial={{ scaleX: 0 }}
+          animate={isInView ? { scaleX: 1 } : {}}
+          transition={{ delay: 0.6, duration: 1.5, ease: "circOut" }}
+          className="mt-20 h-px bg-gradient-to-r from-transparent via-[#b76e79] to-transparent"
+        />
       </div>
     </section>
   );

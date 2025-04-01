@@ -1,4 +1,3 @@
-// components/StellarNavbar.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,6 +11,7 @@ const StellarNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   const dimRoseGold = '#f8e9eb';
@@ -19,7 +19,15 @@ const StellarNavbar = () => {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   const navLinks = [
@@ -30,7 +38,6 @@ const StellarNavbar = () => {
     { name: 'Contact', path: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   ];
 
-  // Animation variants
   const navVariants = {
     hidden: { y: -100, opacity: 0 },
     visible: { 
@@ -78,21 +85,6 @@ const StellarNavbar = () => {
     }
   };
 
-  const taglineVariants = {
-    hidden: { opacity: 0, y: -5 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        type: 'spring', 
-        stiffness: 300,
-        damping: 20,
-        delay: 0.1
-      }
-    }
-  };
-
-  // Hamburger icon animation
   const topLine = {
     closed: { rotate: 0, y: 0 },
     open: { rotate: 45, y: 7 },
@@ -122,40 +114,52 @@ const StellarNavbar = () => {
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo with Tagline */}
+            {/* Logo - Hidden tagline on mobile */}
             <Link href="/" passHref>
               <motion.div 
                 className="flex items-center space-x-3 group relative"
-                onHoverStart={() => setIsHovered(true)}
-                onHoverEnd={() => setIsHovered(false)}
-                whileHover="hover"
+                onHoverStart={() => !isMobile && setIsHovered(true)}
+                onHoverEnd={() => !isMobile && setIsHovered(false)}
+                whileHover={!isMobile ? "hover" : undefined}
               >
                 <motion.img 
                   src="/logo.png" 
                   alt="Logo" 
                   className="h-9 w-9 lg:h-10 lg:w-10 transition-all duration-300"
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: isMobile ? 1 : 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 />
                 <div className="flex flex-col relative">
                   <motion.span
                     className="text-2xl font-bold tracking-tight"
                     style={{ color: roseGold, fontFamily: "'Dancing Script', cursive" }}
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: isMobile ? 1 : 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     SalonSphere
                   </motion.span>
                   
                   <AnimatePresence>
-                    {isHovered && (
+                    {!isMobile && isHovered && (
                       <motion.span
                         className="absolute top-full left-0 text-1xl font-light tracking-wide whitespace-nowrap"
                         style={{ 
                           color: lightRoseGold,
                           fontFamily: "'Dancing Script', cursive" 
                         }}
-                        variants={taglineVariants}
+                        variants={{
+                          hidden: { opacity: 0, y: -5 },
+                          visible: { 
+                            opacity: 1, 
+                            y: 0,
+                            transition: { 
+                              type: 'spring', 
+                              stiffness: 300,
+                              damping: 20,
+                              delay: 0.1
+                            }
+                          }
+                        }}
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
@@ -236,7 +240,7 @@ const StellarNavbar = () => {
             </motion.button>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Enhanced Mobile Menu */}
           <AnimatePresence>
             {isMenuOpen && (
               <>
@@ -270,12 +274,12 @@ const StellarNavbar = () => {
                       </button>
                     </div>
                     
-                    <div className="flex flex-col p-8 pt-14">
+                    <div className="flex flex-col p-6 pt-12">
                       <motion.div 
-                        className="mb-8 text-center"
+                        className="mb-6 text-center"
                         variants={linkVariants}
                       >
-                        <div className="inline-block p-4 rounded-2xl mb-4" style={{ backgroundColor: dimRoseGold }}>
+                        <div className="inline-block p-4 rounded-2xl mb-3" style={{ backgroundColor: dimRoseGold }}>
                           <Image 
                             src="/logo.png" 
                             alt="Logo" 
@@ -285,27 +289,13 @@ const StellarNavbar = () => {
                             priority
                           />
                         </div>
-                        <div className="relative inline-block">
-                          <h3 className="text-2xl font-bold" 
-                              style={{ color: roseGold, fontFamily: "'Dancing Script', cursive" }}>
-                            SalonSphere
-                          </h3>
-                          <motion.span
-                            className="absolute top-full left-1/2 -translate-x-1/2 text-xs font-light tracking-wide whitespace-nowrap"
-                            style={{ 
-                              color: lightRoseGold,
-                              fontFamily: "'IBM Plex Mono', monospace" 
-                            }}
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                          >
-                            A complete salon ecosystem
-                          </motion.span>
-                        </div>
+                        <h3 className="text-2xl font-bold" 
+                            style={{ color: roseGold, fontFamily: "'Dancing Script', cursive" }}>
+                          SalonSphere
+                        </h3>
                       </motion.div>
 
-                      <div className="flex flex-col space-y-4">
+                      <div className="flex flex-col space-y-3">
                         {navLinks.map((link) => (
                           <motion.div 
                             key={link.name} 
@@ -316,20 +306,20 @@ const StellarNavbar = () => {
                           >
                             <Link href={link.path} passHref>
                               <motion.div
-                                className="group flex items-center px-6 py-4 rounded-xl hover:bg-rose-50 transition-all"
+                                className="group flex items-center px-5 py-3 rounded-xl hover:bg-rose-50 transition-all"
                                 whileHover={{ x: 5 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setIsMenuOpen(false)}
                               >
                                 <svg 
-                                  className="flex-shrink-0 w-6 h-6 mr-4" 
+                                  className="flex-shrink-0 w-6 h-6 mr-3" 
                                   fill="none" 
                                   stroke={roseGold} 
                                   viewBox="0 0 24 24"
                                 >
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={link.icon} />
                                 </svg>
-                                <p className="text-lg font-medium text-gray-700 group-hover:text-rose-700">
+                                <p className="text-base font-medium text-gray-700 group-hover:text-rose-700">
                                   {link.name}
                                 </p>
                               </motion.div>
@@ -343,11 +333,12 @@ const StellarNavbar = () => {
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
+                        className="mt-6"
                       >
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="mt-8 w-full px-6 py-4 rounded-xl text-lg font-semibold transition-all"
+                          className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
                           style={{ 
                             background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
                             color: 'white',

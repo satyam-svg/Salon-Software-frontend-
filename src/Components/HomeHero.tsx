@@ -17,7 +17,7 @@ const HomeHero = () => {
   const rotateX = useTransform(mouseY, [0, 1], [10, -10]);
   const rotateY = useTransform(mouseX, [0, 1], [-10, 10]);
   const galleryRotateY = useMotionValue(0);
-  const isHovered = false; // Removed hoverCount state since it wasn't being used
+  const isHovered = false;
 
   const galleryImages = [
     '/salon.png',
@@ -28,6 +28,17 @@ const HomeHero = () => {
     '/Feedback.png',
     '/Finance.png',
     '/branch.png'
+  ];
+
+  const imageLabels = [
+    'Salon',
+    'Clients',
+    'Team',
+    'Dashboard',
+    'Bookings',
+    'Reviews',
+    'Finance',
+    'Branches'
   ];
 
   useEffect(() => {
@@ -75,12 +86,12 @@ const HomeHero = () => {
 
   return (
     <section className="relative h-[100dvh] max-h-[900px] bg-black flex items-center justify-center overflow-hidden">
-      {/* HIGHLY VISIBLE SCISSORS BACKGROUND */}
+      {/* ANIMATED SCISSORS BACKGROUND - LARGER ON MOBILE */}
       <motion.div 
         initial={{ opacity: 0.3 }}
         animate={{ 
-          translateY: [0, -15, 0, 15, 0], // More noticeable movement
-          rotate: [0, -3, 0, 3, 0] // More noticeable rotation
+          translateY: [0, -15, 0, 15, 0],
+          rotate: [0, -3, 0, 3, 0]
         }}
         transition={{ 
           duration: 12,
@@ -97,12 +108,12 @@ const HomeHero = () => {
           alt="Salon scissors"
           width={900}
           height={900}
-          className="w-[55vw] max-w-[900px] h-auto opacity-30"
+          className="w-[75vw] md:w-[55vw] max-w-[900px] h-auto opacity-30"
           priority
         />
       </motion.div>
 
-      {/* Radial Gradient Background */}
+      {/* DYNAMIC GRADIENT BACKGROUND */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -113,17 +124,21 @@ const HomeHero = () => {
         }}
       />
 
-      {/* Main Content Container */}
+      {/* MAIN CONTENT CONTAINER */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
         <div className="flex flex-col lg:flex-row h-full items-center justify-center gap-4 lg:gap-8 xl:gap-12">
-          {/* Left Content */}
+          {/* TEXT CONTENT - CENTERED ON MOBILE */}
           <motion.div 
             className="relative w-full lg:w-1/2 flex flex-col justify-center"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1 }}
           >
-            <h1 className="text-[8vw] sm:text-[6vw] md:text-[5vw] lg:text-[4vw] font-bold mb-2 lg:mb-4 leading-[1.1]">
+            <div className="lg:hidden absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center pointer-events-none">
+              <div className="absolute w-[200%] h-[200%] bg-radial-gradient from-rose-500/20 via-transparent to-transparent animate-pulse-slow" />
+            </div>
+
+            <h1 className="text-[8vw] sm:text-[6vw] md:text-[5vw] lg:text-[4vw] font-bold mb-2 lg:mb-4 leading-[1.1] text-center lg:text-left">
               {["Create", "Your Own", "Salon Ecosystem"].map((word, i) => (
                 <motion.span
                   key={word}
@@ -145,7 +160,7 @@ const HomeHero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 }}
-              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-gray-300 mb-4 lg:mb-8 max-w-full lg:max-w-[90%]">
+              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-gray-300 mb-4 lg:mb-8 max-w-full lg:max-w-[90%] text-center lg:text-left px-4 lg:px-0">
               Transform your beauty business with our all-in-one platform integrating 
               <span className="text-rose-300"> management, bookings, and community</span>. 
               Elevate your salon to celestial heights.
@@ -164,16 +179,16 @@ const HomeHero = () => {
             </motion.button>
           </motion.div>
 
-          {/* 3D Gallery Container */}
-          <motion.div 
-            className="relative w-full lg:w-1/2 h-[30vh] lg:h-[50vh] flex items-center justify-center"
-            style={{
-              perspective: `${perspective}px`,
-              rotateX,
-              rotateY,
-            }}
-          >
-            {!mobileview && 
+          {/* DESKTOP GALLERY */}
+          <div className="hidden lg:block relative w-full lg:w-1/2 h-[50vh]">
+            <motion.div 
+              className="w-full h-full"
+              style={{
+                perspective: `${perspective}px`,
+                rotateX,
+                rotateY,
+              }}
+            >
               <motion.div
                 className="gallery-container"
                 animate={{ rotateY: 360 }}
@@ -202,20 +217,130 @@ const HomeHero = () => {
                       loading={i < 3 ? "eager" : "lazy"}
                       priority={i < 2}
                       quality={85}
-                      placeholder="blur"
-                      blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
                     />
                     <div className="gallery-overlay" />
                   </motion.div>
                 ))}
               </motion.div>
-            }
-          </motion.div>
+            </motion.div>
+          </div>
+
+          {/* ENHANCED MOBILE GALLERY */}
+          {mobileview && (
+            <div className="lg:hidden w-full h-[45vh] overflow-hidden relative mt-8">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20 pointer-events-none" />
+              
+              <motion.div 
+                className="h-full grid grid-cols-2 gap-4 px-4 overflow-y-auto pb-8 snap-y"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                {galleryImages.map((img, i) => (
+                  <motion.div
+                    key={i}
+                    className="relative h-48 snap-center group"
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                    whileInView={{ 
+                      scale: 1, 
+                      opacity: 1,
+                      y: 0,
+                      transition: { 
+                        type: "spring",
+                        stiffness: 80,
+                        damping: 15,
+                        delay: i * 0.1
+                      }
+                    }}
+                    animate={{
+                      y: [0, -10, 0],
+                      transition: {
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.3 + 0.5
+                      }
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl shadow-rose-900/30">
+                      <Image
+                        src={img}
+                        alt={imageLabels[i]}
+                        fill
+                        className="object-cover transform transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 100vw"
+                        loading="eager"
+                        quality={90}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
+                      <div className="absolute bottom-3 left-3 text-white text-sm font-bold backdrop-blur-sm px-3 py-1 rounded-full bg-black/30">
+                        {imageLabels[i]}
+                      </div>
+                      <motion.div
+                        className="absolute inset-0 bg-rose-300/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        initial={{ scale: 0.8 }}
+                        whileHover={{ scale: 1.2 }}
+                      />
+                    </div>
+                    <motion.div
+                      className="absolute inset-0 border border-rose-200/20 rounded-3xl pointer-events-none"
+                      animate={{
+                        borderColor: ['rgba(183, 110, 121, 0.2)', 'rgba(183, 110, 121, 0.4)', 'rgba(183, 110, 121, 0.2)'],
+                        transition: {
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.2
+                        }
+                      }}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* ENHANCED SCROLL INDICATOR */}
+              <motion.div
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+              >
+                {[...Array(4)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2.5 h-2.5 rounded-full bg-rose-300/90 backdrop-blur-sm"
+                    animate={{ 
+                      scale: [1, 1.6, 1],
+                      opacity: [0.6, 1, 0.6]
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      delay: i * 0.3
+                    }}
+                  />
+                ))}
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Global Styles */}
+      {/* GLOBAL STYLES */}
       <style jsx global>{`
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(1.05); }
+        }
+
+        .bg-radial-gradient {
+          background: radial-gradient(circle, currentColor 0%, transparent 70%);
+        }
+
+        .animate-pulse-slow {
+          animation: pulse-slow 6s ease-in-out infinite;
+        }
+
         .gallery-container {
           position: relative;
           width: 100%;
@@ -260,20 +385,13 @@ const HomeHero = () => {
           opacity: 1;
         }
 
-        @media (max-width: 1024px) {
-          .gallery-item {
-            width: calc(min(70vw, 180px));
-            height: calc(min(35vw, 250px));
-            transform: rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(25vw, 250px))) !important;
-          }
+        /* MOBILE SCROLL CONTAINER */
+        .snap-y {
+          scroll-snap-type: y mandatory;
         }
 
-        @media (max-width: 768px) {
-          .gallery-item {
-            width: calc(min(30vw, 150px));
-            height: calc(min(40vw, 200px));
-            transform: rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px))) !important;
-          }
+        .snap-center {
+          scroll-snap-align: center;
         }
       `}</style>
     </section>
