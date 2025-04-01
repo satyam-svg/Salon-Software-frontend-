@@ -3,29 +3,21 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+
 const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const [perspective, setPerspective] = useState(420);
   const [mobileview, setMobileview] = useState(false);
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
-  
+
   // Mouse interaction values
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const rotateX = useTransform(mouseY, [0, 1], [10, -10]);
   const rotateY = useTransform(mouseX, [0, 1], [-10, 10]);
-
-  useEffect(() => {
-    setMounted(true);
-    const updateMousePosition = (e: MouseEvent) => {
-      mouseX.set(e.clientX / window.screen.width);
-      mouseY.set(e.clientY / window.screen.height);
-    };
-    
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
-  }, []);
+  const galleryRotateY = useMotionValue(0);
+  const isHovered = false; // Removed hoverCount state since it wasn't being used
 
   const galleryImages = [
     '/salon.png',
@@ -39,47 +31,85 @@ const HomeHero = () => {
   ];
 
   useEffect(() => {
-    if (typeof window === "undefined") return; // Prevent running on server
-  
     setMounted(true);
+    
     const updateMousePosition = (e: MouseEvent) => {
       mouseX.set(e.clientX / window.innerWidth);
       mouseY.set(e.clientY / window.innerHeight);
     };
-  
-    window.addEventListener("mousemove", updateMousePosition);
-    return () => window.removeEventListener("mousemove", updateMousePosition);
+
+    window.addEventListener('mousemove', updateMousePosition);
+    return () => window.removeEventListener('mousemove', updateMousePosition);
   }, []);
-  
+
   useEffect(() => {
-    if (typeof window === "undefined") return; // Ensure it's running on client
-  
+    if (typeof window === "undefined") return;
+
     const updatePerspective = () => {
       const screenWidth = window.innerWidth;
-  
       setPerspective(screenWidth <= 1280 ? 600 : 420);
       setMobileview(screenWidth <= 1000);
     };
-  
+
     updatePerspective();
     window.addEventListener("resize", updatePerspective);
-  
     return () => window.removeEventListener("resize", updatePerspective);
   }, []);
-    
 
+  useEffect(() => {
+    let animationFrameId: number;
+    const rotationSpeed = 0.3;
+
+    const animateRotation = () => {
+      if (!isHovered) {
+        galleryRotateY.set(galleryRotateY.get() + rotationSpeed);
+      }
+      animationFrameId = requestAnimationFrame(animateRotation);
+    };
+
+    animationFrameId = requestAnimationFrame(animateRotation);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isHovered]);
 
   if (!mounted) return null;
 
   return (
     <section className="relative h-[100dvh] max-h-[900px] bg-black flex items-center justify-center overflow-hidden">
-      {/* Animated Background */}
+      {/* HIGHLY VISIBLE SCISSORS BACKGROUND */}
+      <motion.div 
+        initial={{ opacity: 0.3 }}
+        animate={{ 
+          translateY: [0, -15, 0, 15, 0], // More noticeable movement
+          rotate: [0, -3, 0, 3, 0] // More noticeable rotation
+        }}
+        transition={{ 
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="absolute left-10 top-1/2 -translate-y-1/2 z-0 pointer-events-none"
+        style={{
+          filter: 'drop-shadow(0 0 40px rgba(183, 110, 121, 0.5))'
+        }}
+      >
+        <Image
+          src="/scissors.png"
+          alt="Salon scissors"
+          width={900}
+          height={900}
+          className="w-[55vw] max-w-[900px] h-auto opacity-30"
+          priority
+        />
+      </motion.div>
+
+      {/* Radial Gradient Background */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
         className="absolute inset-0 opacity-10"
         style={{
-          background: `radial-gradient(circle at center, ${roseGold} 0%, transparent 70%)`
+          background: `radial-gradient(circle at center, ${roseGold} 0%, transparent 70%)`,
         }}
       />
 
@@ -142,47 +172,44 @@ const HomeHero = () => {
               rotateX,
               rotateY,
             }}
-           
           >
             {!mobileview && 
-                    <motion.div
-                    className="gallery-container"
-                    animate={{ rotateY: 360 }}
-                    transition={{
-                      duration: 20,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                    style={{ transformStyle: 'preserve-3d' }}
+              <motion.div
+                className="gallery-container"
+                animate={{ rotateY: 360 }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: 'linear',
+                }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {galleryImages.map((img, i) => (
+                  <motion.div
+                    key={i}
+                    className="gallery-item"
+                    style={{ 
+                      '--i': i+1,
+                      transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
+                    } as React.CSSProperties}
                   >
-                    {/* Inside your gallery mapping function */}
-      {galleryImages.map((img, i) => (
-        <motion.div
-          key={i}
-          className="gallery-item"
-          style={{ 
-            '--i': i+1,
-            transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
-          } as React.CSSProperties}
-        >
-          <Image
-            src={img}
-            alt={`Gallery image ${i+1}`}
-            className="gallery-image"
-            width={200}  // Set explicit width
-            height={300} // Set explicit height
-            loading={i < 3 ? "eager" : "lazy"} // First 3 load eagerly, rest lazy load
-            priority={i < 2} // Highest priority for first 2 images
-            quality={85} // Good balance between quality and size
-            placeholder="blur" // Add blur placeholder
-            blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
-          />
-          <div className="gallery-overlay" />
-        </motion.div>
-      ))}
+                    <Image
+                      src={img}
+                      alt={`Gallery image ${i+1}`}
+                      className="gallery-image"
+                      width={200}
+                      height={300}
+                      loading={i < 3 ? "eager" : "lazy"}
+                      priority={i < 2}
+                      quality={85}
+                      placeholder="blur"
+                      blurDataURL={`data:image/svg+xml;base64,[YOUR_BASE64_PLACEHOLDER]`}
+                    />
+                    <div className="gallery-overlay" />
                   </motion.div>
+                ))}
+              </motion.div>
             }
-
           </motion.div>
         </div>
       </div>
@@ -197,13 +224,12 @@ const HomeHero = () => {
           display: flex;
           justify-content: center;
           align-items: center;
-          
         }
 
         .gallery-item {
           position: absolute;
-           width: calc(min(15vw, 150px));  /* Reduced width */
-  height: calc(min(22vw, 220px)); /* Reduced height */
+          width: calc(min(15vw, 150px));
+          height: calc(min(22vw, 220px));
           transform-style: preserve-3d;
           transition: transform 0.5s ease;
           border-radius: 12px;
