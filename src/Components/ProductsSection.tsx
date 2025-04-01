@@ -2,11 +2,13 @@
 
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 
 const ProductsSection = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [cardInView, setCardInView] = useState<boolean[]>([]);
+  const isInView = useInView(sectionRef, { once: false, margin: "-100px" });
   const roseGold = "#b76e79";
   const lightRoseGold = "#d4a373";
 
@@ -43,9 +45,45 @@ const ProductsSection = () => {
     }
   ];
 
+  // Initialize card refs and inView states
+  useEffect(() => {
+    setCardInView(new Array(features.length).fill(false));
+  }, [features.length]);
+
+  // Create ref callback with proper typing
+  const setCardRef = useCallback((index: number) => (el: HTMLDivElement | null) => {
+    cardRefs.current[index] = el;
+  }, []);
+
+  // Track card visibility
+  useEffect(() => {
+    const observers = features.map((_, index) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setCardInView(prev => {
+            const newState = [...prev];
+            newState[index] = entry.isIntersecting;
+            return newState;
+          });
+        },
+        { root: null, rootMargin: "-100px", threshold: 0.1 }
+      );
+
+      if (cardRefs.current[index]) {
+        observer.observe(cardRefs.current[index]!);
+      }
+
+      return observer;
+    });
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, [features.length]);
+
   return (
     <section 
-      ref={ref}
+      ref={sectionRef}
       className="relative bg-black text-white py-20 md:py-28 overflow-hidden"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 50%, ${roseGold}10 1px, transparent 1px)`,
@@ -136,41 +174,42 @@ const ProductsSection = () => {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 xl:gap-12 px-4 sm:px-0">
           {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 80, rotateX: -30, scale: 0.8 }}
-              animate={isInView ? { 
-                opacity: 1, 
-                y: 0, 
-                rotateX: 0,
-                scale: 1
-              } : {}}
-              transition={{ 
-                delay: index * 0.15,
-                duration: 0.8,
-                ease: "backOut",
-                rotateX: { duration: 0.6 }
-              }}
-              whileHover={{ 
-                y: -15,
-                rotateZ: Math.random() * 4 - 2,
-                transition: { 
-                  duration: 0.4,
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 10
-                } 
-              }}
+            <div 
+              key={index} 
+              ref={setCardRef(index)}
               className="relative group perspective-1000"
             >
-              <div className="relative h-full p-1 rounded-3xl bg-gradient-to-br from-[#b76e7930] to-[#d4a37330] hover:shadow-2xl hover:shadow-[#b76e7930] transition-all overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
+              <motion.div
+                initial={{ opacity: 0, y: 80, rotateX: -30, scale: 0.8 }}
+                animate={cardInView[index] ? { 
+                  opacity: 1, 
+                  y: 0, 
+                  rotateX: 0,
+                  scale: 1
+                } : {}}
+                transition={{ 
+                  delay: index * 0.15,
+                  duration: 0.8,
+                  ease: "backOut",
+                  rotateX: { duration: 0.6 }
+                }}
+                whileHover={{ 
+                  y: -15,
+                  rotateZ: Math.random() * 4 - 2,
+                  transition: { 
+                    duration: 0.4,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 10
+                  } 
+                }}
+                className="relative h-full p-1 rounded-3xl bg-gradient-to-br from-[#b76e7930] to-[#d4a37330] hover:shadow-2xl hover:shadow-[#b76e7930] transition-all overflow-hidden"
+              >
                 <div className="h-full bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl p-6">
                   {/* Image Container */}
                   <motion.div
                     initial={{ scale: 0.9, y: 20 }}
-                    animate={isInView ? { scale: 1, y: 0 } : {}}
+                    animate={cardInView[index] ? { scale: 1, y: 0 } : {}}
                     transition={{ delay: index * 0.15 + 0.2 }}
                     className="relative w-full h-48 md:h-56 rounded-xl overflow-hidden mb-6"
                   >
@@ -188,7 +227,7 @@ const ProductsSection = () => {
                   {/* Content */}
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 1 } : {}}
+                    animate={cardInView[index] ? { opacity: 1 } : {}}
                     transition={{ delay: index * 0.15 + 0.4 }}
                   >
                     <h3 className="text-xl md:text-2xl font-semibold mb-3 bg-clip-text text-transparent"
@@ -213,7 +252,7 @@ const ProductsSection = () => {
                 <motion.div
                   className="absolute inset-0 rounded-2xl pointer-events-none border border-white/10"
                   initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
+                  animate={cardInView[index] ? { opacity: 1 } : {}}
                   whileHover={{
                     borderColor: [`${roseGold}40`, `${lightRoseGold}80`, `${roseGold}40`],
                   }}
@@ -223,8 +262,8 @@ const ProductsSection = () => {
                     ease: "easeInOut"
                   }}
                 />
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           ))}
         </div>
 
