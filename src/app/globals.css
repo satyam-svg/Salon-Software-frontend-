@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Delius&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -19,12 +20,9 @@
   }
 }
 
-
-
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Delius', sans-serif;
   background-color: black;
-  
 }
 
 @keyframes pulse {
@@ -44,10 +42,6 @@ body {
   color: var(--rose-gold);
 }
 
-
-
 .bg-rose-gold { background-color: #b76e79; }
 .text-rose-gold { color: #b76e79; }
 .shadow-rose-sm { box-shadow: 0 2px 8px rgba(183, 110, 121, 0.1); }
-
-

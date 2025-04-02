@@ -9,12 +9,15 @@ module.exports = {
       colors: {
         'rose-gold': '#b76e79',
       },
+      fontFamily: {
+        delius: ['Delius', 'cursive'],
+        dancing: ['Dancing Script', 'cursive'],
+        ibm: ['IBM Plex Mono', 'monospace'],
+      },
       backgroundImage: {
         'salon-pattern': "url('/image/background.png')",
       },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
+      
       screens: {
         'xs': '480px',
       },
@@ -23,6 +26,9 @@ module.exports = {
       },
       transitionDuration: {
         '1500': '1500ms',
+      },
+      animation: {
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     },
   },

@@ -1,157 +1,274 @@
 "use client";
-import { motion } from "framer-motion";
+
+import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import { useRef, useState, useEffect } from "react";
 
 const FinancialManagement = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [cardInView, setCardInView] = useState<boolean[]>([]);
+  const isInView = useInView(sectionRef, { once: false, margin: "-100px" });
+  const roseGold = "#b76e79";
+  const lightRoseGold = "#d4a373";
+
   const financialMetrics = [
     {
       title: "Branch Revenue Overview",
       description: "Track earnings from multiple branches in real-time.",
       image: "/finacial1.png",
-      gradient: "from-rose-400/20 to-amber-600/10"
+      color: '#b76e79'
     },
     {
       title: "Expense Monitoring",
       description: "Detailed breakdown of operational costs.",
       image: "/finacial2.jpg",
-      gradient: "from-emerald-400/20 to-cyan-600/10"
+      color: '#d4a373'
     },
     {
       title: "Financial Reports & Taxes",
       description: "Automated reports for accounting compliance.",
       image: "/finacial3.png",
-      gradient: "from-purple-400/20 to-pink-600/10"
+      color: '#9d6b53'
     },
     {
       title: "AI Profit Insights",
       description: "Smart analytics to maximize profits.",
       image: "/finacial4.jpg",
-      gradient: "from-blue-400/20 to-indigo-600/10"
+      color: '#c58e6a'
     },
   ];
 
+  // Initialize card visibility states
+  useEffect(() => {
+    setCardInView(new Array(financialMetrics.length).fill(false));
+  }, [financialMetrics.length]);
+
+  // Track card visibility using IntersectionObserver
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    financialMetrics.forEach((_, index) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setCardInView(prev => {
+            const newState = [...prev];
+            newState[index] = entry.isIntersecting;
+            return newState;
+          });
+        },
+        { root: null, rootMargin: "-100px", threshold: 0.1 }
+      );
+
+      if (cardRefs.current[index]) {
+        observer.observe(cardRefs.current[index]!);
+      }
+
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach(observer => observer.disconnect());
+    };
+  }, [financialMetrics.length]);
+
+  // Create ref callback with proper typing
+  const setCardRef = (index: number) => (el: HTMLDivElement | null) => {
+    cardRefs.current[index] = el;
+  };
+
   return (
-    <section className="relative min-h-screen bg-black text-white overflow-hidden">
-      {/* Background Elements */}
+    <section 
+      ref={sectionRef}
+      className="relative bg-black text-white py-20 md:py-28 overflow-hidden"
+      style={{
+        backgroundImage: `radial-gradient(circle at 50% 50%, ${roseGold}10 1px, transparent 1px)`,
+        backgroundSize: '40px 40px'
+      }}
+    >
+      {/* Animated Background Elements */}
       <motion.div
         initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        className="absolute inset-0 opacity-10"
+        animate={isInView ? { scale: 1 } : {}}
+        className="absolute inset-0 opacity-15"
         style={{
-          background: `radial-gradient(circle at 50% 50%, #b76e79, transparent 70%)`
+          background: `radial-gradient(circle at 50% 50%, ${roseGold} 0%, transparent 70%)`,
         }}
+        transition={{ duration: 1.5, ease: "easeOut" }}
       />
 
-      {/* Micro Particles */}
-      {[...Array(40)].map((_, i) => (
+      {/* Floating Particles */}
+      {[...Array(30)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute bg-rose-300/10 rounded-full"
+          className="absolute bg-[#b76e79] rounded-full"
           style={{
-            width: Math.random() * 4 + 2 + 'px',
-            height: Math.random() * 4 + 2 + 'px',
+            width: Math.random() * 5 + 2 + 'px',
+            height: Math.random() * 5 + 2 + 'px',
             top: Math.random() * 100 + '%',
             left: Math.random() * 100 + '%',
           }}
-          animate={{
+          initial={{ y: 0, opacity: 0 }}
+          animate={isInView ? {
             y: [0, 100, 0],
-            x: [0, 50, 0],
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0.8, 0.3]
-          }}
+            opacity: [0.3, 0.8, 0.3],
+          } : {}}
           transition={{
-            duration: Math.random() * 5 + 5,
+            duration: Math.random() * 6 + 3,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
+            delay: Math.random() * 2
           }}
         />
       ))}
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
-        {/* Compact Header */}
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+      {/* Gradient Blobs */}
+      <motion.div
+        initial={{ scale: 0, rotate: 0 }}
+        animate={isInView ? { scale: 1, rotate: 360 } : {}}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute -top-40 -left-40 w-[800px] h-[800px] opacity-10 blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${roseGold} 0%, transparent 60%)`
+        }}
+      />
+      <motion.div
+        initial={{ scale: 0, rotate: 180 }}
+        animate={isInView ? { scale: 1, rotate: -180 } : {}}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear", delay: 5 }}
+        className="absolute -bottom-40 -right-40 w-[800px] h-[800px] opacity-10 blur-3xl"
+        style={{
+          background: `radial-gradient(circle, ${lightRoseGold} 0%, transparent 60%)`
+        }}
+      />
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+          transition={{ duration: 0.8, ease: "backOut" }}
+          className="text-center mb-16 md:mb-20"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-rose-300 to-rose-500">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-clip-text text-transparent px-4 leading-tight md:leading-none"
+              style={{
+                backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`,
+                textShadow: `0 0 30px ${roseGold}40`
+              }}>
             Financial Control
           </h2>
-          <p className="text-lg text-gray-300 max-w-xl mx-auto">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.3 }}
+            className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-4"
+          >
             Precision financial tools for salon business excellence
-          </p>
+          </motion.p>
         </motion.div>
 
-        {/* Compact Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 xl:gap-12 px-4 sm:px-0">
           {financialMetrics.map((metric, index) => (
-            <motion.div
-              key={index}
-              className="group relative h-[280px] rounded-xl overflow-hidden"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "0px 0px -50px 0px" }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
+            <div 
+              key={index} 
+              ref={setCardRef(index)}
+              className="relative group perspective-1000"
             >
-              {/* Image Container */}
-              <div className="relative h-48">
-                <Image
-                  src={metric.image}
-                  alt={metric.title}
-                  fill
-                  className="object-cover transform group-hover:scale-103 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              </div>
-
-              {/* Content */}
-              <div className="p-4 bg-gradient-to-b from-black/40 to-transparent">
-                <h3 className="text-lg font-semibold mb-2 text-rose-100">{metric.title}</h3>
-                <p className="text-sm text-gray-300 leading-tight">{metric.description}</p>
-              </div>
-
-              {/* Hover Effects */}
-              <div className={`absolute inset-0 border border-rose-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${metric.gradient}`} />
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  boxShadow: `0 0 30px ${metric.gradient.split(' ')[0].replace('from-', '#').replace('/20', '30')}`
-                }}
-              />
-
-              {/* Animated Indicator */}
               <motion.div
-                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-sm"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 15, -15, 0]
+                initial={{ opacity: 0, y: 80, rotateX: -30, scale: 0.8 }}
+                animate={cardInView[index] ? { 
+                  opacity: 1, 
+                  y: 0, 
+                  rotateX: 0,
+                  scale: 1
+                } : {}}
+                transition={{ 
+                  delay: index * 0.15,
+                  duration: 0.8,
+                  ease: "backOut",
+                  rotateX: { duration: 0.6 }
                 }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity
+                whileHover={{ 
+                  y: -15,
+                  rotateZ: Math.random() * 4 - 2,
+                  transition: { 
+                    duration: 0.4,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 10
+                  } 
                 }}
+                className="relative h-full p-1 rounded-3xl bg-gradient-to-br from-[#b76e7930] to-[#d4a37330] hover:shadow-2xl hover:shadow-[#b76e7930] transition-all overflow-hidden"
               >
-                💹
+                <div className="h-full bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl p-6">
+                  {/* Image Container */}
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={cardInView[index] ? { scale: 1, y: 0 } : {}}
+                    transition={{ delay: index * 0.15 + 0.2 }}
+                    className="relative w-full h-48 md:h-56 rounded-xl overflow-hidden mb-6"
+                  >
+                    <Image
+                      src={metric.image}
+                      alt={metric.title}
+                      fill
+                      className="object-cover transform transition-transform duration-500 group-hover:scale-105"
+                      style={{ transform: 'translateZ(0)' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 border border-white/5 rounded-xl" />
+                  </motion.div>
+
+                  {/* Content */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={cardInView[index] ? { opacity: 1 } : {}}
+                    transition={{ delay: index * 0.15 + 0.4 }}
+                  >
+                    <h3 className="text-xl md:text-2xl font-semibold mb-3 bg-clip-text text-transparent"
+                        style={{
+                          backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
+                        }}>
+                      {metric.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+                      {metric.description}
+                    </p>
+                  </motion.div>
+
+                  {/* Hover Glow */}
+                  <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-30 transition-opacity"
+                       style={{
+                         boxShadow: `0 0 80px 20px ${metric.color}40`
+                       }} />
+                </div>
+
+                {/* Floating Border Animation */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none border border-white/10"
+                  initial={{ opacity: 0 }}
+                  animate={cardInView[index] ? { opacity: 1 } : {}}
+                  whileHover={{
+                    borderColor: [`${metric.color}40`, `${metric.color}80`, `${metric.color}40`],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
               </motion.div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {/* Central Animation */}
+        {/* Animated Divider */}
         <motion.div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full mix-blend-overlay opacity-15"
-          animate={{
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: 40,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          style={{
-            background: `conic-gradient(from 90deg, #b76e79, #d4a373, #b76e79)`
-          }}
+          initial={{ scaleX: 0 }}
+          animate={isInView ? { scaleX: 1 } : {}}
+          transition={{ delay: 0.6, duration: 1.5, ease: "circOut" }}
+          className="mt-20 h-px bg-gradient-to-r from-transparent via-[#b76e79] to-transparent"
         />
       </div>
     </section>
