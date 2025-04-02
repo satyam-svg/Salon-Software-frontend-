@@ -8,8 +8,7 @@ const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const [perspective, setPerspective] = useState(420);
   const [mobileview, setMobileview] = useState(false);
-  const roseGold = 'var(--rose-gold)';
-  const lightRoseGold = 'var(--rose-gold-light)';
+  
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
