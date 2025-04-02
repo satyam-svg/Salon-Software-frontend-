@@ -38,6 +38,8 @@ const HomeHero = () => {
     'Finance',
     'Branches'
   ];
+  const roseGold = '#b76e79';
+  const lightRoseGold = '#d4a373';
 
   useEffect(() => {
     setMounted(true);
@@ -145,7 +147,8 @@ const HomeHero = () => {
                   transition={{ delay: i * 0.2 + 1 }}
                   className="block bg-clip-text text-transparent"
                   style={{
-                    backgroundImage: `linear-gradient(45deg, var(--rose-gold-light), var(--rose-gold))`
+                    backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
+
                   }}
                 >
                   {word}
@@ -168,12 +171,11 @@ const HomeHero = () => {
               whileTap={{ scale: 0.95 }}
               className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] rounded-full text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] font-semibold transition-all relative overflow-hidden group w-fit mx-auto lg:mx-0"
               style={{
-                background: `linear-gradient(45deg, var(--rose-gold), var(--rose-gold-light))`,
-                boxShadow: `0 0 40px var(--rose-gold-light)`,
-                color: 'var(--background)'
+                background: `linear-gradient(45deg, ${roseGold}, ${lightRoseGold}),
+                boxShadow: 0 0 40px ${roseGold}40`
               }}>
               <span className="relative z-10">Launch Your Ecosystem</span>
-              <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
           </motion.div>
 
