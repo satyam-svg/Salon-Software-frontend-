@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {  Zilla_Slab } from "next/font/google";
 import "./globals.css";
-import Navbar from '@/Components/Navbar'
+import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+
+
+const zillaSlab = Zilla_Slab({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"], // Ensure proper weight selection
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,12 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar/>
+      {/* Apply Zilla Slab globally */}
+      <body className={`${zillaSlab.className} antialiased`}>
+        <Navbar />
         {children}
-        <Footer/>
+        <Footer />
       </body>
     </html>
   );
