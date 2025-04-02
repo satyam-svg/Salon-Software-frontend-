@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers} from 'react-icons/fi'
 import { LiaGemSolid } from "react-icons/lia";
 
-const LoginPopup = () => {
+const LoginPopup = ({ onClose }: { onClose: () => void }) => {
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   
@@ -35,6 +35,7 @@ const LoginPopup = () => {
       alert(activeTab === 'owner' 
         ? `Welcome back, Luxury Owner!` 
         : `Staff access granted!`)
+        onClose(); // Close popup after successful login
     }, 1500)
   }
 

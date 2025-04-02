@@ -5,52 +5,15 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-
+import LoginPopup from './Login';
 interface NavLink {
   name: string;
   path: string;
   icon: string;
 }
 
-interface LoginPopupProps {
-  onClose: () => void;
-}
 
-const LoginPopup: FC<LoginPopupProps> = ({ onClose }) => {
-  return (
-    <div className="bg-white rounded-lg shadow-xl p-6 relative max-w-md w-full">
-      <button 
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
-      >
-        &times;
-      </button>
-      <h2 className="text-2xl font-bold text-center mb-6 text-[#b76e79]">Login</h2>
-      <form className="space-y-4">
-        <div>
-          <label className="block text-gray-700 mb-2">Email</label>
-          <input 
-            type="email" 
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b76e79]"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-2">Password</label>
-          <input 
-            type="password" 
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b76e79]"
-          />
-        </div>
-        <button 
-          type="submit"
-          className="w-full bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white py-2 rounded-lg font-medium"
-        >
-          Sign In
-        </button>
-      </form>
-    </div>
-  );
-};
+
 
 const StellarNavbar: FC = () => {
   const pathname = usePathname();
