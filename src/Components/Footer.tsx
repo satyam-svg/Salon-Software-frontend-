@@ -84,6 +84,10 @@ const LuxuryFooter = () => {
   };
 
   return (
+    <>
+     <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+      `}</style>
     <motion.footer 
       ref={ref}
       initial="hidden"
@@ -129,11 +133,12 @@ const LuxuryFooter = () => {
           <motion.div variants={itemVariants}>
             <motion.h3 
               className="font-playfair text-3xl text-[#b76e79] mb-6 relative pb-3 after:absolute after:bottom-0 after:left-0 after:w-12 after:h-[2px] after:bg-[#e8c4c0]"
+              style={{fontFamily: "'Dancing Script', cursive" }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Éclat Salon
+              SalonSphere
             </motion.h3>
             <motion.p 
               className="text-gray-600 mb-6 leading-relaxed"
@@ -421,6 +426,7 @@ const LuxuryFooter = () => {
         ❀
       </motion.div>
     </motion.footer>
+    </>
   );
 };
 
