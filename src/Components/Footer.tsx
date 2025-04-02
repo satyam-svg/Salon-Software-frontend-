@@ -374,7 +374,7 @@ const LuxuryFooter = () => {
           transition={{ delay: 0.7 }}
         >
           <div className="text-gray-600 text-sm mb-4 md:mb-0">
-            © {new Date().getFullYear()} Éclat Salon. All rights reserved.
+            © {new Date().getFullYear()} SalonSphere. All rights reserved.
           </div>
           <div className="flex space-x-6">
             {['Privacy Policy', 'Terms of Service', 'Cookie Policy'].map((item) => (
