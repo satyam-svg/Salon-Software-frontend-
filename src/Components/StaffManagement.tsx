@@ -80,7 +80,7 @@ const StaffManagement = () => {
   return (
     <section 
       ref={sectionRef}
-      className="relative bg-black text-white py-20 md:py-28 overflow-hidden"
+      className="relative  text-white py-20 md:py-28 overflow-hidden"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 50%, ${roseGold}10 1px, transparent 1px)`,
         backgroundSize: '40px 40px'
@@ -161,7 +161,7 @@ const StaffManagement = () => {
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3 }}
-            className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-4"
+            className="text-base md:text-lg lg:text-xl text-black max-w-3xl mx-auto px-4"
           >
             Empower Your Team with Intelligent Management
           </motion.p>

@@ -84,7 +84,7 @@ const ProductsSection = () => {
   return (
     <section 
       ref={sectionRef}
-      className="relative bg-black text-white py-20 md:py-28 overflow-hidden"
+      className="relative  text-white py-20 md:py-28 overflow-hidden"
       style={{
         backgroundImage: `radial-gradient(circle at 50% 50%, ${roseGold}10 1px, transparent 1px)`,
         backgroundSize: '40px 40px'
@@ -165,7 +165,7 @@ const ProductsSection = () => {
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3 }}
-            className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto px-4"
+            className="text-base md:text-lg lg:text-xl text-black max-w-3xl mx-auto px-4"
           >
             Organize your salon inventory with ease. Track stock, usage, and availability, while managing your offered services with dynamic pricing & insights.
           </motion.p>

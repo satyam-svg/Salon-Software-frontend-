@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -8,10 +8,9 @@ const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const [perspective, setPerspective] = useState(420);
   const [mobileview, setMobileview] = useState(false);
-  const roseGold = '#b76e79';
-  const lightRoseGold = '#d4a373';
+  const roseGold = 'var(--rose-gold)';
+  const lightRoseGold = 'var(--rose-gold-light)';
 
-  // Mouse interaction values
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const rotateX = useTransform(mouseY, [0, 1], [10, -10]);
@@ -85,8 +84,11 @@ const HomeHero = () => {
   if (!mounted) return null;
 
   return (
-    <section className="relative h-[100dvh] max-h-[900px] bg-black flex items-center justify-center overflow-hidden">
-      {/* ANIMATED SCISSORS BACKGROUND - LARGER ON MOBILE */}
+    <section 
+      className="relative h-[100dvh] max-h-[900px] flex items-center justify-center overflow-hidden"
+      style={{ backgroundColor: 'var(--background)' }}
+    >
+      {/* ANIMATED SCISSORS BACKGROUND */}
       <motion.div 
         initial={{ opacity: 0.3 }}
         animate={{ 
@@ -120,25 +122,21 @@ const HomeHero = () => {
         transition={{ duration: 1.5, ease: "easeOut" }}
         className="absolute inset-0 opacity-10"
         style={{
-          background: `radial-gradient(circle at center, ${roseGold} 0%, transparent 70%)`,
+          background: `radial-gradient(circle at center, var(--rose-gold) 0%, transparent 70%)`,
         }}
       />
 
       {/* MAIN CONTENT CONTAINER */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
         <div className="flex flex-col lg:flex-row h-full items-center justify-center gap-4 lg:gap-8 xl:gap-12">
-          {/* TEXT CONTENT - CENTERED ON MOBILE */}
+          {/* TEXT CONTENT */}
           <motion.div 
             className="relative w-full lg:w-1/2 flex flex-col justify-center"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1 }}
           >
-            <div className="lg:hidden absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center pointer-events-none">
-              <div className="absolute w-[200%] h-[200%] bg-radial-gradient from-rose-500/20 via-transparent to-transparent animate-pulse-slow" />
-            </div>
-
-            <h1 className="text-[8vw] sm:text-[6vw] md:text-[5vw] lg:text-[4vw] font-bold mb-2 lg:mb-4 leading-[1.1] text-center lg:text-left">
+            <h1 className="text-[8vw] sm:text-[6vw] md:text-[5vw] lg:text-[4vw] font-bold mb-2 lg:mb-4 leading-[1.1] text-center lg:text-left ">
               {["Create", "Your Own", "Salon Ecosystem"].map((word, i) => (
                 <motion.span
                   key={word}
@@ -148,7 +146,7 @@ const HomeHero = () => {
                   transition={{ delay: i * 0.2 + 1 }}
                   className="block bg-clip-text text-transparent"
                   style={{
-                    backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
+                    backgroundImage: `linear-gradient(45deg, var(--rose-gold-light), var(--rose-gold))`
                   }}
                 >
                   {word}
@@ -160,9 +158,9 @@ const HomeHero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 }}
-              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-gray-300 mb-4 lg:mb-8 max-w-full lg:max-w-[90%] text-center lg:text-left px-4 lg:px-0">
+              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-foreground mb-4 lg:mb-8 max-w-full lg:max-w-[90%] text-center lg:text-left px-4 lg:px-0">
               Transform your beauty business with our all-in-one platform integrating 
-              <span className="text-rose-300"> management, bookings, and community</span>. 
+              <span className="text-rose-gold-light"> management, bookings, and community</span>. 
               Elevate your salon to celestial heights.
             </motion.p>
 
@@ -171,11 +169,12 @@ const HomeHero = () => {
               whileTap={{ scale: 0.95 }}
               className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] rounded-full text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] font-semibold transition-all relative overflow-hidden group w-fit mx-auto lg:mx-0"
               style={{
-                background: `linear-gradient(45deg, ${roseGold}, ${lightRoseGold})`,
-                boxShadow: `0 0 40px ${roseGold}40`
+                background: `linear-gradient(45deg, var(--rose-gold), var(--rose-gold-light))`,
+                boxShadow: `0 0 40px var(--rose-gold-light)`,
+                color: 'var(--background)'
               }}>
               <span className="relative z-10">Launch Your Ecosystem</span>
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.button>
           </motion.div>
 
@@ -225,11 +224,12 @@ const HomeHero = () => {
             </motion.div>
           </div>
 
-          {/* ENHANCED MOBILE GALLERY */}
+          {/* MOBILE GALLERY */}
           {mobileview && (
-            <div className="lg:hidden w-full h-[45vh] overflow-hidden relative mt-8">
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20 pointer-events-none" />
-              
+            <div 
+              className="lg:hidden w-full h-[45vh] overflow-hidden relative mt-8"
+              style={{ backgroundColor: 'var(--background)' }}
+            >
               <motion.div 
                 className="h-full grid grid-cols-2 gap-4 px-4 overflow-y-auto pb-8 snap-y"
                 initial={{ opacity: 0 }}
@@ -263,7 +263,7 @@ const HomeHero = () => {
                     }}
                     whileHover={{ scale: 1.05 }}
                   >
-                    <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl shadow-rose-900/30">
+                    <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-lg shadow-rose-900/10">
                       <Image
                         src={img}
                         alt={imageLabels[i]}
@@ -273,20 +273,19 @@ const HomeHero = () => {
                         loading="eager"
                         quality={90}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
-                      <div className="absolute bottom-3 left-3 text-white text-sm font-bold backdrop-blur-sm px-3 py-1 rounded-full bg-black/30">
+                      <div className="absolute inset-0 bg-gradient-to-b from-foreground/10 via-transparent to-foreground/10" />
+                      <div 
+                        className="absolute bottom-3 left-3 text-background text-sm font-bold backdrop-blur-sm px-3 py-1 rounded-full"
+                        style={{ backgroundColor: 'var(--rose-gold)' }}
+                      >
                         {imageLabels[i]}
                       </div>
-                      <motion.div
-                        className="absolute inset-0 bg-rose-300/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                        initial={{ scale: 0.8 }}
-                        whileHover={{ scale: 1.2 }}
-                      />
                     </div>
                     <motion.div
-                      className="absolute inset-0 border border-rose-200/20 rounded-3xl pointer-events-none"
+                      className="absolute inset-0 border rounded-3xl pointer-events-none"
+                      style={{ borderColor: 'var(--rose-gold-light)' }}
                       animate={{
-                        borderColor: ['rgba(183, 110, 121, 0.2)', 'rgba(183, 110, 121, 0.4)', 'rgba(183, 110, 121, 0.2)'],
+                        opacity: [0.3, 0.6, 0.3],
                         transition: {
                           duration: 2,
                           repeat: Infinity,
@@ -298,7 +297,7 @@ const HomeHero = () => {
                 ))}
               </motion.div>
 
-              {/* ENHANCED SCROLL INDICATOR */}
+              {/* SCROLL INDICATOR */}
               <motion.div
                 className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30"
                 initial={{ opacity: 0 }}
@@ -308,7 +307,8 @@ const HomeHero = () => {
                 {[...Array(4)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="w-2.5 h-2.5 rounded-full bg-rose-300/90 backdrop-blur-sm"
+                    className="w-2.5 h-2.5 rounded-full backdrop-blur-sm"
+                    style={{ backgroundColor: 'var(--rose-gold)' }}
                     animate={{ 
                       scale: [1, 1.6, 1],
                       opacity: [0.6, 1, 0.6]
@@ -333,10 +333,6 @@ const HomeHero = () => {
           50% { opacity: 0.4; transform: scale(1.05); }
         }
 
-        .bg-radial-gradient {
-          background: radial-gradient(circle, currentColor 0%, transparent 70%);
-        }
-
         .animate-pulse-slow {
           animation: pulse-slow 6s ease-in-out infinite;
         }
@@ -359,7 +355,7 @@ const HomeHero = () => {
           transition: transform 0.5s ease;
           border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
 
         .gallery-image {
@@ -372,7 +368,7 @@ const HomeHero = () => {
         .gallery-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+          background: linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 50%);
           opacity: 0;
           transition: opacity 0.3s ease;
         }
@@ -385,7 +381,6 @@ const HomeHero = () => {
           opacity: 1;
         }
 
-        /* MOBILE SCROLL CONTAINER */
         .snap-y {
           scroll-snap-type: y mandatory;
         }

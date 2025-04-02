@@ -1,17 +1,65 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 
-const StellarNavbar = () => {
+interface NavLink {
+  name: string;
+  path: string;
+  icon: string;
+}
+
+interface LoginPopupProps {
+  onClose: () => void;
+}
+
+const LoginPopup: FC<LoginPopupProps> = ({ onClose }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-xl p-6 relative max-w-md w-full">
+      <button 
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+      >
+        &times;
+      </button>
+      <h2 className="text-2xl font-bold text-center mb-6 text-[#b76e79]">Login</h2>
+      <form className="space-y-4">
+        <div>
+          <label className="block text-gray-700 mb-2">Email</label>
+          <input 
+            type="email" 
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b76e79]"
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 mb-2">Password</label>
+          <input 
+            type="password" 
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b76e79]"
+          />
+        </div>
+        <button 
+          type="submit"
+          className="w-full bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white py-2 rounded-lg font-medium"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const StellarNavbar: FC = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   const dimRoseGold = '#f8e9eb';
@@ -30,12 +78,12 @@ const StellarNavbar = () => {
     };
   }, []);
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { name: 'Home', path: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { name: 'Products', path: '/products', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
     { name: 'Staff', path: '/services', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
     { name: 'Resource', path: '/about', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { name: 'Financ', path: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+    { name: 'Finance', path: '/contact', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   ];
 
   const navVariants = {
@@ -114,7 +162,6 @@ const StellarNavbar = () => {
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12 lg:h-14">
-            {/* Logo - Hidden tagline on mobile */}
             <Link href="/" passHref>
               <motion.div 
                 className="flex items-center space-x-3 group relative"
@@ -122,13 +169,18 @@ const StellarNavbar = () => {
                 onHoverEnd={() => !isMobile && setIsHovered(false)}
                 whileHover={!isMobile ? "hover" : undefined}
               >
-                <motion.img 
-                  src="/logo.png" 
-                  alt="Logo" 
-                  className="h-9 w-9 lg:h-10 lg:w-10 transition-all duration-300"
+                <motion.div 
+                  className="h-9 w-9 lg:h-10 lg:w-10 transition-all duration-300 relative"
                   whileHover={{ scale: isMobile ? 1 : 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                />
+                >
+                  <Image 
+                    src="/logo.png" 
+                    alt="Logo" 
+                    layout="fill"
+                    objectFit="contain"
+                  />
+                </motion.div>
                 <div className="flex flex-col relative">
                   <motion.span
                     className="text-2xl font-bold tracking-tight"
@@ -200,6 +252,7 @@ const StellarNavbar = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setShowLogin(true)}
                 className="px-6 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
                 style={{ 
                   background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
@@ -280,14 +333,14 @@ const StellarNavbar = () => {
                         variants={linkVariants}
                       >
                         <div className="inline-block p-4 rounded-2xl mb-3" style={{ backgroundColor: dimRoseGold }}>
-                          <Image 
-                            src="/logo.png" 
-                            alt="Logo" 
-                            width={48}
-                            height={48}
-                            className="object-contain"
-                            priority
-                          />
+                          <div className="w-12 h-12 relative">
+                            <Image 
+                              src="/logo.png" 
+                              alt="Logo" 
+                              layout="fill"
+                              objectFit="contain"
+                            />
+                          </div>
                         </div>
                         <h3 className="text-2xl font-bold" 
                             style={{ color: roseGold, fontFamily: "'Dancing Script', cursive" }}>
@@ -338,6 +391,10 @@ const StellarNavbar = () => {
                         <motion.button
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setShowLogin(true);
+                          }}
                           className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
                           style={{ 
                             background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
@@ -356,6 +413,29 @@ const StellarNavbar = () => {
           </AnimatePresence>
         </div>
       </motion.nav>
+
+      {/* Login Modal */}
+      <AnimatePresence>
+        {showLogin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowLogin(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LoginPopup onClose={() => setShowLogin(false)} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
