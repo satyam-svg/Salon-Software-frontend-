@@ -64,7 +64,7 @@ const LuxuryFooter = () => {
       color: "#b76e79",
       transition: {
         type: "spring",
-        stiffness: 400,
+        stiffness: 401,
         damping: 10
       }
     }
