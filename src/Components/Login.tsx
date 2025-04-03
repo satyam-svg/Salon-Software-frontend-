@@ -4,22 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers, FiX } from 'react-icons/fi'
 import { LiaGemSolid } from "react-icons/lia"
-import Signup from '@/Components/Signup' // Import your existing Signup component
+import { useLogin } from '@/context/LoginContext'
+import { useSignup } from '@/context/SignupContext'
 
-const LoginPopup = ({ onClose }: { onClose: () => void }) => {
+const LoginPopup = () => {
   const roseGold = '#b76e79'
   const lightRoseGold = '#d4a373'
-  
   const [activeTab, setActiveTab] = useState<'owner' | 'staff'>('owner')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSignup, setShowSignup] = useState(false)
+
+
+ // Hide when signupToggle is false
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     staffId: '',
     accessCode: ''
   })
-
+  const { loginToggle, setLoginToggle } = useLogin();
+  const { setSignupToggle} = useSignup();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -37,23 +40,12 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
       alert(activeTab === 'owner' 
         ? `Welcome back, Luxury Owner!` 
         : `Staff access granted!`)
-      onClose()
     }, 1500)
   }
 
-  const handleShowSignup = () => {
-    setShowSignup(true)
-  }
-
-  const handleSignupComplete = () => {
-    setShowSignup(false)
-    onClose()
-  }
-
-  if (showSignup) {
-    return <Signup onClose={handleSignupComplete} onLoginClick={() => setShowSignup(false)} />
-  }
-
+  
+  if (!loginToggle) return null;
+  
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div 
@@ -63,11 +55,17 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative"
         style={{ borderColor: `${roseGold}20` }}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors z-10"
+        {/* Close Button - Integrated with header */}
+        <button 
+          onClick={() => setLoginToggle(false)} 
+          className="absolute top-4 right-4 z-50 p-2 hover:bg-rose-50/50 rounded-full transition-colors"
         >
-          <FiX className="w-5 h-5" />
+          <motion.div
+            whileHover={{ rotate: 90, scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <FiX className="text-2xl text-rose-700/90 hover:text-rose-800" />
+          </motion.div>
         </button>
 
         {/* Rose Gold Header */}
@@ -258,7 +256,7 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
               <p>
                 New luxury partner?{' '}
                 <button
-                  onClick={handleShowSignup}
+                  onClick={()=>{setLoginToggle(false); setSignupToggle(true)}}
                   className="text-rose-600 hover:text-rose-700 font-medium focus:outline-none"
                 >
                   Join our elite circle

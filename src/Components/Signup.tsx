@@ -6,15 +6,17 @@ import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff 
 import { LiaGemSolid } from "react-icons/lia"
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
+import { useSignup } from '@/context/SignupContext'
+import { useLogin } from '@/context/LoginContext'
 
-const Signup = ({ onClose, onLoginClick }: { onClose: () => void, onLoginClick: () => void }) => {
+const Signup = () => {
   const roseGold = '#b76e79'
   const lightRoseGold = '#d4a373'
-  
+  const { setLoginToggle } = useLogin();
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
-
+  const { signupToggle, setSignupToggle } = useSignup();
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0]
@@ -39,10 +41,11 @@ const Signup = ({ onClose, onLoginClick }: { onClose: () => void, onLoginClick: 
     setTimeout(() => {
       setIsSubmitting(false)
       alert('Welcome to LuxeSalon Suite!')
-      onClose()
     }, 1500)
   }
-
+  if(!signupToggle){
+    return null;
+  }
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div 
@@ -57,7 +60,7 @@ const Signup = ({ onClose, onLoginClick }: { onClose: () => void, onLoginClick: 
         }}
       >
         <button
-          onClick={onClose}
+          onClick={()=>{setSignupToggle(false)}}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors z-10"
         >
           <FiX className="w-5 h-5" />
@@ -251,7 +254,7 @@ const Signup = ({ onClose, onLoginClick }: { onClose: () => void, onLoginClick: 
             <p>
               Already have an account?{' '}
               <button
-                onClick={onLoginClick}
+                onClick={()=>{setSignupToggle(false); setLoginToggle(true)}}
                 className="text-rose-600 hover:text-rose-700 font-medium focus:outline-none"
               >
                 Access your suite

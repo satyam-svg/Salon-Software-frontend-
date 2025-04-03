@@ -6,14 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import LoginPopup from './Login';
+import { useLogin } from '@/context/LoginContext';
+import { useSignup } from '@/context/SignupContext';
+import Signup from './Signup';
 interface NavLink {
   name: string;
   path: string;
   icon: string;
 }
-
-
-
 
 const StellarNavbar: FC = () => {
   const pathname = usePathname();
@@ -21,12 +21,11 @@ const StellarNavbar: FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  
+  const { signupToggle } = useSignup();
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   const dimRoseGold = '#f8e9eb';
-
+  const { loginToggle, setLoginToggle } = useLogin();
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -215,7 +214,7 @@ const StellarNavbar: FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowLogin(true)}
+                onClick={() => setLoginToggle(!loginToggle)}
                 className="px-6 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
                 style={{ 
                   background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
@@ -356,7 +355,7 @@ const StellarNavbar: FC = () => {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => {
                             setIsMenuOpen(false);
-                            setShowLogin(true);
+                            setLoginToggle(!loginToggle);
                           }}
                           className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
                           style={{ 
@@ -379,13 +378,12 @@ const StellarNavbar: FC = () => {
 
       {/* Login Modal */}
       <AnimatePresence>
-        {showLogin && (
+        {loginToggle && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setShowLogin(false)}
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }}
@@ -394,7 +392,25 @@ const StellarNavbar: FC = () => {
               className="w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <LoginPopup onClose={() => setShowLogin(false)} />
+              <LoginPopup />
+            </motion.div>
+          </motion.div>
+        )}
+        {signupToggle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Signup/>
             </motion.div>
           </motion.div>
         )}

@@ -3,6 +3,8 @@ import {  Zilla_Slab } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
+import { SignupProvider } from "@/context/SignupContext";
+import { LoginProvider } from "@/context/LoginContext";
 
 
 
@@ -24,12 +26,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <LoginProvider>
+      <SignupProvider>
       {/* Apply Zilla Slab globally */}
       <body className={`${zillaSlab.className} antialiased`}>
         <Navbar />
         {children}
         <Footer />
       </body>
+      </SignupProvider>
+      </LoginProvider>
     </html>
   );
 }
