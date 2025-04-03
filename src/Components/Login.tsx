@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers, FiX } from 'react-icons/fi'
-import { LiaGemSolid } from "react-icons/lia"
 import { useLogin } from '@/context/LoginContext'
 import { useSignup } from '@/context/SignupContext'
 
@@ -82,10 +81,9 @@ const LoginPopup = () => {
             className="relative z-10 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-2">
-              <LiaGemSolid className="text-rose-600/80 text-xl" />
-              <h1 className="text-2xl font-bold text-white">LuxeSalon Suite</h1>
+              <h1 className="text-2xl font-bold text-white">SalonSphere</h1>
             </div>
-            <p className="text-white/90 text-sm font-light">Premium Business Management</p>
+            <p className="text-white/90 text-sm font-light">Complete salon ecosystem</p>
           </motion.div>
           
           {/* Tabs with Icons */}

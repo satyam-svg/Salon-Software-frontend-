@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff } from 'react-icons/fi'
-import { LiaGemSolid } from "react-icons/lia"
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { useSignup } from '@/context/SignupContext'
@@ -80,10 +79,9 @@ const Signup = () => {
             className="relative z-10 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-1">
-              <LiaGemSolid className="text-rose-600/80 text-xl" />
-              <h1 className="text-xl font-bold text-white">Join LuxeSalon</h1>
+              <h1 className="text-xl font-bold text-white">SalonSphere</h1>
             </div>
-            <p className="text-white/90 text-xs font-light">Premium Business Partnership</p>
+            <p className="text-white/90 text-xs font-light">Complete Salon ecosystem</p>
           </motion.div>
         </div>
 
