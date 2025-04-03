@@ -2,15 +2,17 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers} from 'react-icons/fi'
-import { LiaGemSolid } from "react-icons/lia";
+import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers, FiX } from 'react-icons/fi'
+import { LiaGemSolid } from "react-icons/lia"
+import Signup from '@/Components/Signup' // Import your existing Signup component
 
 const LoginPopup = ({ onClose }: { onClose: () => void }) => {
-  const roseGold = '#b76e79';
-  const lightRoseGold = '#d4a373';
+  const roseGold = '#b76e79'
+  const lightRoseGold = '#d4a373'
   
   const [activeTab, setActiveTab] = useState<'owner' | 'staff'>('owner')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSignup, setShowSignup] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,8 +37,21 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
       alert(activeTab === 'owner' 
         ? `Welcome back, Luxury Owner!` 
         : `Staff access granted!`)
-        onClose(); // Close popup after successful login
+      onClose()
     }, 1500)
+  }
+
+  const handleShowSignup = () => {
+    setShowSignup(true)
+  }
+
+  const handleSignupComplete = () => {
+    setShowSignup(false)
+    onClose()
+  }
+
+  if (showSignup) {
+    return <Signup onClose={handleSignupComplete} onLoginClick={() => setShowSignup(false)} />
   }
 
   return (
@@ -45,9 +60,16 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 20 }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative"
         style={{ borderColor: `${roseGold}20` }}
       >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors z-10"
+        >
+          <FiX className="w-5 h-5" />
+        </button>
+
         {/* Rose Gold Header */}
         <div 
           className="relative h-40 flex flex-col items-center justify-end pb-6 px-8"
@@ -62,7 +84,7 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
             className="relative z-10 text-center"
           >
             <div className="flex items-center justify-center gap-2 mb-2">
-            <LiaGemSolid className="text-rose-600/80 text-xl" />
+              <LiaGemSolid className="text-rose-600/80 text-xl" />
               <h1 className="text-2xl font-bold text-white">LuxeSalon Suite</h1>
             </div>
             <p className="text-white/90 text-sm font-light">Premium Business Management</p>
@@ -204,7 +226,7 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
                 ${
                   isSubmitting
                     ? 'bg-rose-300 cursor-not-allowed'
-                    : `bg-gradient-to-r from-[${roseGold}] to-[${lightRoseGold}] hover:from-[${roseGold}] hover:to-[${roseGold}] text-white shadow-md hover:shadow-rose-200/50`
+                    : `text-white shadow-md hover:shadow-rose-200/50`
                 }`}
               style={{
                 background: isSubmitting 
@@ -235,9 +257,12 @@ const LoginPopup = ({ onClose }: { onClose: () => void }) => {
             {activeTab === 'owner' ? (
               <p>
                 New luxury partner?{' '}
-                <a href="#" className="text-rose-600 hover:text-rose-700 font-medium">
+                <button
+                  onClick={handleShowSignup}
+                  className="text-rose-600 hover:text-rose-700 font-medium focus:outline-none"
+                >
                   Join our elite circle
-                </a>
+                </button>
               </p>
             ) : (
               <p>
