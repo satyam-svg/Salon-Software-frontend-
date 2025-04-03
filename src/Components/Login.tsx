@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers, FiX } from 'react-icons/fi'
 import { useLogin } from '@/context/LoginContext'
 import { useSignup } from '@/context/SignupContext'
+import toast, { Toaster } from 'react-hot-toast'
 
 const LoginPopup = () => {
   const roseGold = '#b76e79'
@@ -55,16 +56,49 @@ const LoginPopup = () => {
         }
 
         console.log('Login successful:', data)
-        alert(`Welcome back, Luxury Owner!`)
+        toast.success('Welcome back, Luxury Owner!', {
+          style: {
+            background: '#f5f0f0',
+            color: '#b76e79',
+            border: '1px solid #e7d4d6'
+          },
+          iconTheme: {
+            primary: '#b76e79',
+            secondary: '#FFF'
+          }
+        })
         setLoginToggle(false)
       } else {
         // Staff login mock (replace with actual API call if needed)
         await new Promise(resolve => setTimeout(resolve, 1500))
-        alert(`Staff access granted!`)
+        toast.success('Staff access granted!', {
+          style: {
+            background: '#f5f0f0',
+            color: '#b76e79',
+            border: '1px solid #e7d4d6'
+          },
+          iconTheme: {
+            primary: '#b76e79',
+            secondary: '#FFF'
+          }
+        })
       }
-    } catch (error) {
-      console.error('Login error:', error)
-      alert(error || 'An error occurred during signup')
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+  
+      let errorMessage = 'An error occurred during Login';
+  
+      if (error instanceof Error) {
+          errorMessage = error.message;
+      }
+  
+      toast.error(errorMessage, {
+          style: {
+              background: '#fdf3f4',
+              color: '#c23b3b',
+              border: '1px solid #f5c6cb'
+          }
+      });  
     } finally {
       setIsSubmitting(false)
     }
@@ -74,6 +108,14 @@ const LoginPopup = () => {
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: 'font-medium text-sm',
+          duration: 3000,
+        }}
+      />
+      
       <motion.div 
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}

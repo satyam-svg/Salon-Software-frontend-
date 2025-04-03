@@ -1,12 +1,13 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useCallback } from 'react'
-import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff, FiPhone } from 'react-icons/fi'
+import { useState, useCallback, useEffect } from 'react'
+import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff, FiPhone, FiCheck, FiXCircle, FiCheckCircle } from 'react-icons/fi'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { useSignup } from '@/context/SignupContext'
 import { useLogin } from '@/context/LoginContext'
+import toast, { Toaster } from 'react-hot-toast'
 
 const Signup = () => {
   const roseGold = '#b76e79'
@@ -17,6 +18,37 @@ const Signup = () => {
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const { signupToggle, setSignupToggle } = useSignup();
+  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('')
+  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [enteredOtp, setEnteredOtp] = useState('')
+  const [otpSent, setOtpSent] = useState<number | null>(null)
+  const [passwordChecks, setPasswordChecks] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    specialChar: false
+  })
+  const [otpValid, setOtpValid] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    setPasswordChecks({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[@$!%*?&]/.test(password)
+    })
+  }, [password])
+
+  useEffect(() => {
+    if (enteredOtp.length === 6 && otpSent) {
+      setOtpValid(enteredOtp === otpSent.toString())
+    } else {
+      setOtpValid(null)
+    }
+  }, [enteredOtp, otpSent])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -36,25 +68,54 @@ const Signup = () => {
     onDrop,
   })
 
+  const validateContact = (contact: string) => /^\d{10}$/.test(contact)
+  const validatePassword = () => Object.values(passwordChecks).every(Boolean)
+
+  const handleSendOtp = async () => {
+    if (!email) {
+      toast.error('Please enter your email first')
+      return
+    }
+    
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('https://salon-backend-2.onrender.com/api/email/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: email }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Failed to send OTP')
+      
+      setOtpSent(data.otp)
+      setIsOtpSent(true)
+      toast.success('OTP sent to your email!')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP'
+      toast.error(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      if (!profileImageFile) {
-        throw new Error('Please upload a profile image')
-      }
-
       const formData = new FormData(e.currentTarget as HTMLFormElement)
       const fullname = formData.get('fullname') as string
-      const email = formData.get('email') as string
       const contact = formData.get('contact') as string
-      const password = formData.get('password') as string
       const confirmPassword = formData.get('confirmPassword') as string
 
-      if (password !== confirmPassword) {
-        throw new Error('Passwords do not match')
-      }
+      if (!isOtpSent) throw new Error('Please verify your email first')
+      if (!enteredOtp) throw new Error('Please enter the OTP')
+      if (!profileImageFile) throw new Error('Please upload a profile image')
+      if (!validateContact(contact)) throw new Error('Contact number must be 10 digits')
+      if (!validatePassword()) throw new Error('Please meet all password requirements')
+      if (password !== confirmPassword) throw new Error('Passwords do not match')
+      if (enteredOtp !== otpSent?.toString()) throw new Error('Invalid OTP')
 
       // Upload image to Cloudinary
       const cloudinaryFormData = new FormData()
@@ -66,15 +127,9 @@ const Signup = () => {
         { method: 'POST', body: cloudinaryFormData }
       )
 
-      if (!cloudinaryResponse.ok) {
-        const errorData = await cloudinaryResponse.json()
-        throw new Error(errorData.error.message || 'Image upload failed')
-      }
+      if (!cloudinaryResponse.ok) throw new Error('Image upload failed')
 
-      const cloudinaryData = await cloudinaryResponse.json()
-      const profileImgUrl = cloudinaryData.secure_url
-
-      // Submit user data to backend
+      // Create user account
       const userResponse = await fetch('https://salon-backend-2.onrender.com/api/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,22 +138,25 @@ const Signup = () => {
           email,
           contact,
           password,
-          profile_img: profileImgUrl
+          profile_img: (await cloudinaryResponse.json()).secure_url
         }),
       })
 
-      const userData = await userResponse.json()
-
       if (!userResponse.ok) {
-        throw new Error(userData.message || 'Signup failed')
+        const text = await userResponse.text()
+        throw new Error(text.startsWith('{') ? JSON.parse(text).message : text)
       }
 
-      console.log('Signup successful:', userData)
-      alert('Welcome to LuxeSalon Suite!')
+      toast.success('Welcome to LuxeSalon Suite!', {
+        style: { background: '#f5f0f0', color: '#b76e79', border: '1px solid #e7d4d6' },
+        duration: 4000
+      })
       setSignupToggle(false)
-    } catch (error) {
-      console.error('Signup error:', error)
-      alert(error || 'An error occurred during signup')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during signup'
+      toast.error(errorMessage, {
+        style: { background: '#fdf3f4', color: '#c23b3b', border: '1px solid #f5c6cb' }
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -108,6 +166,8 @@ const Signup = () => {
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Toaster position="top-center" toastOptions={{ className: 'font-medium text-sm', duration: 5000 }} />
+      
       <motion.div 
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -124,11 +184,7 @@ const Signup = () => {
 
         <div className="relative h-32 flex flex-col items-center justify-end pb-4 px-6"
           style={{ background: `linear-gradient(135deg, ${roseGold}, ${lightRoseGold})` }}>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="relative z-10 text-center"
-          >
+          <motion.div className="relative z-10 text-center">
             <h1 className="text-xl font-bold text-white">SalonSphere</h1>
             <p className="text-white/90 text-xs font-light">Complete Salon ecosystem</p>
           </motion.div>
@@ -176,17 +232,60 @@ const Signup = () => {
                   name="email"
                   type="email"
                   placeholder="Business Email"
-                  className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setIsOtpSent(false)
+                    setEnteredOtp('')
+                    setOtpSent(null)
+                  }}
+                  className="w-full pl-9 pr-24 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={isOtpSent || isSubmitting}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-medium disabled:opacity-50 px-2 py-1 rounded bg-rose-50"
+                >
+                  {isOtpSent ? 'OTP Sent' : 'Send OTP'}
+                </button>
               </div>
+
+              {isOtpSent && (
+                <div className="relative group">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Enter OTP"
+                    value={enteredOtp}
+                    onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
+                    required
+                  />
+                  {enteredOtp.length === 6 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      {otpValid ? (
+                        <FiCheckCircle className="text-green-500" />
+                      ) : (
+                        <FiXCircle className="text-red-500" />
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              )}
 
               <div className="relative group">
                 <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   name="contact"
-                  type="text"
-                  placeholder="Contact Number"
+                  type="tel"
+                  placeholder="10-digit Contact Number"
+                  pattern="\d{10}"
                   className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
                   required
                 />
@@ -197,9 +296,11 @@ const Signup = () => {
                 <input
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Password"
+                  placeholder="Create Password"
                   className="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <button
                   type="button"
@@ -208,6 +309,21 @@ const Signup = () => {
                 >
                   {showPassword ? <FiEyeOff size={14} /> : <FiEye size={14} />}
                 </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                {Object.entries(passwordChecks).map(([key, value]) => (
+                  <div key={key} className={`flex items-center ${value ? 'text-green-500' : 'text-red-500'}`}>
+                    {value ? <FiCheck className="mr-1" /> : <FiX className="mr-1" />}
+                    <span>
+                      {key === 'length' && '8+ characters'}
+                      {key === 'uppercase' && '1 uppercase'}
+                      {key === 'lowercase' && '1 lowercase'}
+                      {key === 'number' && '1 number'}
+                      {key === 'specialChar' && '1 special (@$!%*?&)'}
+                    </span>
+                  </div>
+                ))}
               </div>
 
               <div className="relative group">
@@ -237,11 +353,10 @@ const Signup = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              disabled={isSubmitting}
-              className="w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-1 text-white shadow-md mt-3 text-sm"
+              disabled={isSubmitting || (isOtpSent && !otpValid)}
+              className="w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-1 text-white shadow-md mt-3 text-sm disabled:opacity-70"
               style={{
                 background: `linear-gradient(135deg, ${roseGold}, ${lightRoseGold})`,
-                opacity: isSubmitting ? 0.7 : 1
               }}
             >
               {isSubmitting ? (
