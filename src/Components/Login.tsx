@@ -11,40 +11,67 @@ const LoginPopup = () => {
   const lightRoseGold = '#d4a373'
   const [activeTab, setActiveTab] = useState<'owner' | 'staff'>('owner')
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-
- // Hide when signupToggle is false
+  const [error, setError] = useState<string | null>(null)
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     staffId: '',
     accessCode: ''
   })
-  const { loginToggle, setLoginToggle } = useLogin();
-  const { setSignupToggle} = useSignup();
+
+  const { loginToggle, setLoginToggle } = useLogin()
+  const { setSignupToggle } = useSignup()
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
+    setError(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    setTimeout(() => {
+    setError(null)
+
+    try {
+      if (activeTab === 'owner') {
+        // Owner login API call
+        const response = await fetch('https://salon-backend-2.onrender.com/api/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          }),
+        })
+
+        const data = await response.json()
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed')
+        }
+
+        console.log('Login successful:', data)
+        alert(`Welcome back, Luxury Owner!`)
+        setLoginToggle(false)
+      } else {
+        // Staff login mock (replace with actual API call if needed)
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        alert(`Staff access granted!`)
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert(error || 'An error occurred during signup')
+    } finally {
       setIsSubmitting(false)
-      alert(activeTab === 'owner' 
-        ? `Welcome back, Luxury Owner!` 
-        : `Staff access granted!`)
-    }, 1500)
+    }
   }
 
-  
-  if (!loginToggle) return null;
-  
+  if (!loginToggle) return null
+
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div 
@@ -52,22 +79,16 @@ const LoginPopup = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 20 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative"
-        style={{ borderColor: `${roseGold}20` }}
       >
-        {/* Close Button - Integrated with header */}
         <button 
           onClick={() => setLoginToggle(false)} 
           className="absolute top-4 right-4 z-50 p-2 hover:bg-rose-50/50 rounded-full transition-colors"
         >
-          <motion.div
-            whileHover={{ rotate: 90, scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
+          <motion.div whileHover={{ rotate: 90, scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <FiX className="text-2xl text-rose-700/90 hover:text-rose-800" />
           </motion.div>
         </button>
 
-        {/* Rose Gold Header */}
         <div 
           className="relative h-40 flex flex-col items-center justify-end pb-6 px-8"
           style={{ background: `linear-gradient(135deg, ${roseGold}, ${lightRoseGold})` }}
@@ -86,7 +107,6 @@ const LoginPopup = () => {
             <p className="text-white/90 text-sm font-light">Complete salon ecosystem</p>
           </motion.div>
           
-          {/* Tabs with Icons */}
           <motion.div 
             className="flex gap-2 mt-6 relative bg-white/20 backdrop-blur-sm rounded-full p-1"
             style={{ borderColor: 'rgba(255,255,255,0.3)' }}
@@ -96,9 +116,7 @@ const LoginPopup = () => {
             <button
               onClick={() => setActiveTab('owner')}
               className={`relative px-6 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all z-10 ${
-                activeTab === 'owner'
-                  ? 'text-rose-800 bg-white/90 shadow-sm'
-                  : 'text-white hover:text-white/90'
+                activeTab === 'owner' ? 'text-rose-800 bg-white/90 shadow-sm' : 'text-white hover:text-white/90'
               }`}
             >
               <FiBriefcase className={activeTab === 'owner' ? 'text-rose-600' : 'text-white'} />
@@ -107,9 +125,7 @@ const LoginPopup = () => {
             <button
               onClick={() => setActiveTab('staff')}
               className={`relative px-6 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all z-10 ${
-                activeTab === 'staff'
-                  ? 'text-rose-800 bg-white/90 shadow-sm'
-                  : 'text-white hover:text-white/90'
+                activeTab === 'staff' ? 'text-rose-800 bg-white/90 shadow-sm' : 'text-white hover:text-white/90'
               }`}
             >
               <FiUsers className={activeTab === 'staff' ? 'text-rose-600' : 'text-white'} />
@@ -118,7 +134,6 @@ const LoginPopup = () => {
           </motion.div>
         </div>
 
-        {/* Form Area */}
         <div className="p-8 pt-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <AnimatePresence mode="wait">
@@ -201,6 +216,12 @@ const LoginPopup = () => {
               )}
             </AnimatePresence>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center mb-2">
+                {error}
+              </div>
+            )}
+
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 text-gray-600 text-sm cursor-pointer">
                 <input 
@@ -219,11 +240,7 @@ const LoginPopup = () => {
               whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
               className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all mt-4
-                ${
-                  isSubmitting
-                    ? 'bg-rose-300 cursor-not-allowed'
-                    : `text-white shadow-md hover:shadow-rose-200/50`
-                }`}
+                ${isSubmitting ? 'bg-rose-300 cursor-not-allowed' : 'text-white shadow-md hover:shadow-rose-200/50'}`}
               style={{
                 background: isSubmitting 
                   ? '#b76e79' 
@@ -231,17 +248,9 @@ const LoginPopup = () => {
               }}
             >
               <span className="font-medium">
-                {isSubmitting ? (
-                  'Authenticating...'
-                ) : (
-                  <>
-                    {activeTab === 'owner' ? 'Owner Access' : 'Staff Portal'}
-                  </>
-                )}
+                {isSubmitting ? 'Authenticating...' : activeTab === 'owner' ? 'Owner Access' : 'Staff Portal'}
               </span>
-              {!isSubmitting && (
-                <FiChevronRight className="text-white" />
-              )}
+              {!isSubmitting && <FiChevronRight className="text-white" />}
             </motion.button>
           </form>
 
@@ -254,7 +263,7 @@ const LoginPopup = () => {
               <p>
                 New luxury partner?{' '}
                 <button
-                  onClick={()=>{setLoginToggle(false); setSignupToggle(true)}}
+                  onClick={() => { setLoginToggle(false); setSignupToggle(true) }}
                   className="text-rose-600 hover:text-rose-700 font-medium focus:outline-none"
                 >
                   Join our elite circle
