@@ -9,6 +9,8 @@ import LoginPopup from './Login';
 import { useLogin } from '@/context/LoginContext';
 import { useSignup } from '@/context/SignupContext';
 import Signup from './Signup';
+import { useForgetPassword } from '@/context/ForgetpassContext';
+import ForgotPassword from './Forgotpasswrd';
 interface NavLink {
   name: string;
   path: string;
@@ -26,6 +28,7 @@ const StellarNavbar: FC = () => {
   const lightRoseGold = '#d4a373';
   const dimRoseGold = '#f8e9eb';
   const { loginToggle, setLoginToggle } = useLogin();
+  const { forgetPasswordToggle } = useForgetPassword();
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -411,6 +414,24 @@ const StellarNavbar: FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <Signup/>
+            </motion.div>
+          </motion.div>
+        )}
+        {forgetPasswordToggle && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ForgotPassword/>
             </motion.div>
           </motion.div>
         )}

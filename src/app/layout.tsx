@@ -5,6 +5,7 @@ import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
 import { SignupProvider } from "@/context/SignupContext";
 import { LoginProvider } from "@/context/LoginContext";
+import { ForgetPasswordProvider } from "@/context/ForgetpassContext";
 
 
 
@@ -28,12 +29,14 @@ export default function RootLayout({
     <html lang="en">
       <LoginProvider>
       <SignupProvider>
+      <ForgetPasswordProvider>
       {/* Apply Zilla Slab globally */}
       <body className={`${zillaSlab.className} antialiased`}>
         <Navbar />
         {children}
         <Footer />
       </body>
+      </ForgetPasswordProvider>
       </SignupProvider>
       </LoginProvider>
     </html>

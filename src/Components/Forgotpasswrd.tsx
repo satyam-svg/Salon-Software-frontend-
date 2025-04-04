@@ -3,8 +3,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { FiMail, FiLock, FiChevronRight, FiX, FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
-import { useLogin } from '@/context/LoginContext'
 import toast, { Toaster } from 'react-hot-toast'
+import { useForgetPassword } from '@/context/ForgetpassContext'
 
 const ForgotPassword = () => {
   const roseGold = '#b76e79'
@@ -16,8 +16,8 @@ const ForgotPassword = () => {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [sentOtp, setSentOtp] = useState<string | null>(null)
-
-  const { loginToggle, setLoginToggle } = useLogin()
+  const { setForgetPasswordToggle } = useForgetPassword();
+ 
 
   const handleSendOtp = async () => {
     if (!validateEmail(email)) {
@@ -78,7 +78,7 @@ const ForgotPassword = () => {
           border: '1px solid #e7d4d6'
         }
       })
-      setLoginToggle(false)
+      
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error('Password reset failed')
@@ -89,7 +89,7 @@ const ForgotPassword = () => {
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
-  if (!loginToggle) return null
+
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -108,7 +108,7 @@ const ForgotPassword = () => {
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative"
       >
         <button 
-          onClick={() => setLoginToggle(false)} 
+          onClick={() => setForgetPasswordToggle(false)} 
           className="absolute top-4 right-4 z-50 p-2 hover:bg-rose-50/50 rounded-full transition-colors"
         >
           <motion.div whileHover={{ rotate: 90, scale: 1.1 }} whileTap={{ scale: 0.9 }}>

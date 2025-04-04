@@ -6,6 +6,7 @@ import { FiMail, FiLock, FiUser, FiChevronRight, FiBriefcase, FiUsers, FiX } fro
 import { useLogin } from '@/context/LoginContext'
 import { useSignup } from '@/context/SignupContext'
 import toast, { Toaster } from 'react-hot-toast'
+import { useForgetPassword } from '@/context/ForgetpassContext'
 
 const LoginPopup = () => {
   const roseGold = '#b76e79'
@@ -23,7 +24,7 @@ const LoginPopup = () => {
 
   const { loginToggle, setLoginToggle } = useLogin()
   const { setSignupToggle } = useSignup()
-
+  const { setForgetPasswordToggle } = useForgetPassword();
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -286,7 +287,7 @@ const LoginPopup = () => {
                 />
                 Remember me
               </label>
-              <a href="#" className="text-rose-600 hover:text-rose-700 text-sm font-medium">
+              <a onClick={()=>{setLoginToggle(false); setForgetPasswordToggle(true)}} className="text-rose-600 hover:text-rose-700 text-sm font-medium">
                 Forgot {activeTab === 'owner' ? 'Password?' : 'Code?'}
               </a>
             </div>
