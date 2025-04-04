@@ -13,20 +13,23 @@ const DashboardPage = ({ params }: { params: { userId: string } }) => {
   const router = useRouter();
   const [hasSalon, setHasSalon] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState(5);
+  const [name,setname]=useState("");
 
   useEffect(() => {
     const checkSalonStatus = async () => {
       try {
         const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${params.userId}`);
         const data =  response.data;
+        setname(data.user.fullname)
         
-        if (data.salonId) {
+        
+        if (data.user.salonId) {
           setHasSalon(true);
           const timer = setInterval(() => {
             setCountdown((prev) => {
               if (prev === 1) {
                 clearInterval(timer);
-                router.push(`/dashboard/${params.userId}/homepage`);
+                router.push(`/${params.userId}/ownerhomepage`);
               }
               return prev - 1;
             });
@@ -93,7 +96,7 @@ const DashboardPage = ({ params }: { params: { userId: string } }) => {
               className="relative z-10"
             >
               <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-                Hi, User #{params.userId}!
+                Hi,  {name}!
               </h2>
               
               <div className="flex items-center justify-center gap-4 mb-6">

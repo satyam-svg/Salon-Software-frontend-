@@ -7,8 +7,9 @@ import { useLogin } from '@/context/LoginContext'
 import { useSignup } from '@/context/SignupContext'
 import toast, { Toaster } from 'react-hot-toast'
 import { useForgetPassword } from '@/context/ForgetpassContext'
-
+import { useRouter } from 'next/navigation'
 const LoginPopup = () => {
+  const router=useRouter();
   const roseGold = '#b76e79'
   const lightRoseGold = '#d4a373'
   const [activeTab, setActiveTab] = useState<'owner' | 'staff'>('owner')
@@ -65,6 +66,8 @@ const LoginPopup = () => {
         // CHANGES END
 
         console.log('Login successful:', data)
+        const userId=data.user.id;
+        router.push(`/${userId}`)
         toast.success('Welcome back, Luxury Owner!', {
           style: {
             background: '#f5f0f0',
@@ -280,13 +283,7 @@ const LoginPopup = () => {
             )}
 
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 text-gray-600 text-sm cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="rounded border-gray-300 text-rose-500 focus:ring-rose-200 h-4 w-4" 
-                />
-                Remember me
-              </label>
+    
               <a onClick={()=>{setLoginToggle(false); setForgetPasswordToggle(true)}} className="text-rose-600 hover:text-rose-700 text-sm font-medium cursor-pointer">
                 Forgot {activeTab === 'owner' ? 'Password?' : 'Code?'}
               </a>
