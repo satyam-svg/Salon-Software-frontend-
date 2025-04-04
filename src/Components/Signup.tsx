@@ -8,7 +8,6 @@ import Image from 'next/image'
 import { useSignup } from '@/context/SignupContext'
 import { useLogin } from '@/context/LoginContext'
 import toast, { Toaster } from 'react-hot-toast'
-
 const Signup = () => {
   const roseGold = '#b76e79'
   const lightRoseGold = '#d4a373'
@@ -19,6 +18,7 @@ const Signup = () => {
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const { signupToggle, setSignupToggle } = useSignup();
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [email, setEmail] = useState('')
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [enteredOtp, setEnteredOtp] = useState('')
@@ -146,6 +146,16 @@ const Signup = () => {
         const text = await userResponse.text()
         throw new Error(text.startsWith('{') ? JSON.parse(text).message : text)
       }
+
+      // CHANGES START HERE - Token handling
+      const responseData = await userResponse.json();
+      if (responseData.token) {
+        // Set cookie with token (using js-cookie or document.cookie)
+        document.cookie = `authToken=${responseData.token}; path=/; max-age=${60 * 60 * 24 * 7}`; // Expires in 7 days
+        // Alternatively using js-cookie:
+        // Cookies.set('authToken', responseData.token, { expires: 7, path: '/' });
+      }
+      // CHANGES END HERE
 
       toast.success('Welcome to LuxeSalon Suite!', {
         style: { background: '#f5f0f0', color: '#b76e79', border: '1px solid #e7d4d6' },
@@ -334,7 +344,22 @@ const Signup = () => {
                   placeholder="Confirm Password"
                   className="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
                   required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
+                {confirmPassword && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    {password === confirmPassword ? (
+                      <FiCheckCircle className="text-green-500" />
+                    ) : (
+                      <FiXCircle className="text-red-500" />
+                    )}
+                  </motion.div>
+                )}
               </div>
             </div>
 

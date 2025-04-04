@@ -55,6 +55,14 @@ const LoginPopup = () => {
           throw new Error(data.message || 'Login failed')
         }
 
+        // CHANGES START - Token handling for owner
+        if (data.token) {
+          document.cookie = `authToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax; secure`;
+          // Alternatively using js-cookie:
+          // Cookies.set('authToken', data.token, { expires: 7, path: '/', secure: true, sameSite: 'lax' });
+        }
+        // CHANGES END
+
         console.log('Login successful:', data)
         toast.success('Welcome back, Luxury Owner!', {
           style: {
@@ -71,6 +79,12 @@ const LoginPopup = () => {
       } else {
         // Staff login mock (replace with actual API call if needed)
         await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // CHANGES START - Mock token handling for staff
+        const mockStaffToken = 'staff-mock-token-12345'; // Replace with actual token from API
+        document.cookie = `staffAuthToken=${mockStaffToken}; path=/; max-age=${60 * 60 * 8}; SameSite=Lax; secure`; // 8 hour session
+        // CHANGES END
+
         toast.success('Staff access granted!', {
           style: {
             background: '#f5f0f0',
