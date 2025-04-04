@@ -1,27 +1,29 @@
-// src/app/(dashboard)/[userId]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaCrown, FaBusinessTime } from 'react-icons/fa';
 import LoadingSpinner from '@/Components/LoadingSpinner';
 import axios from 'axios';
 
-
-const DashboardPage = ({ params }: { params: { userId: string } }) => {
+const DashboardPage = () => {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [hasSalon, setHasSalon] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState(5);
-  const [name,setname]=useState("");
+  const [name, setName] = useState("");
+
+  // Extract userId from pathname like /1234 or /5678/anything
+  const userId = pathname.split('/')[1];
 
   useEffect(() => {
     const checkSalonStatus = async () => {
       try {
-        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${params.userId}`);
-        const data =  response.data;
-        setname(data.user.fullname)
-        
+        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        const data = response.data;
+        setName(data.user.fullname);
         
         if (data.user.salonId) {
           setHasSalon(true);
@@ -29,26 +31,29 @@ const DashboardPage = ({ params }: { params: { userId: string } }) => {
             setCountdown((prev) => {
               if (prev === 1) {
                 clearInterval(timer);
-                router.push(`/${params.userId}/ownerhomepage`);
+                router.push(`/${userId}/ownerhomepage`);
               }
               return prev - 1;
             });
           }, 1000);
         } else {
-          router.push(`/${params.userId}/salon/not_creted`);
+          router.push(`/${userId}/salon/not_created`);
         }
       } catch (error) {
         console.error('Error checking salon status:', error);
+        router.push('/error');
       }
     };
 
-    checkSalonStatus();
-  }, [params.userId, router]);
+    if (userId) {
+      checkSalonStatus();
+    }
+  }, [userId, router]);
 
   if (hasSalon === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fff9f7]">
-        <LoadingSpinner/>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -61,13 +66,11 @@ const DashboardPage = ({ params }: { params: { userId: string } }) => {
         transition={{ duration: 0.5 }}
         className="max-w-2xl w-full text-center"
       >
-        {/* Decorative Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20">
           <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#e8c4c0] rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
           <div className="absolute -bottom-40 left-0 w-96 h-96 bg-[#b76e79] rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
         </div>
 
-        {/* Main Content */}
         <motion.div
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
@@ -96,7 +99,7 @@ const DashboardPage = ({ params }: { params: { userId: string } }) => {
               className="relative z-10"
             >
               <h2 className="text-3xl font-semibold text-gray-800 mb-4">
-                Hi,  {name}!
+                Hi, {name}!
               </h2>
               
               <div className="flex items-center justify-center gap-4 mb-6">
