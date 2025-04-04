@@ -287,7 +287,7 @@ const LoginPopup = () => {
                 />
                 Remember me
               </label>
-              <a onClick={()=>{setLoginToggle(false); setForgetPasswordToggle(true)}} className="text-rose-600 hover:text-rose-700 text-sm font-medium">
+              <a onClick={()=>{setLoginToggle(false); setForgetPasswordToggle(true)}} className="text-rose-600 hover:text-rose-700 text-sm font-medium cursor-pointer">
                 Forgot {activeTab === 'owner' ? 'Password?' : 'Code?'}
               </a>
             </div>

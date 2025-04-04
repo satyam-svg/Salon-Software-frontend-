@@ -2,12 +2,13 @@
 
 import { motion } from 'framer-motion'
 import { useState, useCallback, useEffect } from 'react'
-import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff, FiPhone, FiCheck, FiXCircle, FiCheckCircle } from 'react-icons/fi'
+import { FiMail, FiLock, FiUser, FiChevronRight, FiX, FiCamera, FiEye, FiEyeOff, FiPhone, FiCheck, FiXCircle, FiCheckCircle, FiRotateCw } from 'react-icons/fi'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { useSignup } from '@/context/SignupContext'
 import { useLogin } from '@/context/LoginContext'
 import toast, { Toaster } from 'react-hot-toast'
+
 const Signup = () => {
   const roseGold = '#b76e79'
   const lightRoseGold = '#d4a373'
@@ -31,6 +32,7 @@ const Signup = () => {
     specialChar: false
   })
   const [otpValid, setOtpValid] = useState<boolean | null>(null)
+  const [otpResendTimer, setOtpResendTimer] = useState(0)
 
   useEffect(() => {
     setPasswordChecks({
@@ -49,6 +51,16 @@ const Signup = () => {
       setOtpValid(null)
     }
   }, [enteredOtp, otpSent])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (otpResendTimer > 0) {
+      interval = setInterval(() => {
+        setOtpResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpResendTimer]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -71,7 +83,7 @@ const Signup = () => {
   const validateContact = (contact: string) => /^\d{10}$/.test(contact)
   const validatePassword = () => Object.values(passwordChecks).every(Boolean)
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (isResend = false) => {
     if (!email) {
       toast.error('Please enter your email first')
       return
@@ -90,13 +102,20 @@ const Signup = () => {
       
       setOtpSent(data.otp)
       setIsOtpSent(true)
-      toast.success('OTP sent to your email!')
+      setEnteredOtp('')
+      setOtpValid(null)
+      setOtpResendTimer(60)
+      toast.success(isResend ? 'New OTP sent to your email!' : 'OTP sent to your email!')
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP'
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleResendOtp = async () => {
+    await handleSendOtp(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,15 +166,11 @@ const Signup = () => {
         throw new Error(text.startsWith('{') ? JSON.parse(text).message : text)
       }
 
-      // CHANGES START HERE - Token handling
+      // Token handling
       const responseData = await userResponse.json();
       if (responseData.token) {
-        // Set cookie with token (using js-cookie or document.cookie)
-        document.cookie = `authToken=${responseData.token}; path=/; max-age=${60 * 60 * 24 * 7}`; // Expires in 7 days
-        // Alternatively using js-cookie:
-        // Cookies.set('authToken', responseData.token, { expires: 7, path: '/' });
+        document.cookie = `authToken=${responseData.token}; path=/; max-age=${60 * 60 * 24 * 7}`;
       }
-      // CHANGES END HERE
 
       toast.success('Welcome to LuxeSalon Suite!', {
         style: { background: '#f5f0f0', color: '#b76e79', border: '1px solid #e7d4d6' },
@@ -254,7 +269,7 @@ const Signup = () => {
                 />
                 <button
                   type="button"
-                  onClick={handleSendOtp}
+                  onClick={() => handleSendOtp()}
                   disabled={isOtpSent || isSubmitting}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-medium disabled:opacity-50 px-2 py-1 rounded bg-rose-50"
                 >
@@ -263,29 +278,48 @@ const Signup = () => {
               </div>
 
               {isOtpSent && (
-                <div className="relative group">
-                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter OTP"
-                    value={enteredOtp}
-                    onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
-                    required
-                  />
-                  {enteredOtp.length === 6 && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                <div className="space-y-2">
+                  <div className="relative group">
+                    <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Enter OTP"
+                      value={enteredOtp}
+                      onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full pl-9 pr-10 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
+                      required
+                    />
+                    {enteredOtp.length === 6 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                      >
+                        {otpValid ? (
+                          <FiCheckCircle className="text-green-500" />
+                        ) : (
+                          <FiXCircle className="text-red-500" />
+                        )}
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={otpResendTimer > 0 || isSubmitting}
+                      className="text-xs text-rose-600 flex items-center gap-1 disabled:opacity-50"
                     >
-                      {otpValid ? (
-                        <FiCheckCircle className="text-green-500" />
+                      {otpResendTimer > 0 ? (
+                        `Resend OTP in ${otpResendTimer}s`
                       ) : (
-                        <FiXCircle className="text-red-500" />
+                        <>
+                          <FiRotateCw size={12} />
+                          Resend OTP
+                        </>
                       )}
-                    </motion.div>
-                  )}
+                    </button>
+                  </div>
                 </div>
               )}
 
