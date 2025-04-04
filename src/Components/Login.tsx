@@ -38,7 +38,7 @@ const LoginPopup = () => {
     try {
       if (activeTab === 'owner') {
         // Owner login API call
-        const response = await fetch('https://salon-backend-2.onrender.com/api/users/login', {
+        const response = await fetch('https://salon-backend-3.onrender.com/api/users/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
