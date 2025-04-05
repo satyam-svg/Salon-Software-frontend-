@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaPlus } from 'react-icons/fa';
 
 const NoSalonPage = () => {
@@ -28,6 +29,25 @@ const NoSalonPage = () => {
     }
   };
 
+  const buttonVariants = {
+    rest: { scale: 1 },
+    hover: {
+      scale: 1.05,
+      boxShadow: "0 20px 40px -10px rgba(183, 110, 121, 0.3)",
+      transition: {
+        type: "spring",
+        stiffness: 300
+      }
+    },
+    tap: { scale: 0.95 }
+  };
+   const router = useRouter();
+   const pathname = usePathname();
+   
+
+   
+     // Extract userId from pathname like /1234 or /5678/anything
+  const userId = pathname.split('/')[1];
   return (
     <div className="min-h-screen flex flex-col">
       <motion.main 
@@ -87,12 +107,13 @@ const NoSalonPage = () => {
 
             <motion.div variants={itemVariants} className="mb-20">
               <motion.button
-                className="relative bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white px-8 py-4 md:px-12 md:py-5 rounded-full text-lg font-medium flex items-center gap-3 mx-auto transform transition-all duration-300 overflow-hidden group"
-                whileHover={{ 
-                  scale: 1.05, 
-                  boxShadow: "0 20px 40px -10px rgba(183, 110, 121, 0.3)"
-                }}
-                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white px-12 py-5 rounded-full text-lg font-medium flex items-center gap-3 mx-auto transform transition-all duration-300"
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+                initial="rest"
+                animate="rest"
+                onClick={()=>{router.push(`/${userId}/salon/creating`)}}
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-[#d8a5a5] to-[#b76e79] opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
                 <FaPlus className="text-xl relative z-10" />
