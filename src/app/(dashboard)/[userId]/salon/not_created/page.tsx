@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaPlus } from 'react-icons/fa';
 
 const NoSalonPage = () => {
@@ -40,7 +41,13 @@ const NoSalonPage = () => {
     },
     tap: { scale: 0.95 }
   };
+   const router = useRouter();
+   const pathname = usePathname();
+   
 
+   
+     // Extract userId from pathname like /1234 or /5678/anything
+  const userId = pathname.split('/')[1];
   return (
     <div className="min-h-screen flex flex-col">
       <motion.main 
@@ -99,6 +106,7 @@ const NoSalonPage = () => {
                 whileTap="tap"
                 initial="rest"
                 animate="rest"
+                onClick={()=>{router.push(`/${userId}/salon/creating`)}}
               >
                 <FaPlus className="text-xl" />
                 Create Your Salon Now
