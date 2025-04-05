@@ -110,10 +110,10 @@ const CreateSalonForm = () => {
         {/* Progress Tracker - Enhanced for Mobile */}
         <div className="mb-12 lg:mb-16 px-4 sm:px-8">
           <div className="relative">
-            <div className="absolute top-1/2 left-0 right-0 h-2 sm:h-3 bg-gray-100 rounded-full -z-10" />
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-100 rounded-full -z-10" />
             
             <motion.div
-              className="absolute top-1/2 left-0 h-2 sm:h-3 rounded-full bg-gradient-to-r from-[#FF9A8B] via-[#FF6B95] via-[#FF8E53] via-[#FFD166] via-[#06D6A0] to-[#118AB2]"
+              className="absolute top-1/4 left-0 h-2 sm:h-3 rounded-full bg-gradient-to-r from-[#FF9A8B] via-[#FF6B95] via-[#FF8E53] via-[#FFD166] via-[#06D6A0] to-[#118AB2]"
               animate={{ width: `${calculateProgress()}%` }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             />
