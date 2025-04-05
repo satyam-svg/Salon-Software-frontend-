@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import jwtDecode from "jsonwebtoken";
+import { decode } from "jsonwebtoken"; // ✅ Named import
 import FinancialManagement from "@/Components/FinancialManagement";
 import HomeHero from "@/Components/HomeHero";
 import ProductsSection from "@/Components/ProductsSection";
 import ResourceManagement from "@/Components/ResourceManagement";
 import StaffManagement from "@/Components/StaffManagement";
+import LoadingScreen from "@/Components/LoadingSpinner";
 
 // Define the shape of your token payload
 interface DecodedToken {
@@ -17,8 +18,14 @@ interface DecodedToken {
 
 export default function Home() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true); // default to true
 
   useEffect(() => {
+    // Simulate 3s loading delay
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+
     if (typeof document !== "undefined") {
       const cookies = document.cookie;
       const authToken = cookies
@@ -28,7 +35,7 @@ export default function Home() {
 
       if (authToken) {
         try {
-          const decoded = jwtDecode.decode(authToken) as DecodedToken;
+          const decoded = decode(authToken) as DecodedToken;
 
           if (decoded?.id) {
             router.push(`/${decoded.id}`);
@@ -38,7 +45,13 @@ export default function Home() {
         }
       }
     }
+
+    return () => clearTimeout(timeout);
   }, [router]);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
