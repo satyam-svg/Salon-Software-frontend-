@@ -10,6 +10,7 @@ import axios from 'axios';
 const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
+  
 
   const [hasSalon, setHasSalon] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState(5);
