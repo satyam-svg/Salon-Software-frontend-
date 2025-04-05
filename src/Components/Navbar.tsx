@@ -3,32 +3,100 @@
 import { useState, useEffect, FC } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import {jwtDecode} from 'jwt-decode';
 import LoginPopup from './Login';
 import { useLogin } from '@/context/LoginContext';
 import { useSignup } from '@/context/SignupContext';
 import Signup from './Signup';
 import { useForgetPassword } from '@/context/ForgetpassContext';
 import ForgotPassword from './Forgotpasswrd';
+
 interface NavLink {
   name: string;
   path: string;
   icon: string;
 }
 
+interface DecodedToken {
+  id: string;
+}
+
 const StellarNavbar: FC = () => {
+  const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userData, setUserData] = useState({ fullname: '', profile_img: '' });
+  const [hasSalon, setHasSalon] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
   const { signupToggle } = useSignup();
   const roseGold = '#b76e79';
   const lightRoseGold = '#d4a373';
   const dimRoseGold = '#f8e9eb';
   const { loginToggle, setLoginToggle } = useLogin();
   const { forgetPasswordToggle } = useForgetPassword();
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const authToken = Cookies.get('authToken');
+      if (authToken) {
+        try {
+          const decoded = jwtDecode<DecodedToken>(authToken);
+          const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${decoded.id}`);
+          console.log(decoded.id)
+          const { fullname, profile_img } = response.data.user;
+          setUserData({ fullname, profile_img });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+
+  useEffect(() => {
+    const checkSalonStatus = async () => {
+      const authToken = Cookies.get('authToken');
+      if (!authToken) return;
+
+      try {
+        const decoded = jwtDecode<DecodedToken>(authToken);
+        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${decoded.id}`);
+        const data = response.data;
+        
+        if (data.user.salonId) {
+          setHasSalon(true);
+          const timer = setInterval(() => {
+            setCountdown((prev) => {
+              if (prev === 1) {
+                clearInterval(timer);
+                router.push(`/${decoded.id}/ownerhomepage`);
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        } else {
+          router.push(`/${decoded.id}/salon/not_created`);
+        }
+      } catch (error) {
+        console.error('Error checking salon status:', error);
+        router.push('/error');
+      }
+    };
+
+    checkSalonStatus();
+  }, [router]);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -42,6 +110,13 @@ const StellarNavbar: FC = () => {
       window.removeEventListener('resize', checkMobile);
     };
   }, []);
+
+  const handleLogout = () => {
+    Cookies.remove('authToken');
+    setUserData({ fullname: '', profile_img: '' });
+    setIsProfileOpen(false);
+    router.push('/');
+  };
 
   const navLinks: NavLink[] = [
     { name: 'Home', path: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -189,7 +264,6 @@ const StellarNavbar: FC = () => {
               </motion.div>
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
               {navLinks.map((link) => (
                 <motion.div key={link.name} variants={linkVariants}>
@@ -214,21 +288,78 @@ const StellarNavbar: FC = () => {
                   </Link>
                 </motion.div>
               ))}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setLoginToggle(!loginToggle)}
-                className="px-6 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
-                style={{ 
-                  background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
-                  color: 'white'
-                }}
-              >
-                Get Started
-              </motion.button>
+              
+              {userData.fullname ? (
+                <motion.div className="relative" whileHover={{ scale: 1.05 }}>
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-3 group"
+                  >
+                    <div className="relative h-9 w-9 rounded-full overflow-hidden border-2" style={{ borderColor: roseGold }}>
+                      <Image
+                        src={userData.profile_img || '/default-profile.png'}
+                        alt="Profile"
+                        layout="fill"
+                        objectFit="cover"
+                      />
+                    </div>
+                    <span className="text-gray-700 font-medium" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                      {userData.fullname}
+                    </span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2"
+                        style={{ border: `1px solid ${dimRoseGold}` }}
+                      >
+                        <Link href="/profile" passHref>
+                          <motion.div
+                            className="px-4 py-3 hover:bg-rose-50 cursor-pointer"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span className="text-gray-700">Profile</span>
+                          </motion.div>
+                        </Link>
+                        <Link href="/dashboard" passHref>
+                          <motion.div
+                            className="px-4 py-3 hover:bg-rose-50 cursor-pointer"
+                            whileHover={{ x: 5 }}
+                          >
+                            <span className="text-gray-700">Dashboard</span>
+                          </motion.div>
+                        </Link>
+                        <motion.div
+                          className="px-4 py-3 hover:bg-rose-50 cursor-pointer"
+                          onClick={handleLogout}
+                          whileHover={{ x: 5 }}
+                        >
+                          <span className="text-rose-700">Logout</span>
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setLoginToggle(!loginToggle)}
+                  className="px-6 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
+                  style={{ 
+                    background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
+                    color: 'white'
+                  }}
+                >
+                  Get Started
+                </motion.button>
+              )}
             </div>
 
-            {/* Mobile Menu Button */}
             <motion.button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-2 rounded-lg focus:outline-none"
@@ -258,7 +389,6 @@ const StellarNavbar: FC = () => {
             </motion.button>
           </div>
 
-          {/* Enhanced Mobile Menu */}
           <AnimatePresence>
             {isMenuOpen && (
               <>
@@ -353,22 +483,64 @@ const StellarNavbar: FC = () => {
                         exit="hidden"
                         className="mt-6"
                       >
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            setLoginToggle(!loginToggle);
-                          }}
-                          className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
-                          style={{ 
-                            background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
-                            color: 'white',
-                            boxShadow: `0 4px 24px ${roseGold}30`
-                          }}
-                        >
-                          Get Started
-                        </motion.button>
+                        {userData.fullname ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center space-x-3 p-3">
+                              <div className="relative h-10 w-10 rounded-full overflow-hidden border-2" style={{ borderColor: roseGold }}>
+                                <Image
+                                  src={userData.profile_img || '/default-profile.png'}
+                                  alt="Profile"
+                                  layout="fill"
+                                  objectFit="cover"
+                                />
+                              </div>
+                              <span className="text-gray-700 font-medium">{userData.fullname}</span>
+                            </div>
+                            {hasSalon && (
+                              <div className="text-center text-sm text-rose-700">
+                                Redirecting to dashboard in {countdown}...
+                              </div>
+                            )}
+                            <Link href="/profile" passHref>
+                              <motion.div
+                                className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
+                                style={{ 
+                                  backgroundColor: dimRoseGold,
+                                  color: roseGold
+                                }}
+                              >
+                                Profile
+                              </motion.div>
+                            </Link>
+                            <motion.button
+                              onClick={handleLogout}
+                              className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
+                              style={{ 
+                                background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
+                                color: 'white'
+                              }}
+                            >
+                              Logout
+                            </motion.button>
+                          </div>
+                        ) : (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              setIsMenuOpen(false);
+                              setLoginToggle(!loginToggle);
+                            }}
+                            className="w-full px-5 py-3 rounded-xl text-base font-semibold transition-all"
+                            style={{ 
+                              background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
+                              color: 'white',
+                              boxShadow: `0 4px 24px ${roseGold}30`
+                            }}
+                          >
+                            Get Started
+                          </motion.button>
+                        )}
                       </motion.div>
                     </div>
                   </div>
@@ -379,7 +551,6 @@ const StellarNavbar: FC = () => {
         </div>
       </motion.nav>
 
-      {/* Login Modal */}
       <AnimatePresence>
         {loginToggle && (
           <motion.div

@@ -60,45 +60,52 @@ const NoSalonPage = () => {
         initial="hidden"
         animate="visible"
       >
-        {/* Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-32 overflow-hidden">
-          <svg 
-            className="absolute top-0 left-0 w-full h-full"
-            viewBox="0 0 1200 120" 
-            preserveAspectRatio="none"
-          >
-            <path 
-              d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" 
-              className="fill-[#b76e79] opacity-20"
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-[#b76e79] rounded-full opacity-10"
+              style={{
+                width: Math.random() * 50 + 20 + 'px',
+                height: Math.random() * 50 + 20 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%'
+              }}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.1, 0.2, 0.1]
+              }}
+              transition={{
+                duration: 4 + Math.random() * 4,
+                repeat: Infinity,
+                delay: Math.random() * 2
+              }}
             />
-          </svg>
+          ))}
         </div>
-
-        <div className="absolute top-20 right-10 w-32 h-32 rounded-full bg-[#e8c4c0] opacity-20 mix-blend-multiply filter blur-xl animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-40 h-40 rounded-full bg-[#b76e79] opacity-20 mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div 
-            className="max-w-2xl mx-auto text-center"
+            className="max-w-4xl mx-auto text-center"
             variants={containerVariants}
           >
-
             <motion.h1 
-              className="text-5xl font-playfair text-[#b76e79] mb-6"
+              className="text-5xl md:text-6xl font-playfair text-[#b76e79] mb-6"
               style={{ fontFamily: "'Dancing Script', cursive" }}
               variants={itemVariants}
             >
-              Your Salon Journey Begins Here
+              Craft Your Digital Salon
             </motion.h1>
 
             <motion.p 
               className="text-xl text-gray-600 mb-12 leading-relaxed max-w-xl mx-auto"
               variants={itemVariants}
             >
-              It looks like you haven not set up your salon yet. Let us create a beautiful online presence that matches your brand is elegance.
+              Transform your beauty business with a stunning online presence that wows clients and boosts bookings.
             </motion.p>
 
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants} className="mb-20">
               <motion.button
                 className="bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white px-12 py-5 rounded-full text-lg font-medium flex items-center gap-3 mx-auto transform transition-all duration-300"
                 variants={buttonVariants}
@@ -108,14 +115,19 @@ const NoSalonPage = () => {
                 animate="rest"
                 onClick={()=>{router.push(`/${userId}/salon/creating`)}}
               >
-                <FaPlus className="text-xl" />
-                Create Your Salon Now
+                <span className="absolute inset-0 bg-gradient-to-r from-[#d8a5a5] to-[#b76e79] opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+                <FaPlus className="text-xl relative z-10" />
+                <span className="relative z-10">Create My Salon Now</span>
               </motion.button>
             </motion.div>
+
+            
+
+            {/* Animated Phone Mockup (Pure CSS) */}
           </motion.div>
         </div>
 
-        {/* Floating decorative elements */}
+        {/* Floating Decorations */}
         <motion.div 
           className="absolute top-1/3 left-5 text-[#b76e79] text-2xl opacity-70"
           animate={{
@@ -131,11 +143,13 @@ const NoSalonPage = () => {
         >
           ❀
         </motion.div>
+
         <motion.div 
           className="absolute bottom-20 right-10 text-[#e8c4c0] text-4xl"
           animate={{
             y: [0, -10, 0],
-            rotate: [0, 5, -5, 0]
+            rotate: [0, 5, -5, 0],
+            scale: [1, 1.2, 1]
           }}
           transition={{
             duration: 4,
