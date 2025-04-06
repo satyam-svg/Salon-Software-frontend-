@@ -1,9 +1,11 @@
 'use client';
-import { useState } from 'react';
-import { FaCloudUploadAlt, FaSave } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
-import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { FiClock, FiUploadCloud, FiX, FiScissors, FiSmartphone, FiMail } from 'react-icons/fi';
+import { useDropzone } from 'react-dropzone';
+import { useState, useEffect, useMemo } from 'react';
+import { defaultColors, ColorTheme } from '../../theme';
+import { staggerItems, fadeInUp, scaleUp, slideIn } from '../../animation';
 
 interface FormData {
   salon_name: string;
@@ -11,342 +13,315 @@ interface FormData {
   opening_time: string;
   contact_email: string;
   contact_number: string;
-  branch_url: string;
-  salon_img_url: string;
+  salon_img: File | string | null;
 }
 
-export default function StepOne({ step, onNextStep }: { step: number; onNextStep: () => void }) {
-  const pathname = usePathname();
-  const userId = pathname.split('/')[1];
-  const [activeField, setActiveField] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    salon_name: '',
-    salon_tag: '',
-    opening_time: '',
-    contact_email: '',
-    contact_number: '',
-    branch_url: '',
-    salon_img_url: ''
+interface StepOneProps {
+  setFormData: (data: FormData) => void;
+  formData: Partial<FormData>;
+  colors?: Partial<ColorTheme>;
+}
+
+export default function StepOne({ setFormData, formData = {}, colors = {} }: StepOneProps) {
+  const mergedColors = useMemo(() => ({ ...defaultColors, ...colors }), [colors]);
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormData>();
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (formData) {
+      const fields = ['salon_name', 'salon_tag', 'opening_time', 'contact_email', 'contact_number'];
+      fields.forEach(field => {
+        if (formData[field as keyof FormData]) {
+          setValue(field as keyof FormData, formData[field as keyof FormData]!);
+        }
+      });
+
+      if (formData.salon_img) {
+        if (typeof formData.salon_img === 'string') {
+          setPreview(formData.salon_img);
+        } else if (formData.salon_img instanceof File) {
+          setPreview(URL.createObjectURL(formData.salon_img));
+        }
+      }
+    }
+  }, [formData, setValue]);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { 'image/*': ['.jpeg', '.jpg', '.png'] },
+    maxFiles: 1,
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        setValue('salon_img', file);
+        setFormData({ ...formData, salon_img: file });
+        setPreview(URL.createObjectURL(file));
+      }
+    }
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const onSubmit = (data: FormData) => {
+    setFormData({ ...formData, ...data });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-    }
-  };
-
-  const uploadImageToCloudinary = async () => {
-    if (!imageFile) return '';
-
-    const cloudinaryFormData = new FormData();
-    cloudinaryFormData.append('file', imageFile);
-    cloudinaryFormData.append('upload_preset', 'salon_preset');
-
-    try {
-      const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
-        { method: 'POST', body: cloudinaryFormData }
-      );
-
-      if (!response.ok) throw new Error('Image upload failed');
-      const data = await response.json();
-      return data.secure_url;
-    } catch (error) {
-      console.error('Cloudinary upload error:', error);
-      return '';
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const imageUrl = await uploadImageToCloudinary();
-      const finalFormData = {
-        ...formData,
-        salon_img_url: imageUrl || formData.salon_img_url,
-        user_id: userId
-      };
-
-      const response = await axios.post(
-        'https://salon-backend-3.onrender.com/api/salon/create',
-        finalFormData
-      );
-
-      if (response.status === 201) {
-        if (imagePreview) URL.revokeObjectURL(imagePreview);
-        onNextStep();
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('Error creating salon. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Animation variants
-  const floatingLabelVariants = {
-    active: { 
-      y: -20, 
-      scale: 0.8,
-      color: "#FF72B6",
-      transition: { type: 'spring', stiffness: 300 }
-    },
-    inactive: { 
-      y: 0, 
-      scale: 1, 
-      color: "#8B8D9D",
-      transition: { duration: 0.2 }
-    }
-  };
-
-  const inputContainerVariants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.95,
-      transition: { duration: 0.3 }
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { 
-        type: "spring",
-        stiffness: 120,
-        damping: 15
-      }
-    },
-    hover: { 
-      y: -3,
-      boxShadow: "0 25px 50px -12px rgba(255, 114, 182, 0.15)",
-    }
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        when: "beforeChildren"
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 120,
-        damping: 12
-      }
-    }
+  const removeImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPreview(null);
+    setValue('salon_img', null);
+    setFormData({ ...formData, salon_img: null });
   };
 
   return (
-    <AnimatePresence>
-      {step === 1 && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.4 }}
-          className="relative bg-gradient-to-br from-[#F8F9FA] to-[#E9ECEF] p-8 rounded-3xl shadow-lg max-w-4xl mx-auto border border-gray-200 overflow-hidden"
+    <motion.form 
+      onSubmit={handleSubmit(onSubmit)}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="max-w-[95%] md:max-w-2xl mx-auto p-4 md:p-8 bg-white rounded-3xl shadow-2xl relative overflow-hidden"
+      style={{ '--primary': mergedColors.primary, '--secondary': mergedColors.secondary } as React.CSSProperties}
+    >
+      {/* Animated Background Elements */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="absolute -top-32 -right-32 w-64 h-64 bg-[color:var(--primary)]/10 rounded-full mix-blend-multiply"
+      />
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="absolute -bottom-48 -left-48 w-96 h-96 bg-[color:var(--secondary)]/10 rounded-full mix-blend-multiply"
+      />
+
+      {/* Form Header */}
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        className="mb-8 md:mb-12 text-center relative z-10"
+      >
+        <motion.div
+          initial={{ rotate: -45, scale: 0 }}
+          animate={{ rotate: 0, scale: 1 }}
+          className="inline-block p-4 md:p-6 rounded-2xl bg-[color:var(--primary)]/10 mb-4 md:mb-6"
         >
-          {/* Decorative elements */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            <div className="absolute w-72 h-72 bg-[#FF72B6] blur-[100px] -top-20 -left-20 opacity-10"></div>
-            <div className="absolute w-72 h-72 bg-[#7B61FF] blur-[100px] -bottom-20 -right-20 opacity-10"></div>
-          </div>
+          <FiScissors className="text-3xl md:text-4xl" style={{ color: mergedColors.primary }} />
+        </motion.div>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent">
+          Create Your Salon
+        </h1>
+        <p className="text-sm md:text-base text-gray-500">Craft your unique salon identity</p>
+      </motion.div>
 
-          <div className="relative z-10">
-            <motion.div
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-[#FF72B6] to-[#7B61FF] bg-clip-text text-transparent mb-4">
-                Salon Profile Setup
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Complete your salon is profile to get started
-              </p>
-            </motion.div>
+      <motion.div
+        variants={staggerItems}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6 md:space-y-8 relative z-10"
+      >
+        {/* Salon Name */}
+        <motion.div variants={staggerItems} custom={0} className="relative">
+          <input
+            {...register('salon_name', { required: 'Salon name is required' })}
+            className={`w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg bg-gray-50 rounded-xl border-2 focus:border-[color:var(--primary)] focus:ring-0 peer transition-colors ${
+              errors.salon_name ? 'border-red-300' : 'border-gray-200'
+            }`}
+            placeholder=" "
+            autoFocus
+          />
+          <label className="floating-label">
+            {errors.salon_name ? '❗ Salon Name' : '✨ Salon Name'}
+          </label>
+        </motion.div>
 
-            <motion.form 
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              onSubmit={handleSubmit}
-              className="space-y-8"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { id: 'salon_name', label: 'Salon Name', type: 'text', icon: '✂️' },
-                  { id: 'salon_tag', label: 'Tagline', type: 'text', icon: '🏷️' },
-                  { id: 'contact_email', label: 'Email', type: 'email', icon: '✉️' },
-                  { id: 'contact_number', label: 'Phone', type: 'tel', icon: '📱' },
-                ].map((field) => (
-                  <motion.div
-                    key={field.id}
-                    variants={itemVariants}
-                    className="relative group"
-                  >
-                    <motion.div
-                      className="h-16 bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF72B6]/50 transition-colors shadow-sm"
-                      variants={inputContainerVariants}
-                      whileHover="hover"
-                    >
-                      <motion.label
-                        className="absolute left-4 origin-left pointer-events-none flex items-center gap-2"
-                        variants={floatingLabelVariants}
-                        animate={formData[field.id as keyof FormData] || activeField === field.id ? 'active' : 'inactive'}
-                      >
-                        <span className="text-lg">{field.icon}</span>
-                        <span className="text-sm font-medium">{field.label}</span>
-                      </motion.label>
-                      
-                      <input
-                        type={field.type}
-                        className="w-full h-full pt-6 px-3 bg-transparent outline-none text-gray-800 placeholder-gray-400"
-                        onFocus={() => setActiveField(field.id)}
-                        onBlur={() => setActiveField(null)}
-                        value={formData[field.id as keyof FormData]}
-                        onChange={(e) => handleInputChange(field.id as keyof FormData, e.target.value)}
-                        required
-                      />
-                    </motion.div>
-                  </motion.div>
-                ))}
-
-                <motion.div
-                  variants={itemVariants}
-                  className="md:col-span-2"
-                >
-                  <motion.div
-                    className="relative group bg-white rounded-xl p-4 border border-gray-200 hover:border-[#FF72B6]/50 transition-colors shadow-sm"
-                    variants={inputContainerVariants}
-                  >
-                    <motion.label
-                      className="absolute left-4 origin-left pointer-events-none flex items-center gap-2"
-                      variants={floatingLabelVariants}
-                      animate={formData.opening_time || activeField === 'opening_time' ? 'active' : 'inactive'}
-                    >
-                      <span className="text-lg">🗓</span>
-                      <span className="text-sm font-medium">Established Date</span>
-                    </motion.label>
-                    
-                    <input
-                      type="date"
-                      className="w-full h-full pt-6 px-3 bg-transparent outline-none text-gray-800"
-                      onFocus={() => setActiveField('opening_time')}
-                      onBlur={() => setActiveField(null)}
-                      value={formData.opening_time}
-                      onChange={(e) => handleInputChange('opening_time', e.target.value)}
-                      required
-                    />
-                  </motion.div>
-                </motion.div>
-
-                <motion.div
-                  variants={itemVariants}
-                  className="md:col-span-2"
-                >
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-[#FF72B6] to-[#7B61FF] rounded-xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                    <motion.div
-                      initial={{ y: 0 }}
-                      whileHover={{ y: -3 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                      className="relative bg-white rounded-xl border border-gray-200 hover:border-[#FF72B6]/50 transition-colors shadow-sm"
-                    >
-                      <label className="flex flex-col items-center justify-center p-8 cursor-pointer">
-                        <div className="mb-4 text-gray-400 group-hover:text-[#FF72B6] transition-colors">
-                          <FaCloudUploadAlt className="w-12 h-12 mb-4 mx-auto transition-transform group-hover:scale-110" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-medium text-gray-700 group-hover:text-[#FF72B6] transition-colors mb-2">
-                            Upload Salon Image
-                          </p>
-                          <p className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
-                            PNG or JPG (max. 5MB)
-                          </p>
-                        </div>
-                        {imagePreview && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            transition={{ duration: 0.3 }}
-                            className="mt-4 w-full overflow-hidden rounded-lg"
-                          >
-                            <img 
-                              src={imagePreview} 
-                              alt="Preview" 
-                              className="w-full h-40 object-cover border border-gray-200"
-                            />
-                          </motion.div>
-                        )}
-                        <input
-                          type="file"
-                          onChange={handleImageUpload}
-                          accept="image/png, image/jpeg"
-                          required={!formData.salon_img_url && !imagePreview}
-                          className="hidden"
-                        />
-                      </label>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              </div>
-
-              <motion.div
-                variants={itemVariants}
-                className="pt-4 flex justify-end"
-              >
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#FF72B6] to-[#7B61FF] rounded-xl font-bold text-white hover:shadow-lg hover:shadow-[#FF72B6]/30 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-white opacity-0 hover:opacity-10 transition-opacity"></div>
-                  {isSubmitting ? (
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="inline-block"
-                    >
-                      ⏳
-                    </motion.span>
-                  ) : (
-                    <>
-                      <FaSave className="mr-2" />
-                      <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
-                        Save Salon
-                      </span>
-                    </>
-                  )}
-                </motion.button>
-              </motion.div>
-            </motion.form>
+        {/* Salon Tagline */}
+        <motion.div variants={staggerItems} custom={1} className="relative">
+          <textarea
+            {...register('salon_tag', { 
+              required: 'Tagline is required',
+              maxLength: { value: 50, message: 'Max 50 characters' }
+            })}
+            className={`w-full px-4 md:px-6 py-3 md:py-4 bg-gray-50 rounded-xl border-2 focus:border-[color:var(--primary)] focus:ring-0 peer resize-none transition-colors ${
+              errors.salon_tag ? 'border-red-300' : 'border-gray-200'
+            }`}
+            placeholder=" "
+            rows={2}
+          />
+          <label className="floating-label">🌟 Creative Tagline</label>
+          <div className="absolute right-4 bottom-3 text-sm text-gray-400">
+            {formData?.salon_tag?.length || 0}/50
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+
+        {/* Opening Time */}
+        <motion.div variants={staggerItems} custom={2} className="grid grid-cols-2 gap-4 md:gap-6">
+          <div className="relative col-span-2">
+            <motion.div
+              variants={slideIn}
+              custom={0}
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2"
+            >
+              <FiClock className="text-gray-400" />
+            </motion.div>
+            <input
+              type="time"
+              {...register('opening_time', { required: 'Opening time is required' })}
+              className={`w-full px-4 md:px-6 py-3 md:py-4 pl-12 md:pl-16 bg-gray-50 rounded-xl border-2 transition-colors ${
+                errors.opening_time ? 'border-red-300' : 'border-gray-200'
+              } focus:border-[color:var(--primary)]`}
+            />
+            <label className="floating-label">⏰ Opening Hours</label>
+          </div>
+        </motion.div>
+
+        {/* Contact Info */}
+        <motion.div variants={staggerItems} custom={3} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="relative">
+            <motion.div
+              variants={slideIn}
+              custom={0}
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2"
+            >
+              
+            </motion.div>
+            <input
+              type="email"
+              {...register('contact_email', {
+                required: 'Email required',
+                pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' }
+              })}
+              className={`w-full px-4 md:px-6 py-3 md:py-4 pl-12 md:pl-16 bg-gray-50 rounded-xl border-2 transition-colors ${
+                errors.contact_email ? 'border-red-300' : 'border-gray-200'
+              } focus:border-[color:var(--primary)]`}
+              placeholder=" "
+              inputMode="email"
+            />
+            <label className="floating-label">📧 Email Address</label>
+          </div>
+
+          <div className="relative">
+            <motion.div
+              variants={slideIn}
+              custom={1}
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2"
+            >
+              
+            </motion.div>
+            <input
+              type="tel"
+              {...register('contact_number', {
+                required: 'Phone required',
+                pattern: { value: /^[0-9]{10}$/, message: '10 digits required' }
+              })}
+              className={`w-full px-4 md:px-6 py-3 md:py-4 pl-12 md:pl-16 bg-gray-50 rounded-xl border-2 transition-colors ${
+                errors.contact_number ? 'border-red-300' : 'border-gray-200'
+              } focus:border-[color:var(--primary)]`}
+              placeholder=" "
+              inputMode="tel"
+            />
+            <label className="floating-label">📱 Phone Number</label>
+          </div>
+        </motion.div>
+
+        {/* Image Upload */}
+        <motion.div variants={staggerItems} custom={4} className="space-y-4">
+          <label className="block text-sm md:text-base font-medium text-gray-600">
+            📸 Salon Image <span className="text-red-500">*</span>
+          </label>
+          <div
+            {...getRootProps()}
+            className={`group relative h-56 md:h-64 rounded-2xl border-4 border-dashed transition-all
+              ${preview ? 'border-[color:var(--primary)]' : 'border-gray-200 hover:border-[color:var(--primary)]'}
+              ${errors.salon_img ? 'border-red-300' : ''}`}
+          >
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8 text-center bg-gradient-to-br from-white/50 to-[color:var(--primary)]/5">
+              {preview ? (
+                <>
+                  <motion.img
+                    src={preview}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-xl"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 md:top-4 right-2 md:right-4 p-1.5 md:p-2 bg-white/90 rounded-full shadow-lg hover:bg-red-50 transition-colors"
+                  >
+                    <FiX className="text-red-500 text-lg md:text-xl" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="p-3 md:p-4 rounded-full bg-[color:var(--primary)]/10 mb-2 md:mb-4"
+                  >
+                    <FiUploadCloud className="text-3xl md:text-4xl" style={{ color: mergedColors.primary }} />
+                  </motion.div>
+                  <p className="text-sm md:text-base text-gray-600 font-medium mb-1 md:mb-2">
+                    Drag & drop your salon photo
+                  </p>
+                  <p className="text-xs md:text-sm text-gray-400">
+                    (JPEG, PNG, max 5MB)
+                  </p>
+                </>
+              )}
+            </div>
+            <input {...getInputProps()} />
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Error Messages */}
+      <div className="mt-6 md:mt-8 space-y-2">
+        {Object.values(errors).map((error, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 md:p-4 bg-red-50 text-red-600 rounded-xl flex items-center text-sm md:text-base"
+          >
+            <FiX className="mr-2 flex-shrink-0" />
+            {error?.message}
+          </motion.div>
+        ))}
+      </div>
+
+      <style jsx>{`
+        .floating-label {
+          position: absolute;
+          left: 1rem;
+          top: 0.75rem;
+          font-size: 0.875rem;
+          color: ${mergedColors.text}80;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          pointer-events: none;
+          background: linear-gradient(to bottom, transparent 50%, white 50%);
+          padding: 0 0.5rem;
+        }
+        
+        input:focus ~ .floating-label,
+        input:not(:placeholder-shown) ~ .floating-label,
+        textarea:focus ~ .floating-label,
+        textarea:not(:placeholder-shown) ~ .floating-label {
+          top: -0.75rem;
+          left: 0.75rem;
+          font-size: 0.75rem;
+          color: ${mergedColors.primary};
+          background: white;
+          padding: 0 0.25rem;
+        }
+
+        @media (max-width: 640px) {
+          .floating-label {
+            font-size: 0.75rem;
+            top: 0.5rem;
+            left: 0.75rem;
+          }
+        }
+      `}</style>
+    </motion.form>
   );
 }
