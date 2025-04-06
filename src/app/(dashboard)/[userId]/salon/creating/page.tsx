@@ -173,28 +173,7 @@ const CreateSalonForm = () => {
               formData={formData}
             />
 
-            {/* Navigation Controls */}
-            {step !== 1 && step !== 5 && (
-              <div className="flex justify-between mt-12">
-                <motion.button
-                  whileHover={{ x: -5 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 text-[#b76e79] hover:text-[#a55d68] font-semibold"
-                  onClick={handlePreviousStep}
-                >
-                  <FaChevronLeft /> Previous
-                </motion.button>
-                
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-[#b76e79] text-white px-8 py-3 rounded-xl hover:bg-[#a55d68] transition-colors flex items-center gap-2"
-                  onClick={handleNextStep}
-                >
-                  Next <FaChevronRight />
-                </motion.button>
-              </div>
-            )}
+    
           </motion.div>
         </AnimatePresence>
       </div>
