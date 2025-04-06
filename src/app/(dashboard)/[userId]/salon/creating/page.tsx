@@ -6,6 +6,7 @@ import StepOne from '@/Components/StepOne';
 import StepTwo from '@/Components/Steptwo';
 import StepThree from '@/Components/Stepthree';
 import StepFour from '@/Components/StepFour';
+import StepFive from '@/Components/StepFive';
 
 
 const CreateSalonForm = () => {
@@ -123,7 +124,7 @@ const CreateSalonForm = () => {
             <StepFour step={step}/>
 
             {/* Step 5 - Review */}
-
+            <StepFive step={step}/>
 
             {/* Navigation Controls */}
             <div className="flex justify-between mt-12">
