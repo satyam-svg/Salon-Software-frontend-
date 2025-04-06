@@ -201,7 +201,8 @@ export default function StepOne({ step, onNextStep }: StepOneProps) {
                 { id: 'salon_tag', label: 'Salon Tagline *', type: 'text', required: true },
                 { id: 'contact_email', label: 'Contact Email *', type: 'email', required: true },
                 { id: 'contact_number', label: 'Contact Number *', type: 'tel', required: true },
-                { id: 'opening_time', label: 'Establishment Date', type: 'date', required: false },
+                { id: 'opening_time', label: 'Establishment Date', type: 'date', required: true},
+
               ].map((field, index) => (
                 <motion.div
                   key={field.id}
