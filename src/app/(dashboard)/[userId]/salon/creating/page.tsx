@@ -16,27 +16,15 @@ const steps = [
   { id: 5, title: "Review" },
 ];
 
-interface FormData {
-  salon_name: string;
-  salon_tag: string;
-  opening_time: string;
-  contact_email: string;
-  contact_number: string;
-  salon_img: File | string | null;
-  branches: any[];
-  staff: any[];
-  inventory: any[];
-}
+
 
 export default function CreatingSalon() {
   const [currentStep, setCurrentStep] = useState(1);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
   const [floatY, cycleFloat] = useCycle(0, -10);
-  const [formData, setFormData] = useState<Partial<FormData>>({});
+  
 
-  const updateForm = (data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
+ 
 
   const handleNext = () => {
     setDirection('right');
@@ -54,7 +42,7 @@ export default function CreatingSalon() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fff9f7] to-[#f5e6e3] py-12 px-4 relative overflow-hidden">
-      {/* Enhanced Animated Background */}
+      {/* Animated Background */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20">
         <motion.div
           className="absolute -top-20 -right-20 w-96 h-96 bg-[#e8c4c0] rounded-full mix-blend-multiply filter blur-3xl"
@@ -102,7 +90,7 @@ export default function CreatingSalon() {
       </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
-        {/* Enhanced Progress Steps */}
+        {/* Progress Steps */}
         <div className="mb-16">
           <div className="flex justify-between items-center relative">
             <motion.div
@@ -180,7 +168,7 @@ export default function CreatingSalon() {
           </div>
         </div>
 
-        {/* Enhanced Form Content */}
+        {/* Form Content */}
         <motion.div
           className="bg-white rounded-3xl shadow-2xl p-8 relative overflow-hidden"
           animate={{ y: floatY }}
@@ -215,35 +203,23 @@ export default function CreatingSalon() {
                 transition: { duration: 0.3 }
               }}
             >
-              {currentStep === 1 && <StepOne 
-                setFormData={updateForm}
-                formData={formData}
-                colors={{ 
-                  primary: "#b76e79", 
-                  secondary: "#d8a8a3",
-                  text: "#4B5563"
-                }}
-              />}
+              {currentStep === 1 && <StepOne />}
               {currentStep === 2 && <StepTwo 
-                setFormData={updateForm}
-                formData={formData}
+               
               />}
               {currentStep === 3 && <StepThree 
-                setFormData={updateForm}
-                formData={formData}
+    
               />}
               {currentStep === 4 && <StepFour 
-                setFormData={updateForm}
-                formData={formData}
+               
               />}
               {currentStep === 5 && <StepFive 
-                formData={formData}
-                onComplete={() => console.log('Form submission:', formData)}
+               
               />}
             </motion.div>
           </AnimatePresence>
 
-          {/* Enhanced Navigation Controls */}
+          {/* Navigation Controls */}
           <div className="flex justify-between mt-12">
             {currentStep > 1 && (
               <motion.button
@@ -293,7 +269,7 @@ export default function CreatingSalon() {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    <FiChevronRight className="text-xl" />
+                    
                   </motion.div>
                 </>
               )}
