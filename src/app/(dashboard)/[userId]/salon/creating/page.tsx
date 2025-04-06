@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaCloudUploadAlt, FaCheck, FaChevronLeft, FaChevronRight, FaUser, FaStore, FaBoxes, FaClipboardCheck } from 'react-icons/fa';
+import { FaPlus, FaCheck, FaChevronLeft, FaChevronRight, FaUser, FaStore, FaBoxes, FaClipboardCheck } from 'react-icons/fa';
 import StepOne from '@/Components/StepOne';
 
 // Define TypeScript interfaces
