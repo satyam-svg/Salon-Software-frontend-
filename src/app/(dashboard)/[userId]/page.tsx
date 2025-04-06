@@ -27,6 +27,11 @@ const DashboardPage = () => {
         setName(data.user.fullname);
         
         if (data.user.salonId) {
+          const response1 = await axios.post('https://salon-backend-3.onrender.com/api/branch/isbranch')
+          if(!response1.data.isbranch){
+            router.push(`/${userId}/salon/creating`);
+            return;
+          }
           setHasSalon(true);
           const timer = setInterval(() => {
             setCountdown((prev) => {

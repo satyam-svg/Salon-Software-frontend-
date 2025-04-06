@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaCheck, FaChevronLeft, FaChevronRight, FaUser, FaStore, FaBoxes, FaClipboardCheck } from 'react-icons/fa';
 import StepOne from '@/Components/StepOne';
@@ -7,6 +7,8 @@ import StepTwo from '@/Components/Steptwo';
 import StepThree from '@/Components/Stepthree';
 import StepFour from '@/Components/StepFour';
 import StepFive from '@/Components/StepFive';
+import { usePathname } from 'next/navigation';
+import axios from 'axios';
 
 const CreateSalonForm = () => {
   const [step, setStep] = useState(1);
@@ -33,8 +35,34 @@ const CreateSalonForm = () => {
       setStep(step - 1);
     }
   };
+    const pathname = usePathname();
 
+  
+    // Extract userId from pathname like /1234 or /5678/anything
+    const userId = pathname.split('/')[1];
 
+  useEffect(() => {
+    const checkSalonStatus = async () => {
+      try {
+        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        const data = response.data;
+
+        
+        if (data.user.salonId) {
+          setStep(1)
+
+        } else {
+          setStep(0);
+        }
+      } catch (error) {
+        console.error('Error checking salon status:', error);
+      }
+    };
+
+    if (userId) {
+      checkSalonStatus();
+    }
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-[#fff9f7] py-20 px-4 sm:px-6 lg:px-8">

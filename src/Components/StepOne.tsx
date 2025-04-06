@@ -34,7 +34,7 @@ export default function StepOne({ step, onNextStep }: StepOneProps) {
     salon_img_url: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
