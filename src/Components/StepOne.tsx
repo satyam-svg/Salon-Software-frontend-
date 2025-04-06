@@ -1,7 +1,9 @@
-'use client';
+'use client'
 import { useState } from 'react';
 import { FaCloudUploadAlt, FaMagic } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import { usePathname } from 'next/navigation';
 
 interface FormData {
   salon_name: string;
@@ -16,24 +18,84 @@ interface FormData {
 interface StepOneProps {
   step: number;
   onNextStep: () => void;
-  formData: FormData;
-  updateFormData: (data: Partial<FormData>) => void;
 }
 
-export default function StepOne({ step, onNextStep, formData, updateFormData }: StepOneProps) {
+export default function StepOne({ step, onNextStep }: StepOneProps) {
+  const pathname = usePathname();
+  const userId = pathname.split('/')[1];
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    salon_name: '',
+    salon_tag: '',
+    opening_time: '',
+    contact_email: '',
+    contact_number: '',
+    branch_url: '',
+    salon_img_url: ''
+  });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateFormData({ salon_img_url: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (file) setImageFile(file);
+  };
+
+  const uploadImageToCloudinary = async () => {
+    if (!imageFile) return '';
+
+    const cloudinaryFormData = new FormData();
+    cloudinaryFormData.append('file', imageFile);
+    cloudinaryFormData.append('upload_preset', 'salon_preset');
+
+    try {
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
+        { method: 'POST', body: cloudinaryFormData }
+      );
+
+      if (!response.ok) throw new Error('Image upload failed');
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      return '';
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Upload image first
+      const imageUrl = await uploadImageToCloudinary();
+      const finalFormData = {
+        ...formData,
+        salon_img_url: imageUrl || formData.salon_img_url,
+        user_id: userId
+      };
+
+      // Submit to backend
+      const response = await axios.post(
+        'https://salon-backend-3.onrender.com/api/salon/create',
+        finalFormData
+      );
+
+      if (response.status === 201) {
+        onNextStep();
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      alert('Error creating salon. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const floatingLabelVariants = {
     active: { 
       y: -10, 
@@ -97,24 +159,6 @@ export default function StepOne({ step, onNextStep, formData, updateFormData }: 
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Validate required fields
-    if (
-      !formData.salon_name ||
-      !formData.salon_tag ||
-      !formData.contact_email ||
-      !formData.contact_number
-    ) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    onNextStep();
-  };
-
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    updateFormData({ [field]: value });
-  };
 
   return (
     <AnimatePresence>
@@ -313,3 +357,6 @@ export default function StepOne({ step, onNextStep, formData, updateFormData }: 
     </AnimatePresence>
   );
 }
+
+
+

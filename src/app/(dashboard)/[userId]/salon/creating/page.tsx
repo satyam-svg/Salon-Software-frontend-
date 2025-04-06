@@ -10,18 +10,7 @@ import StepFive from '@/Components/StepFive';
 
 const CreateSalonForm = () => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    salon_name: '',
-    salon_tag: '',
-    opening_time: '',
-    contact_email: '',
-    contact_number: '',
-    branch_url: '',
-    salon_img_url: '',
-    branches: [],
-    staff: [],
-    inventory: []
-  });
+  
 
   const steps = [
     { title: 'Basic Info', number: 1, icon: <FaStore />, color: 'from-[#FF9A8B] to-[#FF6B95]' },
@@ -45,9 +34,7 @@ const CreateSalonForm = () => {
     }
   };
 
-  const updateFormData = (newData: any) => {
-    setFormData(prev => ({ ...prev, ...newData }));
-  };
+
 
   return (
     <div className="min-h-screen bg-[#fff9f7] py-20 px-4 sm:px-6 lg:px-8">
@@ -139,38 +126,29 @@ const CreateSalonForm = () => {
             <StepOne 
               step={step} 
               onNextStep={handleNextStep}
-              formData={formData}
-              updateFormData={updateFormData}
             />
 
             <StepTwo 
               step={step}
               onNextStep={handleNextStep}
               onPreviousStep={handlePreviousStep}
-              formData={formData}
-              updateFormData={updateFormData}
             />
 
             <StepThree 
               step={step}
               onNextStep={handleNextStep}
               onPreviousStep={handlePreviousStep}
-              formData={formData}
-              updateFormData={updateFormData}
             />
 
             <StepFour 
               step={step}
               onNextStep={handleNextStep}
               onPreviousStep={handlePreviousStep}
-              formData={formData}
-              updateFormData={updateFormData}
             />
 
             <StepFive 
               step={step}
               onPreviousStep={handlePreviousStep}
-              formData={formData}
             />
 
             {/* Navigation Controls */}
