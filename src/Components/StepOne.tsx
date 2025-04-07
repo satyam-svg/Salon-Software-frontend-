@@ -93,7 +93,6 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
       });
 
       if (!response.ok) throw new Error('Salon creation failed');
-      
       setStep(2);
 
     } catch (error: unknown) {

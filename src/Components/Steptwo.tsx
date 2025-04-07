@@ -2,14 +2,13 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FiPlus, FiChevronLeft, FiChevronRight, FiClock, FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
-
+import { FiPlus, FiChevronLeft, FiChevronRight, FiClock, FiAlertCircle, FiCheckCircle, FiMapPin, FiMail, FiPhone } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
 interface Branch {
   id: string;
   name: string;
-  tag: string;
   openingTime: string;
   location: string;
   closingTime: string;
@@ -19,7 +18,6 @@ interface Branch {
 
 interface FormData {
   branchName: string;
-  tag: string;
   location: string;
   openingTime: string;
   closingTime: string;
@@ -33,32 +31,136 @@ const floatingVariants = {
 };
 
 export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
+  const pathname = usePathname();
+  const userId = pathname.split('/')[1];
+  const [salonId, setSalonId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { 
     register, 
     handleSubmit, 
     reset, 
     formState: { errors, isValid }, 
-    trigger,
     watch 
   } = useForm<FormData>({ mode: 'onChange' });
-  
+  const updateStep = async ()=>{
+    const salonData = {
+      salonId:salonId,
+      step:2,
+      user_id: userId
+    };
+
+    // Submit to backend
+    const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(salonData),
+    });
+    console.log(response);
+    setStep(3)
+  }
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        // Get user data to find salonId
+        const userResponse = await fetch(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        if (!userResponse.ok) throw new Error('Failed to fetch user data');
+        const userData = await userResponse.json();
+        
+        if (!userData.user?.salonId) throw new Error('Salon not found');
+        setSalonId(userData.user.salonId);
 
-  const onSubmit = (data: FormData) => {
-    const newBranch = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...data
+        // Get existing branches
+        const branchResponse = await fetch('https://salon-backend-3.onrender.com/api/branch/isbranch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ salon_id: userData.user.salonId })
+        });
+        
+        const branchData = await branchResponse.json();
+        if (branchData.isbranch) {
+          console.log(branchData);
+          setBranches(branchData.brances.map((branch: any) => ({
+            id: branch.id,
+            name: branch.branch_name,
+            location: branch.branch_location,
+            openingTime: branch.opning_time,
+            closingTime: branch.closeings_time,
+            email: branch.contact_email,
+            contact: branch.contact_number
+          })));
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to initialize data');
+      } finally {
+        setLoading(false);
+      }
     };
-    
-    setBranches(prev => [...prev, newBranch]);
-    reset();
-    setIsEditing(false);
-  };
 
-  const removeBranch = (id: string) => {
-    setBranches(prev => prev.filter(branch => branch.id !== id));
+    if (userId) initializeData();
+  }, [userId]);
+  const onSubmit = async (formData: FormData) => {
+    try {
+      // Create new branch
+      const response = await fetch('https://salon-backend-3.onrender.com/api/branch/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch_name: formData.branchName,
+          branch_location: formData.location,
+          salon_id: salonId,
+          contact_email: formData.email,
+          contact_number: formData.contact,
+          opning_time: formData.openingTime,
+          closeings_time: formData.closingTime,
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create branch');
+
+      // Refresh branches list
+      const newBranchResponse = await fetch('https://salon-backend-3.onrender.com/api/branch/isbranch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ salon_id: salonId })
+      });
+      
+      const newBranchData = await newBranchResponse.json();
+      setBranches(newBranchData.branches.map((branch: any) => ({
+        id: branch.id,
+        name: branch.branch_name,
+        location: branch.branch_location,
+        openingTime: branch.opning_time,
+        closingTime: branch.closeings_time,
+        email: branch.contact_email,
+        contact: branch.contact_number
+      })));
+
+      reset();
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save branch');
+    }
   };
+  if (loading) return (
+    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-gray-500 dark:text-gray-300"
+      >
+        Loading branches...
+      </motion.div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center text-rose-500">
+      {error}
+    </div>
+  );
 
   return (
     <motion.div
@@ -87,42 +189,55 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
 
       {/* Saved Branches List */}
       <AnimatePresence>
-        {branches.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mb-8 space-y-4"
-          >
-            {branches.map((branch) => (
-              <motion.div
-                key={branch.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 flex justify-between items-center group hover:shadow-md transition-shadow"
-              >
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-gray-800">{branch.name}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full">
-                      {branch.tag}
-                    </span>
-                    <span>•</span>
-                    <span>{branch.location}</span>
-                  </div>
+  {branches.length > 0 && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="mb-8 space-y-4"
+    >
+      {branches.map((branch) => (
+        <motion.div
+          key={branch.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex justify-between items-start group hover:shadow-md transition-shadow"
+        >
+          <div className="space-y-3 flex-1">
+            <div className="flex items-center gap-3">
+              <h3 className="font-semibold text-gray-800 text-lg">{branch.name}</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <FiMapPin className="flex-shrink-0 text-rose-400" />
+                <span className="truncate">{branch.location}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <FiClock className="flex-shrink-0 text-emerald-400" />
+                <span>
+                  {branch.openingTime} - {branch.closingTime}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <FiMail className="flex-shrink-0 text-blue-400" />
+                  <span className="truncate">{branch.email}</span>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  onClick={() => removeBranch(branch.id)}
-                  className="text-gray-400 hover:text-rose-500 transition-colors"
-                >
-                  <FiX className="text-lg" />
-                </motion.button>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <div className="flex items-center gap-2">
+                  <FiPhone className="flex-shrink-0 text-indigo-400" />
+                  <span>{branch.contact}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Branch Form */}
       <AnimatePresence>
@@ -176,20 +291,6 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                 )}
               </motion.div>
 
-              {/* Tag */}
-              <motion.div
-                variants={floatingVariants}
-                className="relative z-0"
-              >
-                <input
-                  {...register('tag')}
-                  className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
-                  placeholder=" "
-                />
-                <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
-                  Tagline (Optional)
-                </label>
-              </motion.div>
 
               {/* Location */}
               <motion.div
@@ -388,7 +489,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
         </motion.button>
         
         <motion.button
-          onClick={() => setStep(3)}
+          onClick={() => updateStep()}
           disabled={branches.length === 0}
           whileHover={{ x: 5 }}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${
