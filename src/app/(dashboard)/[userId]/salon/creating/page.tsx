@@ -204,15 +204,9 @@ export default function CreatingSalon() {
               }}
             >
               {currentStep === 1 && <StepOne />}
-              {currentStep === 2 && <StepTwo 
-               
-              />}
-              {currentStep === 3 && <StepThree 
-    
-              />}
-              {currentStep === 4 && <StepFour 
-               
-              />}
+              {currentStep === 2 && <StepTwo />}
+              {currentStep === 3 && <StepThree />}
+              {currentStep === 4 && <StepFour />}
               {currentStep === 5 && <StepFive 
                
               />}
