@@ -2,8 +2,10 @@
 
 import { motion, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
 import { FiCheck, FiInfo, FiUser, FiImage,FiClipboard } from 'react-icons/fi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VscSourceControl } from 'react-icons/vsc';
+import axios from 'axios';
+import { usePathname } from 'next/navigation';
 
 const steps = [
   { id: 1, title: 'Basic Info', description: 'Salon basic information', icon: <FiInfo /> },
@@ -13,17 +15,38 @@ const steps = [
   { id: 5, title: 'Review', description: 'Confirm details', icon: <FiClipboard /> },
 ];
 
-export const ProgressStepper = ({ currentStep }: { currentStep: number }) => {
+export const ProgressStepper = ({ currentStep,setCurrentStep }: { currentStep: number;setCurrentStep: (step: number) => void}) => {
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
   const springProgress = useSpring(progressPercentage, {
     stiffness: 100,
     damping: 20,
   });
   const [, setDisplayValue] = useState(0);
+  const pathname = usePathname();
+    const userId = pathname.split('/')[1];
 
   useMotionValueEvent(springProgress, 'change', (latest) => {
     setDisplayValue(Math.round(latest));
   });
+
+  useEffect(() => {
+    const checkSalonStatus = async () => {
+      try {
+        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        const data = response.data;
+        setCurrentStep(data.user.step)
+        
+      } catch (error) {
+        console.error('Error checking salon status:', error);
+        
+      }
+    };
+
+    if (userId) {
+      checkSalonStatus();
+    }
+    
+  }, [userId]);
 
   return (
     <div className="max-w-6xl mx-auto py-8 sm:py-16 px-4 sm:px-6 lg:px-8" style={{position:'relative',top:'1.2rem'}}>
