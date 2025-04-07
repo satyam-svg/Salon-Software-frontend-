@@ -25,7 +25,6 @@ const DashboardPage = () => {
         const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
         const data = response.data;
         setName(data.user.fullname);
-        
         if (data.user.salonId) {
           const response1 = await axios.post('https://salon-backend-3.onrender.com/api/branch/isbranch')
           if(!response1.data.isbranch){
@@ -33,15 +32,15 @@ const DashboardPage = () => {
             return;
           }
           setHasSalon(true);
-          const timer = setInterval(() => {
-            setCountdown((prev) => {
-              if (prev === 1) {
-                clearInterval(timer);
-                router.push(`/${userId}/ownerhomepage`);
-              }
-              return prev - 1;
-            });
-          }, 1000);
+          // const timer = setInterval(() => {
+          //   setCountdown((prev) => {
+          //     if (prev === 1) {
+          //       clearInterval(timer);
+          //       router.push(`/${userId}/ownerhomepage`);
+          //     }
+          //     return prev - 1;
+          //   });
+          // }, 1000);
         } else {
           router.push(`/${userId}/salon/not_created`);
         }

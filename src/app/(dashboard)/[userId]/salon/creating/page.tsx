@@ -24,22 +24,18 @@ export default function CreatingSalon() {
   const [floatY, cycleFloat] = useCycle(0, -10);
   
 
- 
 
   const handleNext = () => {
     setDirection('right');
     if (currentStep < steps.length) setCurrentStep(prev => prev + 1);
     cycleFloat();
   };
-
   const handlePrev = () => {
     setDirection('left');
     if (currentStep > 1) setCurrentStep(prev => prev - 1);
     cycleFloat();
   };
-
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fff9f7] to-[#f5e6e3] py-12 px-4 relative overflow-hidden">
       {/* Animated Background */}
