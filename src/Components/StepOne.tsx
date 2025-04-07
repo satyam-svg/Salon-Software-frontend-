@@ -1,21 +1,26 @@
 // components/SalonSetup/StepOne.tsx
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
-import { FiUploadCloud, FiX, FiAlertTriangle } from 'react-icons/fi';
+import { FiUploadCloud, FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { usePathname } from 'next/navigation';
 
 interface FormData {
   salonName: string;
   tagline: string;
-  openingDate: string; // Changed from openingTime to openingDate
+  openingDate: string;
   email: string;
   phone: string;
   salonImg: File | null;
 }
+
+const floatingVariants = {
+  hidden: { y: 10, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
 
 export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
   const pathname = usePathname();
@@ -23,20 +28,22 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
   const { 
     register, 
     handleSubmit, 
-    formState: { errors }, 
+    formState: { errors, isValid }, 
     setValue, 
-    watch 
-  } = useForm<FormData>();
+    watch,
+    trigger
+  } = useForm<FormData>({ mode: 'onChange' });
   
   const [preview, setPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const { getRootProps, getInputProps } = useDropzone({
-    accept: { 'image/*': ['.jpeg', '.jpg', '.png'] },
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
-      setValue('salonImg', acceptedFiles[0]);
+      setValue('salonImg', acceptedFiles[0], { shouldValidate: true });
     }
   });
 
@@ -44,86 +51,58 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
     e.stopPropagation();
     setPreview(null);
     setValue('salonImg', null);
+    trigger('salonImg');
   };
 
   const onSubmit = async (data: FormData) => {
-    // setIsSubmitting(true);
-    // setSubmissionError(null);
+    setIsSubmitting(true);
+    setSubmissionError(null);
 
-    // try {
-    //   if (!data.salonImg) throw new Error('Salon image is required');
+    try {
+      if (!data.salonImg) throw new Error('Salon image is required');
 
-    //   // Cloudinary upload
-    //   const cloudinaryFormData = new FormData();
-    //   cloudinaryFormData.append('file', data.salonImg);
-    //   cloudinaryFormData.append('upload_preset', 'salon_preset');
+      // Cloudinary upload
+      const cloudinaryFormData = new FormData();
+      cloudinaryFormData.append('file', data.salonImg);
+      cloudinaryFormData.append('upload_preset', 'salon_preset');
 
-    //   const cloudinaryResponse = await fetch(
-    //     'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
-    //     { method: 'POST', body: cloudinaryFormData }
-    //   );
+      const cloudinaryResponse = await fetch(
+        'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
+        { method: 'POST', body: cloudinaryFormData }
+      );
 
-    //   if (!cloudinaryResponse.ok) throw new Error('Image upload failed');
-    //   const cloudinaryData = await cloudinaryResponse.json();
+      if (!cloudinaryResponse.ok) throw new Error('Image upload failed');
+      const cloudinaryData = await cloudinaryResponse.json();
 
-<<<<<<< HEAD
-    //   // Prepare salon data
-    //   const salonData = {
-    //     salon_name: data.salonName,
-    //     salon_tag: data.tagline,
-    //     opening_time: data.openingTime,
-    //     closing_time: data.closingTime,
-    //     contact_email: data.email,
-    //     contact_number: data.phone,
-    //     salon_img_url: cloudinaryData.secure_url,
-    //     user_id: userId
-    //   };
-=======
       // Prepare salon data
       const salonData = {
         salon_name: data.salonName,
         salon_tag: data.tagline,
-        opening_time: data.openingDate, // Changed from openingTime to openingDate
+        opening_time: data.openingDate,
         contact_email: data.email,
         contact_number: data.phone,
         salon_img_url: cloudinaryData.secure_url,
         user_id: userId
       };
->>>>>>> 4d6109b36455a00c1beca16d5b6a50fb1a22a3aa
 
-    //   // Submit to backend
-    //   const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(salonData),
-    //   });
+      // Submit to backend
+      const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(salonData),
+      });
 
-    //   if (!response.ok) throw new Error('Salon creation failed');
+      if (!response.ok) throw new Error('Salon creation failed');
       
-    //   setStep(2); // Move to next step on success
+      setStep(2);
 
-<<<<<<< HEAD
-    // } catch (error: any) {
-    //   setSubmissionError(error.message || 'An error occurred. Please try again.');
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
-    setStep(2);
-=======
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setSubmissionError(error.message || 'An error occurred. Please try again.');
-      } else {
-        // Fallback for unknown error types (e.g., if error is not an instance of Error)
-        setSubmissionError('An error occurred. Please try again.');
-      }
+      setSubmissionError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
->>>>>>> 4d6109b36455a00c1beca16d5b6a50fb1a22a3aa
   };
 
-  // Preview effect
   useEffect(() => {
     const subscription = watch((value) => {
       if (value.salonImg instanceof File) {
@@ -138,161 +117,286 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="max-w-2xl mx-auto py-12 px-4"
+      transition={{ duration: 0.4, ease: 'easeInOut' }}
+      className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
     >
-      <h2 className="text-3xl font-playfair text-[#b76e79] text-center mb-8">
-        Salon Basic Information
-      </h2>
+      <div className="text-center mb-12">
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold bg-gradient-to-r from-rose-400 to-pink-500 bg-clip-text text-transparent mb-4"
+        >
+          Create Your Salon Profile
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-gray-500 dark:text-gray-300 text-lg"
+        >
+          Let's start with the basic information to set up your salon
+        </motion.p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Salon Name */}
-        <div>
-          <label className="block text-gray-700 mb-2">Salon Name *</label>
-          <input
-            {...register('salonName', { required: 'Salon name is required' })}
-            className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
-          />
-          {errors.salonName && (
-            <span className="text-red-500 text-sm flex items-center mt-1">
-              <FiAlertTriangle className="mr-1" /> {errors.salonName.message}
-            </span>
-          )}
-        </div>
-
-        {/* Tagline */}
-        <div>
-          <label className="block text-gray-700 mb-2">Tagline</label>
-          <input
-            {...register('tagline')}
-            className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
-          />
-        </div>
-
-        {/* Opening Date */} {/* Changed this from Opening Time */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 mb-2">Opening Date *</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Salon Name */}
+          <motion.div
+            variants={floatingVariants}
+            className="relative z-0"
+          >
             <input
-              type="date" // Changed to type="date"
-              {...register('openingDate', { required: 'Opening date is required' })} // Changed from openingTime to openingDate
-              className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
-            />
-            {errors.openingDate && ( // Changed from openingTime to openingDate
-              <span className="text-red-500 text-sm flex items-center mt-1">
-                <FiAlertTriangle className="mr-1" /> {errors.openingDate.message} {/* Changed from openingTime to openingDate */}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Contact Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 mb-2">Email *</label>
-            <input
-              type="email"
-              {...register('email', { 
-                required: 'Email is required',
-                pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' }
+              {...register('salonName', { 
+                required: 'Salon name is required',
+                minLength: { value: 3, message: 'Minimum 3 characters' }
               })}
-              className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
+              className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
+              placeholder=" "
             />
-            {errors.email && (
-              <span className="text-red-500 text-sm flex items-center mt-1">
-                <FiAlertTriangle className="mr-1" /> {errors.email.message}
-              </span>
+            <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+              Salon Name *
+            </label>
+            <div className="absolute right-4 top-5">
+              <AnimatePresence>
+                {errors.salonName ? (
+                  <FiAlertCircle className="text-rose-500" />
+                ) : watch('salonName') && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                  >
+                    <FiCheckCircle className="text-emerald-500" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            {errors.salonName && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-rose-500"
+              >
+                {errors.salonName.message}
+              </motion.p>
             )}
-          </div>
+          </motion.div>
 
-          <div>
-            <label className="block text-gray-700 mb-2">Phone Number *</label>
+          {/* Tagline */}
+          <motion.div
+            variants={floatingVariants}
+            className="relative z-0"
+          >
+            <input
+              {...register('tagline')}
+              className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
+              placeholder=" "
+            />
+            <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+              Tagline (Optional)
+            </label>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Opening Date */}
+          <motion.div
+            variants={floatingVariants}
+            className="relative z-0"
+          >
+            <input
+              type="date"
+              {...register('openingDate', { required: 'Opening date is required' })}
+              className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
+            />
+            <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+              Opening Date *
+            </label>
+            {errors.openingDate && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-rose-500"
+              >
+                {errors.openingDate.message}
+              </motion.p>
+            )}
+          </motion.div>
+
+          {/* Phone Number */}
+          <motion.div
+            variants={floatingVariants}
+            className="relative z-0"
+          >
             <input
               type="tel"
               {...register('phone', { 
                 required: 'Phone number is required',
                 pattern: { value: /^[0-9]{10}$/, message: '10 digits required' }
               })}
-              className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
+              className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
+              placeholder=" "
             />
+            <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+              Phone Number *
+            </label>
             {errors.phone && (
-              <span className="text-red-500 text-sm flex items-center mt-1">
-                <FiAlertTriangle className="mr-1" /> {errors.phone.message}
-              </span>
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-rose-500"
+              >
+                {errors.phone.message}
+              </motion.p>
             )}
-          </div>
+          </motion.div>
         </div>
+
+        {/* Email */}
+        <motion.div
+          variants={floatingVariants}
+          className="relative z-0"
+        >
+          <input
+            type="email"
+            {...register('email', { 
+              required: 'Email is required',
+              pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' }
+            })}
+            className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
+            placeholder=" "
+          />
+          <label className="absolute top-4 left-4 text-gray-400 duration-300 transform -translate-y-6 scale-75 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">
+            Email Address *
+          </label>
+          {errors.email && (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 text-sm text-rose-500"
+            >
+              {errors.email.message}
+            </motion.p>
+          )}
+        </motion.div>
 
         {/* Image Upload */}
-        <div>
-          <label className="block text-gray-700 mb-2">Salon Photo *</label>
+        <motion.div
+          variants={floatingVariants}
+          className="space-y-4"
+        >
+          <label className="block text-sm font-medium text-gray-700">Salon Photo *</label>
           <div
             {...getRootProps()}
-            className="border-2 border-dashed border-[#e8c4c0] rounded-lg p-8 text-center cursor-pointer hover:border-[#b76e79] transition-colors"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={`group relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300
+              ${isDragActive ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300 hover:border-emerald-400'}
+              ${errors.salonImg ? 'border-rose-500 bg-rose-50' : ''}`}
           >
             <input {...getInputProps()} />
-            {preview ? (
-              <div className="relative">
-                <img
-                  src={preview}
-                  alt="Salon preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors"
+            <div className="space-y-4 text-center">
+              {preview ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="relative"
                 >
-                  <FiX className="text-red-500 text-lg" />
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <FiUploadCloud className="text-3xl mx-auto text-[#b76e79]" />
-                <p className="text-gray-600 font-medium">Drag & drop salon photo</p>
-                <p className="text-sm text-gray-400">or click to select (JPEG/PNG)</p>
-              </div>
-            )}
+                  <img
+                    src={preview}
+                    alt="Salon preview"
+                    className="w-full h-64 object-cover rounded-xl shadow-lg"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-3 -right-3 p-2 bg-white rounded-full shadow-lg hover:bg-rose-50 transition-colors"
+                  >
+                    <FiX className="text-rose-500 text-lg" />
+                  </motion.button>
+                </motion.div>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <motion.div
+                      animate={{ 
+                        scale: isHovered || isDragActive ? 1.1 : 1,
+                        y: isHovered || isDragActive ? -5 : 0
+                      }}
+                    >
+                      <FiUploadCloud className="text-3xl mx-auto text-emerald-500" />
+                    </motion.div>
+                  </div>
+                  <motion.p
+                    animate={{ color: isDragActive ? '#10B981' : '#6B7280' }}
+                    className="text-sm font-medium"
+                  >
+                    {isDragActive ? 'Drop it here!' : 'Drag & drop or click to upload'}
+                  </motion.p>
+                  <p className="text-xs text-gray-400">JPEG, PNG, WEBP (Max 5MB)</p>
+                </>
+              )}
+            </div>
+            <motion.div
+              animate={{ 
+                opacity: isDragActive ? 1 : 0,
+                scale: isDragActive ? 1 : 0.9
+              }}
+              className="absolute inset-0 bg-emerald-500/10 rounded-2xl pointer-events-none"
+            />
           </div>
           {errors.salonImg && (
-            <span className="text-red-500 text-sm flex items-center mt-1">
-              <FiAlertTriangle className="mr-1" /> {errors.salonImg.message}
-            </span>
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-sm text-rose-500"
+            >
+              <FiAlertCircle className="inline mr-1" /> {errors.salonImg.message}
+            </motion.p>
           )}
-        </div>
+        </motion.div>
 
-        {/* Submit Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] text-white py-4 rounded-lg font-semibold disabled:opacity-50"
+        {/* Form Actions */}
+        <motion.div
+          className="pt-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center gap-2">
+          <AnimatePresence>
+            {submissionError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-4 bg-rose-50 text-rose-600 rounded-lg flex items-center gap-2 text-sm"
+              >
+                <FiAlertCircle className="flex-shrink-0" />
+                {submissionError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={isSubmitting || !isValid}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-4 rounded-xl font-semibold
+                      disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          >
+            {isSubmitting ? (
               <motion.span
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity }}
-                className="block w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                className="block w-6 h-6 border-2 border-white border-t-transparent rounded-full mx-auto"
               />
-              Saving...
-            </span>
-          ) : (
-            'Save & Continue'
-          )}
-        </motion.button>
-
-        {/* Error Message */}
-        {submissionError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-red-50 text-red-600 rounded-lg flex items-center gap-2"
-          >
-            <FiAlertTriangle />
-            {submissionError}
-          </motion.div>
-        )}
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Continue to Next Step
+                <FiCheckCircle className="text-lg" />
+              </span>
+            )}
+          </motion.button>
+        </motion.div>
       </form>
     </motion.div>
   );
