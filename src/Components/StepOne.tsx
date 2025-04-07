@@ -48,53 +48,54 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
   };
 
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
-    setSubmissionError(null);
+    // setIsSubmitting(true);
+    // setSubmissionError(null);
 
-    try {
-      if (!data.salonImg) throw new Error('Salon image is required');
+    // try {
+    //   if (!data.salonImg) throw new Error('Salon image is required');
 
-      // Cloudinary upload
-      const cloudinaryFormData = new FormData();
-      cloudinaryFormData.append('file', data.salonImg);
-      cloudinaryFormData.append('upload_preset', 'salon_preset');
+    //   // Cloudinary upload
+    //   const cloudinaryFormData = new FormData();
+    //   cloudinaryFormData.append('file', data.salonImg);
+    //   cloudinaryFormData.append('upload_preset', 'salon_preset');
 
-      const cloudinaryResponse = await fetch(
-        'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
-        { method: 'POST', body: cloudinaryFormData }
-      );
+    //   const cloudinaryResponse = await fetch(
+    //     'https://api.cloudinary.com/v1_1/dl1lqotns/image/upload',
+    //     { method: 'POST', body: cloudinaryFormData }
+    //   );
 
-      if (!cloudinaryResponse.ok) throw new Error('Image upload failed');
-      const cloudinaryData = await cloudinaryResponse.json();
+    //   if (!cloudinaryResponse.ok) throw new Error('Image upload failed');
+    //   const cloudinaryData = await cloudinaryResponse.json();
 
-      // Prepare salon data
-      const salonData = {
-        salon_name: data.salonName,
-        salon_tag: data.tagline,
-        opening_time: data.openingTime,
-        closing_time: data.closingTime,
-        contact_email: data.email,
-        contact_number: data.phone,
-        salon_img_url: cloudinaryData.secure_url,
-        user_id: userId
-      };
+    //   // Prepare salon data
+    //   const salonData = {
+    //     salon_name: data.salonName,
+    //     salon_tag: data.tagline,
+    //     opening_time: data.openingTime,
+    //     closing_time: data.closingTime,
+    //     contact_email: data.email,
+    //     contact_number: data.phone,
+    //     salon_img_url: cloudinaryData.secure_url,
+    //     user_id: userId
+    //   };
 
-      // Submit to backend
-      const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(salonData),
-      });
+    //   // Submit to backend
+    //   const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(salonData),
+    //   });
 
-      if (!response.ok) throw new Error('Salon creation failed');
+    //   if (!response.ok) throw new Error('Salon creation failed');
       
-      setStep(2); // Move to next step on success
+    //   setStep(2); // Move to next step on success
 
-    } catch (error: any) {
-      setSubmissionError(error.message || 'An error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    // } catch (error: any) {
+    //   setSubmissionError(error.message || 'An error occurred. Please try again.');
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
+    setStep(2);
   };
 
   // Preview effect

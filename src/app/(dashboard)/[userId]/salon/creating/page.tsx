@@ -5,12 +5,12 @@ import StepFive from '@/Components/StepFive';
 import StepFour from '@/Components/StepFour';
 import { StepOne } from '@/Components/StepOne';
 import Stepthree from '@/Components/Stepthree';
-import Steptwo from '@/Components/Steptwo';
+import { StepTwo } from '@/Components/Steptwo';
 import { useState } from 'react';
 
 
 export default function SalonSetupPage() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
 
   return (
     <div className="min-h-screen bg-[#fff9f7]">
@@ -18,7 +18,7 @@ export default function SalonSetupPage() {
       
       <div className="pb-20">
         {currentStep === 1 && <StepOne setStep={setCurrentStep} />}
-        {currentStep === 2 && <Steptwo setStep={setCurrentStep} />}
+        {currentStep === 2 && <StepTwo setStep={setCurrentStep} />}
         {currentStep === 3 && <Stepthree setStep={setCurrentStep} />}
         {currentStep === 4 && <StepFour setStep={setCurrentStep} />}
         {currentStep === 5 && <StepFive setStep={setCurrentStep} />}
