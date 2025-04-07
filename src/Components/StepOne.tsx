@@ -11,8 +11,7 @@ import { usePathname } from 'next/navigation';
 interface FormData {
   salonName: string;
   tagline: string;
-  openingTime: string;
-  closingTime: string;
+  openingDate: string; // Changed from openingTime to openingDate
   email: string;
   phone: string;
   salonImg: File | null;
@@ -71,8 +70,7 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
       const salonData = {
         salon_name: data.salonName,
         salon_tag: data.tagline,
-        opening_time: data.openingTime,
-        closing_time: data.closingTime,
+        opening_time: data.openingDate, // Changed from openingTime to openingDate
         contact_email: data.email,
         contact_number: data.phone,
         salon_img_url: cloudinaryData.secure_url,
@@ -90,8 +88,13 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
       
       setStep(2); // Move to next step on success
 
-    } catch (error: any) {
-      setSubmissionError(error.message || 'An error occurred. Please try again.');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setSubmissionError(error.message || 'An error occurred. Please try again.');
+      } else {
+        // Fallback for unknown error types (e.g., if error is not an instance of Error)
+        setSubmissionError('An error occurred. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -142,32 +145,18 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
           />
         </div>
 
-        {/* Opening Hours */}
+        {/* Opening Date */} {/* Changed this from Opening Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-gray-700 mb-2">Opening Time *</label>
+            <label className="block text-gray-700 mb-2">Opening Date *</label>
             <input
-              type="time"
-              {...register('openingTime', { required: 'Opening time is required' })}
+              type="date" // Changed to type="date"
+              {...register('openingDate', { required: 'Opening date is required' })} // Changed from openingTime to openingDate
               className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
             />
-            {errors.openingTime && (
+            {errors.openingDate && ( // Changed from openingTime to openingDate
               <span className="text-red-500 text-sm flex items-center mt-1">
-                <FiAlertTriangle className="mr-1" /> {errors.openingTime.message}
-              </span>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-gray-700 mb-2">Closing Time *</label>
-            <input
-              type="time"
-              {...register('closingTime', { required: 'Closing time is required' })}
-              className="w-full px-4 py-3 border border-[#e8c4c0] rounded-lg focus:ring-2 focus:ring-[#b76e79] focus:border-transparent"
-            />
-            {errors.closingTime && (
-              <span className="text-red-500 text-sm flex items-center mt-1">
-                <FiAlertTriangle className="mr-1" /> {errors.closingTime.message}
+                <FiAlertTriangle className="mr-1" /> {errors.openingDate.message} {/* Changed from openingTime to openingDate */}
               </span>
             )}
           </div>

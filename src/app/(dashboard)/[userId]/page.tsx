@@ -20,40 +20,39 @@ const DashboardPage = () => {
   const userId = pathname.split('/')[1];
 
   useEffect(() => {
-    // const checkSalonStatus = async () => {
-    //   try {
-    //     const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
-    //     const data = response.data;
-    //     setName(data.user.fullname);
-    //     if (data.user.salonId) {
-    //       const response1 = await axios.post('https://salon-backend-3.onrender.com/api/branch/isbranch')
-    //       if(!response1.data.isbranch){
-    //         router.push(`/${userId}/salon/creating`);
-    //         return;
-    //       }
-    //       setHasSalon(true);
-    //       const timer = setInterval(() => {
-    //         setCountdown((prev) => {
-    //           if (prev === 1) {
-    //             clearInterval(timer);
-    //             router.push(`/${userId}/ownerhomepage`);
-    //           }
-    //           return prev - 1;
-    //         });
-    //       }, 1000);
-    //     } else {
-    //       router.push(`/${userId}/salon/not_created`);
-    //     }
-    //   } catch (error) {
-    //     console.error('Error checking salon status:', error);
-    //     router.push('/error');
-    //   }
-    // };
+    const checkSalonStatus = async () => {
+      try {
+        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        const data = response.data;
+        setName(data.user.fullname);
+        console.log(data.user.step)
+        if(data.user.step==0){
+             router.push(`/${userId}/salon/not_created`)
+        }else if(data.user.step==6){
+          // router.push(`/${userId}/ownerhomepage`)
+          setHasSalon(true);const timer = setInterval(() => {
+                    setCountdown((prev) => {
+                      if (prev === 1) {
+                        clearInterval(timer);
+                        // router.push(`/${userId}/ownerhomepage`);
+                      }
+                      return prev - 1;
+                    });
+                  }, 1000);
 
-    // if (userId) {
-    //   checkSalonStatus();
-    // }
-    router.push(`/${userId}/salon/creating`);
+        }else{
+          router.push(`/${userId}/salon/creating`)
+        }
+      } catch (error) {
+        console.error('Error checking salon status:', error);
+        // router.push('/error');
+      }
+    };
+
+    if (userId) {
+      checkSalonStatus();
+    }
+    
   }, [userId, router]);
 
   if (hasSalon === null) {

@@ -65,3 +65,23 @@
   }
 }
 
+
+.shadow-progress-glow {
+  filter: drop-shadow(0 2px 4px rgba(183, 110, 121, 0.3));
+}
+
+.shadow-step-active {
+  box-shadow: 0 4px 12px rgba(183, 110, 121, 0.25);
+}
+
+.shadow-step-completed {
+  box-shadow: 0 2px 8px rgba(183, 110, 121, 0.2);
+}
+
+
+.shadow-step-active {
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+  }
+  .shadow-step-completed {
+    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+   }

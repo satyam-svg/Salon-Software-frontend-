@@ -73,29 +73,35 @@ const StellarNavbar: FC = () => {
         const decoded = jwtDecode<DecodedToken>(authToken);
         const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${decoded.id}`);
         const data = response.data;
-        
-        if (data.user.salonId) {
-          setHasSalon(true);
-          const timer = setInterval(() => {
-            setCountdown((prev) => {
-              if (prev === 1) {
-                clearInterval(timer);
-                router.push(`/${decoded.id}/ownerhomepage`);
-              }
-              return prev - 1;
-            });
-          }, 1000);
-        } else {
-          router.push(`/${decoded.id}/salon/not_created`);
-        }
+        const userId = decoded.id;
+        console.log(data.user.step)
+        if(data.user.step==0){
+          router.push(`/${userId}/salon/not_created`)
+     }else if(data.user.step==6){
+       // router.push(`/${userId}/ownerhomepage`)
+       setHasSalon(true);const timer = setInterval(() => {
+                 setCountdown((prev) => {
+                   if (prev === 1) {
+                     clearInterval(timer);
+                     // router.push(`/${userId}/ownerhomepage`);
+                   }
+                   return prev - 1;
+                 });
+               }, 1000);
+
+     }else{
+       router.push(`/${userId}/salon/creating`)
+     }
       } catch (error) {
         console.error('Error checking salon status:', error);
-        router.push('/error');
+        // router.push('/error');
       }
     };
 
     checkSalonStatus();
   }, [router]);
+
+
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
