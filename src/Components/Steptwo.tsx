@@ -1,11 +1,21 @@
 // components/SalonSetup/StepTwo.tsx
-'use client';
+"use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { FiPlus, FiChevronLeft, FiChevronRight, FiClock, FiAlertCircle, FiCheckCircle, FiMapPin, FiMail, FiPhone } from 'react-icons/fi';
-import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  FiPlus,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiMapPin,
+  FiMail,
+  FiPhone,
+} from "react-icons/fi";
+import { usePathname } from "next/navigation";
 interface Branch {
   id: string;
   name: string;
@@ -14,6 +24,18 @@ interface Branch {
   closingTime: string;
   email: string;
   contact: string;
+}
+
+interface BranchAPIResponse {
+  id: string;
+  branch_name: string;
+  branch_location: string;
+  opning_time: string;
+  closeings_time: string;
+  contact_email: string;
+  contact_number: string;
+  serviceCount: number;
+  inventoryCount: number;
 }
 
 interface FormData {
@@ -32,68 +54,80 @@ const floatingVariants = {
 
 export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
   const pathname = usePathname();
-  const userId = pathname.split('/')[1];
-  const [salonId, setSalonId] = useState<string>('');
+  const userId = pathname.split("/")[1];
+  const [salonId, setSalonId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { 
-    register, 
-    handleSubmit, 
-    reset, 
-    formState: { errors, isValid }, 
-    watch 
-  } = useForm<FormData>({ mode: 'onChange' });
-  const updateStep = async ()=>{
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+    watch,
+  } = useForm<FormData>({ mode: "onChange" });
+  const updateStep = async () => {
     const salonData = {
-      salonId:salonId,
-      step:2,
-      user_id: userId
+      salonId: salonId,
+      step: 2,
+      user_id: userId,
     };
 
     // Submit to backend
-    const response = await fetch('https://salon-backend-3.onrender.com/api/salon/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(salonData),
-    });
+    const response = await fetch(
+      "https://salon-backend-3.onrender.com/api/salon/create",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(salonData),
+      }
+    );
     console.log(response);
-    setStep(3)
-  }
+    setStep(3);
+  };
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   useEffect(() => {
     const initializeData = async () => {
       try {
         // Get user data to find salonId
-        const userResponse = await fetch(`https://salon-backend-3.onrender.com/api/users/${userId}`);
-        if (!userResponse.ok) throw new Error('Failed to fetch user data');
+        const userResponse = await fetch(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`
+        );
+        if (!userResponse.ok) throw new Error("Failed to fetch user data");
         const userData = await userResponse.json();
-        
-        if (!userData.user?.salonId) throw new Error('Salon not found');
+
+        if (!userData.user?.salonId) throw new Error("Salon not found");
         setSalonId(userData.user.salonId);
 
         // Get existing branches
-        const branchResponse = await fetch('https://salon-backend-3.onrender.com/api/branch/isbranch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ salon_id: userData.user.salonId })
-        });
-        
+        const branchResponse = await fetch(
+          "https://salon-backend-3.onrender.com/api/branch/isbranch",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ salon_id: userData.user.salonId }),
+          }
+        );
+
         const branchData = await branchResponse.json();
         if (branchData.isbranch) {
           console.log(branchData);
-          setBranches(branchData.brances.map((branch: any) => ({
-            id: branch.id,
-            name: branch.branch_name,
-            location: branch.branch_location,
-            openingTime: branch.opning_time,
-            closingTime: branch.closeings_time,
-            email: branch.contact_email,
-            contact: branch.contact_number
-          })));
+          setBranches(
+            branchData.brances.map((branch: BranchAPIResponse) => ({
+              id: branch.id,
+              name: branch.branch_name,
+              location: branch.branch_location,
+              openingTime: branch.opning_time,
+              closingTime: branch.closeings_time,
+              email: branch.contact_email,
+              contact: branch.contact_number,
+            }))
+          );
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize data');
+        setError(
+          err instanceof Error ? err.message : "Failed to initialize data"
+        );
       } finally {
         setLoading(false);
       }
@@ -104,70 +138,80 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
   const onSubmit = async (formData: FormData) => {
     try {
       // Create new branch
-      const response = await fetch('https://salon-backend-3.onrender.com/api/branch/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          branch_name: formData.branchName,
-          branch_location: formData.location,
-          salon_id: salonId,
-          contact_email: formData.email,
-          contact_number: formData.contact,
-          opning_time: formData.openingTime,
-          closeings_time: formData.closingTime,
-        })
-      });
+      const response = await fetch(
+        "https://salon-backend-3.onrender.com/api/branch/create",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch_name: formData.branchName,
+            branch_location: formData.location,
+            salon_id: salonId,
+            contact_email: formData.email,
+            contact_number: formData.contact,
+            opning_time: formData.openingTime,
+            closeings_time: formData.closingTime,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to create branch');
+      if (!response.ok) throw new Error("Failed to create branch");
 
       // Refresh branches list
-      const newBranchResponse = await fetch('https://salon-backend-3.onrender.com/api/branch/isbranch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ salon_id: salonId })
-      });
-      
+      const newBranchResponse = await fetch(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ salon_id: salonId }),
+        }
+      );
+
       const newBranchData = await newBranchResponse.json();
-      setBranches(newBranchData.brances.map((branch: any) => ({
-        id: branch.id,
-        name: branch.branch_name,
-        location: branch.branch_location,
-        openingTime: branch.opning_time,
-        closingTime: branch.closeings_time,
-        email: branch.contact_email,
-        contact: branch.contact_number
-      })));
+      setBranches(
+        newBranchData.brances.map((branch: BranchAPIResponse) => ({
+          id: branch.id,
+          name: branch.branch_name,
+          location: branch.branch_location,
+          openingTime: branch.opning_time,
+          closingTime: branch.closeings_time,
+          email: branch.contact_email,
+          contact: branch.contact_number,
+        }))
+      );
 
       reset();
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save branch');
+      setError(err instanceof Error ? err.message : "Failed to save branch");
     }
   };
-  if (loading) return (
-    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-gray-500 dark:text-gray-300"
-      >
-        Loading branches...
-      </motion.div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-gray-500 dark:text-gray-300"
+        >
+          Loading branches...
+        </motion.div>
+      </div>
+    );
 
-  if (error) return (
-    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center text-rose-500">
-      {error}
-    </div>
-  );
+  if (error)
+    return (
+      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center text-rose-500">
+        {error}
+      </div>
+    );
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: 'easeInOut' }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
       className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="text-center mb-12">
@@ -189,55 +233,57 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
 
       {/* Saved Branches List */}
       <AnimatePresence>
-  {branches.length > 0 && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="mb-8 space-y-4"
-    >
-      {branches.map((branch) => (
-        <motion.div
-          key={branch.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex justify-between items-start group hover:shadow-md transition-shadow"
-        >
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800 text-lg">{branch.name}</h3>
-            </div>
+        {branches.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-8 space-y-4"
+          >
+            {branches.map((branch) => (
+              <motion.div
+                key={branch.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                className="p-6 bg-white rounded-xl shadow-sm border border-gray-100 flex justify-between items-start group hover:shadow-md transition-shadow"
+              >
+                <div className="space-y-3 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-gray-800 text-lg">
+                      {branch.name}
+                    </h3>
+                  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <FiMapPin className="flex-shrink-0 text-rose-400" />
-                <span className="truncate">{branch.location}</span>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <FiMapPin className="flex-shrink-0 text-rose-400" />
+                      <span className="truncate">{branch.location}</span>
+                    </div>
 
-              <div className="flex items-center gap-2">
-                <FiClock className="flex-shrink-0 text-emerald-400" />
-                <span>
-                  {branch.openingTime} - {branch.closingTime}
-                </span>
-              </div>
+                    <div className="flex items-center gap-2">
+                      <FiClock className="flex-shrink-0 text-emerald-400" />
+                      <span>
+                        {branch.openingTime} - {branch.closingTime}
+                      </span>
+                    </div>
 
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <FiMail className="flex-shrink-0 text-blue-400" />
-                  <span className="truncate">{branch.email}</span>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <FiMail className="flex-shrink-0 text-blue-400" />
+                        <span className="truncate">{branch.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiPhone className="flex-shrink-0 text-indigo-400" />
+                        <span>{branch.contact}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <FiPhone className="flex-shrink-0 text-indigo-400" />
-                  <span>{branch.contact}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
-  )}
-</AnimatePresence>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Branch Form */}
       <AnimatePresence>
@@ -251,14 +297,11 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Branch Name */}
-              <motion.div
-                variants={floatingVariants}
-                className="relative z-0"
-              >
+              <motion.div variants={floatingVariants} className="relative z-0">
                 <input
-                  {...register('branchName', { 
-                    required: 'Branch name is required',
-                    minLength: { value: 3, message: 'Minimum 3 characters' }
+                  {...register("branchName", {
+                    required: "Branch name is required",
+                    minLength: { value: 3, message: "Minimum 3 characters" },
                   })}
                   className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                   placeholder=" "
@@ -270,13 +313,15 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                   <AnimatePresence>
                     {errors.branchName ? (
                       <FiAlertCircle className="text-rose-500" />
-                    ) : watch('branchName') && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                      >
-                        <FiCheckCircle className="text-emerald-500" />
-                      </motion.div>
+                    ) : (
+                      watch("branchName") && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                        >
+                          <FiCheckCircle className="text-emerald-500" />
+                        </motion.div>
+                      )
                     )}
                   </AnimatePresence>
                 </div>
@@ -291,14 +336,12 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                 )}
               </motion.div>
 
-
               {/* Location */}
-              <motion.div
-                variants={floatingVariants}
-                className="relative z-0"
-              >
+              <motion.div variants={floatingVariants} className="relative z-0">
                 <input
-                  {...register('location', { required: 'Location is required' })}
+                  {...register("location", {
+                    required: "Location is required",
+                  })}
                   className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                   placeholder=" "
                 />
@@ -326,7 +369,9 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                     <FiClock className="text-emerald-500" />
                     <input
                       type="time"
-                      {...register('openingTime', { required: 'Opening time is required' })}
+                      {...register("openingTime", {
+                        required: "Opening time is required",
+                      })}
                       className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                     />
                   </div>
@@ -352,7 +397,9 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                     <FiClock className="text-emerald-500" />
                     <input
                       type="time"
-                      {...register('closingTime', { required: 'Closing time is required' })}
+                      {...register("closingTime", {
+                        required: "Closing time is required",
+                      })}
                       className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                     />
                   </div>
@@ -372,15 +419,15 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
               </div>
 
               {/* Contact Info */}
-              <motion.div
-                variants={floatingVariants}
-                className="relative z-0"
-              >
+              <motion.div variants={floatingVariants} className="relative z-0">
                 <input
                   type="email"
-                  {...register('email', { 
-                    required: 'Email is required',
-                    pattern: { value: /^\S+@\S+$/i, message: 'Invalid email format' }
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: "Invalid email format",
+                    },
                   })}
                   className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                   placeholder=" "
@@ -399,15 +446,15 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                 )}
               </motion.div>
 
-              <motion.div
-                variants={floatingVariants}
-                className="relative z-0"
-              >
+              <motion.div variants={floatingVariants} className="relative z-0">
                 <input
                   type="tel"
-                  {...register('contact', { 
-                    required: 'Contact number is required',
-                    pattern: { value: /^[0-9]{10}$/, message: '10 digits required' }
+                  {...register("contact", {
+                    required: "Contact number is required",
+                    pattern: {
+                      value: /^[0-9]{10}$/,
+                      message: "10 digits required",
+                    },
                   })}
                   className="block w-full pt-5 pb-2 px-4 bg-transparent border-0 border-b-2 appearance-none focus:outline-none focus:ring-0 peer"
                   placeholder=" "
@@ -439,7 +486,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                   Cancel
                 </motion.button>
               )}
-              
+
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.05 }}
@@ -447,7 +494,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
                 disabled={!isValid}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold disabled:opacity-50"
               >
-                {branches.length === 0 ? 'Save Branch' : 'Add Branch'}
+                {branches.length === 0 ? "Save Branch" : "Add Branch"}
               </motion.button>
             </div>
           </motion.form>
@@ -487,15 +534,15 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
           <FiChevronLeft />
           Previous Step
         </motion.button>
-        
+
         <motion.button
           onClick={() => updateStep()}
           disabled={branches.length === 0}
           whileHover={{ x: 5 }}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${
-            branches.length === 0 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg'
+            branches.length === 0
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg"
           }`}
         >
           Next Step

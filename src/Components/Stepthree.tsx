@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import AddStaffModal from "@/Components/AddStaffModal";
 import { usePathname } from "next/navigation";
+import { FaUserTie } from "react-icons/fa";
 
 interface Branch {
   id: string;
@@ -22,6 +23,20 @@ interface Branch {
   closingTime: string;
   email: string;
   contact: string;
+  staffCount: number;
+}
+
+interface BranchAPIResponse {
+  id: string;
+  branch_name: string;
+  branch_location: string;
+  opning_time: string;
+  closeings_time: string;
+  contact_email: string;
+  contact_number: string;
+  serviceCount: number;
+  inventoryCount: number;
+  staffCount: number;
 }
 
 interface StepThreeProps {
@@ -32,6 +47,7 @@ export default function StepThree({ setStep }: StepThreeProps) {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [salonid, setsaloid] = useState("");
   const [selectedBranch, setSelectedBranch] = useState<{
     id: string;
     name: string;
@@ -40,49 +56,66 @@ export default function StepThree({ setStep }: StepThreeProps) {
   const [error, setError] = useState<string | null>(null);
   const [showAddStaff, setShowAddStaff] = useState(false);
 
-  useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const userResponse = await fetch(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`
-        );
-        if (!userResponse.ok) throw new Error("Failed to fetch user data");
-        const userData = await userResponse.json();
-
-        if (!userData.user?.salonId) throw new Error("Salon not found");
-
-        const response = await fetch(
-          "https://salon-backend-3.onrender.com/api/branch/isbranch",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ salon_id: userData.user.salonId }),
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch branches");
-
-        const data = await response.json();
-        setBranches(
-          data.brances.map((branch: any) => ({
-            id: branch.id,
-            name: branch.branch_name,
-            location: branch.branch_location,
-            openingTime: branch.opning_time,
-            closingTime: branch.closeings_time,
-            email: branch.contact_email,
-            contact: branch.contact_number,
-          }))
-        );
-        setLoading(false);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch branches"
-        );
-        setLoading(false);
-      }
+  const updateStep = async () => {
+    const salonData = {
+      salonId: salonid,
+      step: 3,
+      user_id: userId,
     };
 
+    // Submit to backend
+    const response = await fetch(
+      "https://salon-backend-3.onrender.com/api/salon/create",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(salonData),
+      }
+    );
+    console.log(response);
+    setStep(4);
+  };
+  const fetchBranches = async () => {
+    try {
+      const userResponse = await fetch(
+        `https://salon-backend-3.onrender.com/api/users/${userId}`
+      );
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+      setsaloid(userData.user.salonId);
+      const response = await fetch(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ salon_id: userData.user.salonId }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch branches");
+
+      const data = await response.json();
+      setBranches(
+        data.branches.map((branch: BranchAPIResponse) => ({
+          id: branch.id,
+          name: branch.branch_name,
+          location: branch.branch_location,
+          openingTime: branch.opning_time,
+          closingTime: branch.closeings_time,
+          email: branch.contact_email,
+          contact: branch.contact_number,
+          staffCount: branch.staffCount,
+        }))
+      );
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch branches");
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchBranches();
   }, []);
 
@@ -191,6 +224,10 @@ export default function StepThree({ setStep }: StepThreeProps) {
                     <FiPhone className="text-blue-500" />
                     <p>{branch.contact}</p>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <FaUserTie className="text-blue-500 text-xl" />
+                    <p> Staff :- {branch.staffCount}</p>
+                  </div>
                 </div>
 
                 <motion.button
@@ -212,7 +249,10 @@ export default function StepThree({ setStep }: StepThreeProps) {
 
       <AddStaffModal
         isOpen={showAddStaff}
-        onClose={() => setShowAddStaff(false)}
+        onClose={() => {
+          fetchBranches();
+          setShowAddStaff(false);
+        }}
         selectedBranch={selectedBranch}
       />
 
@@ -223,7 +263,12 @@ export default function StepThree({ setStep }: StepThreeProps) {
       >
         <motion.button className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"></motion.button>
 
+        <motion.button className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"></motion.button>
+
         <motion.button
+          onClick={() => {
+            updateStep();
+          }}
           disabled={branches.length === 0}
           whileHover={{ x: 5 }}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${

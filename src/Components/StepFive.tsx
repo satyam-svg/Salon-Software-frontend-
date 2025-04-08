@@ -1,7 +1,17 @@
-export default function StepFive({ setStep }: { setStep: (step: number) => void }){
+export default function StepFive({
+  setStep,
+}: {
+  setStep: (step: number) => void;
+}) {
   return (
-     <>
-        <h1>hey buddy</h1>
-     </>
-  )
+    <>
+      <h1
+        onClick={() => {
+          setStep(1);
+        }}
+      >
+        hey buddy
+      </h1>
+    </>
+  );
 }
