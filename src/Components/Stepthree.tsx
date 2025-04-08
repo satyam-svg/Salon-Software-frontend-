@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiAlertCircle,  FiClock, FiMapPin, FiMail, FiPhone, FiUser } from 'react-icons/fi';
+import { FiAlertCircle,  FiClock, FiMapPin, FiMail, FiPhone, FiUser, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
 import AddStaffModal from '@/Components/AddStaffModal';
 
 interface Branch {
@@ -186,6 +186,35 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
   selectedBranch={selectedBranch}
   salonId={salonId}
 />
+
+<motion.div
+        className="mt-12 flex justify-between"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <motion.button
+         
+         
+          className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"
+        >
+          
+          
+        </motion.button>
+        
+        <motion.button
+          
+          disabled={branches.length === 0}
+          whileHover={{ x: 5 }}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${
+            branches.length === 0 
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg'
+          }`}
+        >
+          Next Step
+          <FiChevronRight />
+        </motion.button>
+      </motion.div>
     </motion.div>
   );
 }
