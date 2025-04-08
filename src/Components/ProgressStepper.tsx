@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
-import { FiCheck, FiInfo, FiUser, FiImage,FiClipboard } from 'react-icons/fi';
+import { FiCheck, FiInfo, FiUser, FiImage,FiClipboard, FiBox } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
 import { VscSourceControl } from 'react-icons/vsc';
 import axios from 'axios';
@@ -10,8 +10,8 @@ import { usePathname } from 'next/navigation';
 const steps = [
   { id: 1, title: 'Basic Info', description: 'Salon basic information', icon: <FiInfo /> },
   { id: 2, title: 'Branches', description: 'Add your services', icon: <VscSourceControl /> },
-  { id: 3, title: 'Stylists', description: 'Setup your team', icon: <FiUser /> },
-  { id: 4, title: 'Gallery', description: 'Upload photos', icon: <FiImage /> },
+  { id: 3, title: 'Staff', description: 'Setup your team', icon: <FiUser /> },
+  { id: 4, title: 'Inventory', description: 'Upload photos', icon: <FiBox /> },
   { id: 5, title: 'Review', description: 'Confirm details', icon: <FiClipboard /> },
 ];
 
@@ -79,14 +79,14 @@ export const ProgressStepper = ({ currentStep,setCurrentStep }: { currentStep: n
               >
                 {!isFirst && (
                   <div className="absolute top-[30%] right-full w-[calc(100%-2rem)] sm:w-[calc(100%-2.5rem)] h-1">
-                    <motion.div
+                    {/* <motion.div
                       className="h-full bg-pink-500"
                       initial={{ scaleX: 0 }}
                       animate={{ 
                         scaleX: isCompleted ? 1 : 0,
                         transition: { duration: 0.6 }
                       }}
-                    />
+                    /> */}
                   </div>
                 )}
 
