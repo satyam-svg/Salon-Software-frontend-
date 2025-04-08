@@ -14,28 +14,27 @@ import {
   FiEye,
 } from "react-icons/fi";
 import { useDropzone } from "react-dropzone";
+import { usePathname } from "next/navigation";
 
 interface AddStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedBranch: { id: string; name: string } | null;
-  salonId: string;
 }
 
 const AddStaffModal = ({
   isOpen,
   onClose,
   selectedBranch,
-  salonId,
 }: AddStaffModalProps) => {
   const [staffData, setStaffData] = useState({
-    name: "",
+    fullname: "",
     contact: "",
     email: "",
     password: "",
     profile_img: null as File | null,
     user_id: "",
-    staffId: "",
+    staff_id: "",
   });
 
   const [preview, setPreview] = useState<string | null>(null);
@@ -43,6 +42,8 @@ const AddStaffModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const pathname = usePathname();
+  const userId = pathname.split("/")[1];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "image/*": [".jpeg", ".jpg", ".png", ".webp"] },
@@ -78,6 +79,7 @@ const AddStaffModal = ({
       setStep(2);
 
       const imageFormData = new FormData();
+
       imageFormData.append("file", staffData.profile_img);
       imageFormData.append("upload_preset", "salon_preset");
 
@@ -91,19 +93,20 @@ const AddStaffModal = ({
 
       const staffPayload = {
         ...staffData,
-        branch_id: selectedBranch,
-        salon_id: salonId,
+        user_id: userId,
+        branch_id: selectedBranch.id,
         profile_img: imageData.secure_url,
       };
 
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/staff/create",
+        "https://salon-backend-3.onrender.com/api/staff/signup",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(staffPayload),
         }
       );
+      console.log(staffPayload);
 
       if (!response.ok) throw new Error("Staff creation failed");
 
@@ -122,13 +125,13 @@ const AddStaffModal = ({
 
   const resetForm = () => {
     setStaffData({
-      name: "",
+      fullname: "",
       contact: "",
       email: "",
       password: "",
       profile_img: null,
       user_id: "",
-      staffId: "",
+      staff_id: "",
     });
     setPreview(null);
     setStep(1);
@@ -251,11 +254,11 @@ const AddStaffModal = ({
                           <input
                             type="text"
                             required
-                            value={staffData.name}
+                            value={staffData.fullname}
                             onChange={(e) =>
                               setStaffData({
                                 ...staffData,
-                                name: e.target.value,
+                                fullname: e.target.value,
                               })
                             }
                             className="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
@@ -317,11 +320,11 @@ const AddStaffModal = ({
                           <input
                             type="text"
                             required
-                            value={staffData.staffId}
+                            value={staffData.staff_id}
                             onChange={(e) =>
                               setStaffData({
                                 ...staffData,
-                                staffId: e.target.value,
+                                staff_id: e.target.value,
                               })
                             }
                             className="w-full px-4 py-2 pl-10 pr-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"

@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiAlertCircle,  FiClock, FiMapPin, FiMail, FiPhone, FiUser, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
-import AddStaffModal from '@/Components/AddStaffModal';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiAlertCircle,
+  FiClock,
+  FiMapPin,
+  FiMail,
+  FiPhone,
+  FiUser,
+  FiChevronRight,
+} from "react-icons/fi";
+import AddStaffModal from "@/Components/AddStaffModal";
+import { usePathname } from "next/navigation";
 
 interface Branch {
   id: string;
@@ -17,14 +26,16 @@ interface Branch {
 
 interface StepThreeProps {
   setStep: (step: number) => void;
-  salonId: string;
 }
 
-
-
-export default function StepThree({ setStep, salonId }: StepThreeProps) {
+export default function StepThree({ setStep }: StepThreeProps) {
+  const pathname = usePathname();
+  const userId = pathname.split("/")[1];
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<{ id: string; name: string } | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddStaff, setShowAddStaff] = useState(false);
@@ -32,33 +43,48 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch('https://salon-backend-3.onrender.com/api/branch/isbranch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ salon_id: salonId })
-        });
+        const userResponse = await fetch(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`
+        );
+        if (!userResponse.ok) throw new Error("Failed to fetch user data");
+        const userData = await userResponse.json();
 
-        if (!response.ok) throw new Error('Failed to fetch branches');
-        
+        if (!userData.user?.salonId) throw new Error("Salon not found");
+
+        const response = await fetch(
+          "https://salon-backend-3.onrender.com/api/branch/isbranch",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ salon_id: userData.user.salonId }),
+          }
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch branches");
+
         const data = await response.json();
-        setBranches(data.brances.map((branch: any) => ({
-          id: branch.id,
-          name: branch.branch_name,
-          location: branch.branch_location,
-          openingTime: branch.opning_time,
-          closingTime: branch.closeings_time,
-          email: branch.contact_email,
-          contact: branch.contact_number
-        })));
+        setBranches(
+          data.brances.map((branch: any) => ({
+            id: branch.id,
+            name: branch.branch_name,
+            location: branch.branch_location,
+            openingTime: branch.opning_time,
+            closingTime: branch.closeings_time,
+            email: branch.contact_email,
+            contact: branch.contact_number,
+          }))
+        );
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch branches');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch branches"
+        );
         setLoading(false);
       }
     };
 
     fetchBranches();
-  }, [salonId]);
+  }, []);
 
   if (loading) {
     return (
@@ -102,7 +128,7 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: 'easeInOut' }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
       className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="flex flex-col items-center mb-12">
@@ -138,7 +164,9 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
             >
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-xl font-bold text-gray-800">{branch.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {branch.name}
+                  </h3>
                 </div>
 
                 <div className="space-y-3 text-gray-600">
@@ -149,7 +177,9 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
 
                   <div className="flex items-center gap-2">
                     <FiClock className="text-emerald-500" />
-                    <p>{branch.openingTime} -  {branch.closingTime}</p>
+                    <p>
+                      {branch.openingTime} - {branch.closingTime}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -181,34 +211,25 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
       </motion.div>
 
       <AddStaffModal
-  isOpen={showAddStaff}
-  onClose={() => setShowAddStaff(false)}
-  selectedBranch={selectedBranch}
-  salonId={salonId}
-/>
+        isOpen={showAddStaff}
+        onClose={() => setShowAddStaff(false)}
+        selectedBranch={selectedBranch}
+      />
 
-<motion.div
+      <motion.div
         className="mt-12 flex justify-between"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
+        <motion.button className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"></motion.button>
+
         <motion.button
-         
-         
-          className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"
-        >
-          
-          
-        </motion.button>
-        
-        <motion.button
-          
           disabled={branches.length === 0}
           whileHover={{ x: 5 }}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${
-            branches.length === 0 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg'
+            branches.length === 0
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg"
           }`}
         >
           Next Step
