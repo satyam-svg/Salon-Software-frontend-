@@ -90,7 +90,7 @@
          
          const branchData = await branchResponse.json();
          if (branchData.isbranch) {
-           setBranches(branchData.brances.map((branch: any) => ({
+           setBranches(branchData.branches.map((branch: any) => ({
              id: branch.id,
              name: branch.branch_name,
              location: branch.branch_location,

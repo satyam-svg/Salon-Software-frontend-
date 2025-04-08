@@ -13,6 +13,7 @@ interface Branch {
   closingTime: string;
   email: string;
   contact: string;
+  staffCount:number;
 }
 
 interface StepThreeProps {
@@ -41,14 +42,15 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
         if (!response.ok) throw new Error('Failed to fetch branches');
         
         const data = await response.json();
-        setBranches(data.brances.map((branch: any) => ({
+        setBranches(data.branches.map((branch: any) => ({
           id: branch.id,
           name: branch.branch_name,
           location: branch.branch_location,
           openingTime: branch.opning_time,
           closingTime: branch.closeings_time,
           email: branch.contact_email,
-          contact: branch.contact_number
+          contact: branch.contact_number,
+          staffCount:branch.staffCount
         })));
         setLoading(false);
       } catch (err) {
@@ -161,6 +163,10 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
                     <FiPhone className="text-blue-500" />
                     <p>{branch.contact}</p>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <FiPhone className="text-blue-500" />
+                    <p>{branch.staffCount}</p>
+                  </div>
                 </div>
 
                 <motion.button
@@ -202,7 +208,7 @@ export default function StepThree({ setStep, salonId }: StepThreeProps) {
         </motion.button>
         
         <motion.button
-          
+          onClick={()=>{setStep(4)}}
           disabled={branches.length === 0}
           whileHover={{ x: 5 }}
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold ${
