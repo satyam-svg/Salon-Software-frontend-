@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaClock, FaPhone, FaEnvelope, FaMapMarker } from "react-icons/fa";
+import { FiCheckCircle, FiPackage, FiShoppingBag } from "react-icons/fi";
 
 interface Staff {
   fullname: string;
@@ -157,12 +158,14 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50/30">
+      {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative h-96"
+        className="relative h-[60vh] overflow-hidden"
       >
+        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-pink-900/40" />
         <Image
           src={salon.salon_img_url}
           alt={salon.salon_name}
@@ -170,32 +173,56 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
           objectFit="cover"
           className="opacity-90"
         />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-          <div className="text-center text-white">
-            <motion.h1
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="text-5xl font-bold mb-2"
+        
+        <motion.div 
+          className="absolute bottom-0 left-0 right-0 text-center pb-12 px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <motion.h1
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="text-5xl font-bold text-white mb-4 drop-shadow-2xl"
+          >
+            {salon.salon_name}
+          </motion.h1>
+          <motion.p
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            className="text-xl text-pink-100 font-medium mb-6"
+          >
+            {salon.salon_tag}
+          </motion.p>
+          <div className="flex justify-center gap-6">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center bg-white/10 backdrop-blur-sm px-6 py-2 rounded-full text-pink-100 border border-white/20"
             >
-              {salon.salon_name}
-            </motion.h1>
-            <p className="text-xl">{salon.salon_tag}</p>
-            <div className="mt-4 flex gap-4 justify-center">
-              <div className="flex items-center">
-                <FaPhone className="mr-2" />
-                {salon.contact_number}
-              </div>
-              <div className="flex items-center">
-                <FaEnvelope className="mr-2" />
-                {salon.contact_email}
-              </div>
-            </div>
+              <FaPhone className="mr-2 text-pink-200" />
+              <span className="font-medium">{salon.contact_number}</span>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center bg-white/10 backdrop-blur-sm px-6 py-2 rounded-full text-pink-100 border border-white/20"
+            >
+              <FaEnvelope className="mr-2 text-pink-200" />
+              <span className="font-medium">{salon.contact_email}</span>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
-
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8">Our Branches</h2>
+  
+      {/* Branches Section */}
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <motion.h2 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-4xl font-bold text-gray-800 mb-12 text-center"
+        >
+          Our <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">Branches</span>
+        </motion.h2>
+  
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -206,97 +233,134 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
             <motion.div
               key={index}
               variants={itemVariants}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+              whileHover={{ y: -10 }}
+              className="group relative bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/20 backdrop-blur-sm"
             >
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {branch.branch_name}
-                </h3>
-                <div className="flex items-center mb-2 text-gray-600">
-                  <FaMapMarker className="mr-2" />
-                  {branch.branch_location}
+                {/* Branch Header */}
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    {branch.branch_name}
+                  </h3>
+                  <div className="flex items-center text-gray-500 mb-3">
+                    <FaMapMarker className="mr-2 text-purple-500" />
+                    <span className="truncate">{branch.branch_location}</span>
+                  </div>
+                  <div className="flex items-center text-gray-500">
+                    <FaClock className="mr-2 text-pink-500" />
+                    <span>{branch.opning_time} - {branch.closeings_time}</span>
+                  </div>
                 </div>
-                <div className="flex items-center mb-2 text-gray-600">
-                  <FaClock className="mr-2" />
-                  {branch.opning_time} - {branch.closeings_time}
-                </div>
-
-                <div className="flex items-center mb-2 text-gray-600">
-                  <FaEnvelope className="mr-2" />
-                  {branch.contact_email}
-                </div>
-
-                <div className="flex items-center mb-2 text-gray-600">
-                  <FaPhone className="mr-2" />
-                  {branch.contact_number}
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="font-bold mb-2">Staff</h4>
+  
+                {/* Staff Gallery */}
+                <div className="mb-6">
+                  <h4 className="font-bold text-gray-700 mb-3">Featured Staff</h4>
                   <div className="flex flex-wrap gap-2">
                     {branch.staff.map((staff, idx) => (
                       <motion.div
                         key={idx}
                         whileHover={{ scale: 1.1 }}
-                        className="flex items-center bg-gray-100 rounded-full px-3 py-1"
+                        className="relative group"
                       >
                         <Image
                           src={staff.profile_img}
                           alt={staff.fullname}
-                          width={24}
-                          height={24}
-                          className="rounded-full"
+                          width={40}
+                          height={40}
+                          className="rounded-full border-2 border-white shadow-sm"
                         />
-                        <span className="ml-2 text-sm">{staff.fullname}</span>
-                        <span className="ml-2 text-sm">{staff.email}</span>
-                        <span className="ml-2 text-sm">{staff.contact}</span>
-                        <span className="ml-2 text-sm">{staff.staff_id}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="font-bold mb-2">Products</h4>
-                  <div className="space-y-2">
-                    {branch.inventory.map((product, idx) => (
-                      <motion.div
-                        key={idx}
-                        whileHover={{ x: 10 }}
-                        className="flex justify-between bg-pink-50 p-2 rounded"
-                      >
-                        <span>{product.product_name}</span>
-                        <span>${product.price}</span>
-                        <span>${product.product_quantity}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="font-bold mb-2">Services</h4>
-                  <div className="space-y-2">
-                    {branch.service.map((service, idx) => (
-                      <motion.div
-                        key={idx}
-                        whileHover={{ x: 10 }}
-                        className="flex justify-between bg-purple-50 p-2 rounded"
-                      >
-                        <div>
-                          <span>{service.service_name}</span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            ({service.time})
-                          </span>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 hidden group-hover:block bg-white p-2 rounded-lg shadow-lg mb-2">
+                          <p className="text-sm font-medium">{staff.fullname}</p>
                         </div>
-                        <span>${service.service_price}</span>
                       </motion.div>
                     ))}
+                  </div>
+                </div>
+  
+                {/* Products & Services */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-bold text-gray-700 mb-3 flex items-center">
+                      <FiPackage className="mr-2 text-purple-500" />
+                      Products
+                    </h4>
+                    <div className="space-y-2">
+                      {branch.inventory.map((product, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ x: 10 }}
+                          className="flex justify-between items-center bg-purple-50/30 p-3 rounded-lg"
+                        >
+                          <span className="font-medium">{product.product_name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-sm">
+                              ${product.price}
+                            </span>
+                            <span className="bg-pink-100 text-pink-600 px-2 py-1 rounded-full text-sm">
+                              Qty: {product.product_quantity}
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+  
+                  <div>
+                    <h4 className="font-bold text-gray-700 mb-3 flex items-center">
+                      <FiShoppingBag className="mr-2 text-pink-500" />
+                      Services
+                    </h4>
+                    <div className="space-y-2">
+                      {branch.service.map((service, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ x: 10 }}
+                          className="flex justify-between items-center bg-pink-50/30 p-3 rounded-lg"
+                        >
+                          <div>
+                            <span className="font-medium">{service.service_name}</span>
+                            <span className="block text-sm text-gray-500">{service.time}</span>
+                          </div>
+                          <span className="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-sm">
+                            ${service.service_price}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </motion.div>
           ))}
+        </motion.div>
+  
+        {/* Action Section */}
+        <motion.div 
+          className="mt-16 text-center space-y-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+          >
+            Confirm & Publish Salon
+            <FiCheckCircle className="inline-block ml-3 text-xl" />
+          </motion.button>
+  
+          <div className="text-gray-600">
+            Need changes?{' '}
+            <motion.a
+              href="/dashboard"
+              className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent font-semibold hover:underline"
+              whileHover={{ scale: 1.05 }}
+            >
+              Visit your dashboard
+            </motion.a>{' '}
+            to update details
+          </div>
         </motion.div>
       </div>
     </div>
