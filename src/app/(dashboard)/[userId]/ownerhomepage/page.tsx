@@ -9,7 +9,7 @@ const OwnerHomepage = () => {
   const [daysOperating, setDaysOperating] = useState(0);
   const [yearsOperating, setYearsOperating] = useState(0);
  const  salonData = {
-    opening_time:"2025-04-23",
+    opening_time:"1997-04-23",
     share_link:"fgfdfgfdfgfdfgfdfgfdf.com",
     salon_img:"https://res.cloudinary.com/dl1lqotns/image/upload/v1744206969/hiz45i9z72s7vxgfb9dq.jpg",
     salon_name:"Fabulas salon",
