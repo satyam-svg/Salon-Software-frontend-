@@ -8,6 +8,7 @@ import Image from 'next/image'
 import { useSignup } from '@/context/SignupContext'
 import { useLogin } from '@/context/LoginContext'
 import toast, { Toaster } from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 const Signup = () => {
   const roseGold = '#b76e79'
@@ -113,7 +114,7 @@ const Signup = () => {
       setIsSubmitting(false)
     }
   }
-
+  const router = useRouter()
   const handleResendOtp = async () => {
     await handleSendOtp(true)
   }
@@ -135,7 +136,7 @@ const Signup = () => {
       if (!validatePassword()) throw new Error('Please meet all password requirements')
       if (password !== confirmPassword) throw new Error('Passwords do not match')
       if (enteredOtp !== otpSent?.toString()) throw new Error('Invalid OTP')
-
+     
       // Upload image to Cloudinary
       const cloudinaryFormData = new FormData()
       cloudinaryFormData.append('file', profileImageFile)
@@ -177,6 +178,8 @@ const Signup = () => {
         duration: 4000
       })
       setSignupToggle(false)
+      const userId=responseData.user.id;
+      router.push(`/${userId}`)
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during signup'
       toast.error(errorMessage, {
