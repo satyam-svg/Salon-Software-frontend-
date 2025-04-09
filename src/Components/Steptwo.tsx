@@ -169,7 +169,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
 
       const newBranchData = await newBranchResponse.json();
       setBranches(
-        newBranchData.brances.map((branch: BranchAPIResponse) => ({
+        newBranchData.branches.map((branch: BranchAPIResponse) => ({
           id: branch.id,
           name: branch.branch_name,
           location: branch.branch_location,
