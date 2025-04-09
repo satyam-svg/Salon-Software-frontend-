@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   FiPlus,
-  FiChevronLeft,
   FiChevronRight,
   FiClock,
   FiAlertCircle,
@@ -114,7 +113,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
         if (branchData.isbranch) {
           console.log(branchData);
           setBranches(
-            branchData.brances.map((branch: BranchAPIResponse) => ({
+            branchData.branches.map((branch: BranchAPIResponse) => ({
               id: branch.id,
               name: branch.branch_name,
               location: branch.branch_location,
@@ -171,7 +170,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
 
       const newBranchData = await newBranchResponse.json();
       setBranches(
-        newBranchData.brances.map((branch: BranchAPIResponse) => ({
+        newBranchData.branches.map((branch: BranchAPIResponse) => ({
           id: branch.id,
           name: branch.branch_name,
           location: branch.branch_location,
@@ -561,10 +560,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
           onClick={() => setStep(1)}
           whileHover={{ x: -5 }}
           className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"
-        >
-          <FiChevronLeft />
-          Previous Step
-        </motion.button>
+        ></motion.button>
 
         <motion.button
           onClick={() => updateStep()}
