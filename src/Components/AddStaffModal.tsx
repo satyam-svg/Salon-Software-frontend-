@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { useDropzone } from "react-dropzone";
 import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -51,9 +52,11 @@ const AddStaffModal = ({
     maxSize: 5 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
       setStaffData({ ...staffData, profile_img: acceptedFiles[0] });
+      toast.success("Image selected");
     },
     onDropRejected: () => {
       setError("File must be an image (JPEG, PNG, WEBP) and less than 5MB");
+      toast.error("File must be an image (JPEG, PNG, WEBP) and less than 5MB");
     },
   });
 
@@ -73,10 +76,17 @@ const AddStaffModal = ({
     setError(null);
 
     try {
-      if (!selectedBranch) throw new Error("No branch selected");
-      if (!staffData.profile_img) throw new Error("Profile image is required");
+      if (!selectedBranch) {
+        toast.error("Please select a branch first");
+        return;
+      }
+      if (!staffData.profile_img) {
+        toast.error("Profile image is required");
+        return;
+      }
 
       setStep(2);
+      const uploadToast = toast.loading("Uploading profile image...");
 
       const imageFormData = new FormData();
 
@@ -88,7 +98,11 @@ const AddStaffModal = ({
         { method: "POST", body: imageFormData }
       );
 
-      if (!imageResponse.ok) throw new Error("Image upload failed");
+      if (!imageResponse.ok) {
+        toast.error("Image upload failed");
+        throw new Error("Image upload failed");
+      }
+      toast.success("Image uploaded successfully", { id: uploadToast });
       const imageData = await imageResponse.json();
 
       const staffPayload = {
@@ -97,6 +111,8 @@ const AddStaffModal = ({
         branch_id: selectedBranch.id,
         profile_img: imageData.secure_url,
       };
+
+      const staffToast = toast.loading("Creating staff account...");
 
       const response = await fetch(
         "https://salon-backend-3.onrender.com/api/staff/signup",
@@ -108,8 +124,14 @@ const AddStaffModal = ({
       );
       console.log(staffPayload);
 
-      if (!response.ok) throw new Error("Staff creation failed");
-
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(errorData.message || "Staff creation failed", {
+          id: staffToast,
+        });
+        throw new Error(errorData.message || "Staff creation failed");
+      }
+      toast.success("Staff created successfully!", { id: staffToast });
       setStep(3);
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -277,17 +299,34 @@ const AddStaffModal = ({
                             type="tel"
                             required
                             value={staffData.contact}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              // Allow only numbers and limit to 10 digits
+                              const value = e.target.value
+                                .replace(/\D/g, "")
+                                .slice(0, 10);
                               setStaffData({
                                 ...staffData,
-                                contact: e.target.value,
-                              })
-                            }
+                                contact: value,
+                              });
+                            }}
+                            pattern="[0-9]{10}"
+                            title="Please enter exactly 10 digits"
                             className="w-full px-4 py-2 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
-                            placeholder="+1 234 567 890"
+                            placeholder="8345678934"
                           />
                           <FiSmartphone className="absolute left-3 top-3 text-gray-400" />
+                          {staffData.contact.length === 10 && (
+                            <span className="absolute right-3 top-3 text-emerald-500">
+                              ✓
+                            </span>
+                          )}
                         </div>
+                        {staffData.contact &&
+                          staffData.contact.length !== 10 && (
+                            <p className="mt-1 text-sm text-rose-500">
+                              Please enter exactly 10 digits
+                            </p>
+                          )}
                       </div>
 
                       <div className="relative">

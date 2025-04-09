@@ -9,7 +9,6 @@ import {
   FiMapPin,
   FiClock,
   FiShoppingBag,
-  FiChevronLeft,
   FiChevronRight,
   FiX,
   FiDollarSign,
@@ -578,10 +577,7 @@ export default function StepFour({
           onClick={() => setStep(2)}
           whileHover={{ x: -5 }}
           className="flex items-center gap-2 text-gray-600 hover:text-emerald-600"
-        >
-          <FiChevronLeft />
-          Previous Step
-        </motion.button>
+        ></motion.button>
 
         <motion.button
           onClick={() => updateStep()}
