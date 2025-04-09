@@ -3,39 +3,97 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiShare2, FiCopy, FiCheck, FiStar, FiSettings } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import axios from "axios";
 
 const floatingStars = Array(30).fill(null);
 
+interface Salon {
+  salon_name: string;
+  salon_tag: string;
+  opening_time: string;
+  contact_email: string;
+  contact_number: string;
+  salon_img_url: string;
+  share_link: string;
+}
+
 const OwnerHomepage = () => {
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
+  const router = useRouter();
+
   const [copySuccess, setCopySuccess] = useState(false);
   const [daysOperating, setDaysOperating] = useState(0);
   const [yearsOperating, setYearsOperating] = useState(0);
+  const [salonid, setsalonid] = useState("");
 
-  const salonData = {
-    opening_time: "2025-04-23",
-    share_link: "fgfdfgfdfgfdfgfdfgfdf.com",
-    salon_img:
-      "https://res.cloudinary.com/dl1lqotns/image/upload/v1744206969/hiz45i9z72s7vxgfb9dq.jpg",
-    salon_name: "Fabulas salon",
-    salon_tagline: "Discover your best form",
-    total_customers: 1500,
-    total_staff: 12,
-    total_services: 45,
-  };
+  const [salon, setsalon] = useState<Salon>({
+    salon_name: "",
+    salon_tag: "",
+    opening_time: "",
+    contact_email: "",
+    contact_number: "",
+    salon_img_url: "",
+    share_link: `https://salon.edubotix.online/${userid}-u`,
+  });
 
   useEffect(() => {
-    const openedDate = new Date(salonData.opening_time);
+    const getsalonid = async () => {
+      const userResponse = await fetch(
+        `https://salon-backend-3.onrender.com/api/users/${userid}`
+      );
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+      setsalonid(userData.user.salonId);
+      console.log(userResponse);
+    };
+    getsalonid();
+  }, [userid]);
+
+  useEffect(() => {
+    const getsalon = async () => {
+      const salonresponse = await axios.post(
+        `https://salon-backend-3.onrender.com/api/salon/getsalonbyid`,
+        {
+          id: salonid,
+        }
+      );
+      const mysalon = salonresponse.data.salon;
+      console.log(mysalon);
+
+      setsalon({
+        salon_name: mysalon.salon_name,
+        salon_tag: mysalon.salon_tag,
+        salon_img_url: mysalon.salon_img_url,
+        opening_time: mysalon.opening_time,
+        contact_email: mysalon.contact_email,
+        contact_number: mysalon.contact_number,
+        share_link: salon.share_link,
+      });
+    };
+    getsalon();
+  }, [salonid]);
+
+  useEffect(() => {
+    if (!salon?.opening_time) return;
+
+    const openedDate = new Date(salon.opening_time);
     const today = new Date();
-    const diffTime = Math.abs(today - openedDate);
+
+    const diffTime = Math.abs(today.getTime() - openedDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
     const diffYears = today.getFullYear() - openedDate.getFullYear();
 
     setDaysOperating(diffDays);
     setYearsOperating(diffYears);
-  }, []);
+  }, [salon]);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(salonData.share_link);
+    navigator.clipboard.writeText(salon.share_link);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
   };
@@ -86,8 +144,8 @@ const OwnerHomepage = () => {
             className="relative w-72 h-72 rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white"
           >
             <Image
-              src={salonData.salon_img}
-              alt={salonData.salon_name}
+              src={salon.salon_img_url}
+              alt={salon.salon_name}
               layout="fill"
               objectFit="cover"
               className="transform hover:scale-105 transition-transform"
@@ -110,7 +168,7 @@ const OwnerHomepage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              {salonData.salon_name.split("").map((char, i) => (
+              {salon.salon_name.split("").map((char, i) => (
                 <motion.span
                   key={i}
                   initial={{ y: 20, opacity: 0 }}
@@ -128,7 +186,7 @@ const OwnerHomepage = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              {salonData.salon_tagline}
+              {salon.salon_tag}
             </motion.p>
 
             <motion.div
@@ -158,17 +216,17 @@ const OwnerHomepage = () => {
           {[
             { value: daysOperating, label: "Days Operating", color: "purple" },
             {
-              value: salonData.total_customers,
+              value: 225,
               label: "Happy Customers",
               color: "pink",
             },
             {
-              value: salonData.total_staff,
+              value: 300,
               label: "Expert Staff",
               color: "purple",
             },
             {
-              value: salonData.total_services,
+              value: 100,
               label: "Services Offered",
               color: "pink",
             },
@@ -226,7 +284,7 @@ const OwnerHomepage = () => {
                 <div className="flex items-center gap-2 relative">
                   <input
                     type="text"
-                    value={salonData.share_link}
+                    value={salon.share_link}
                     readOnly
                     className="bg-transparent text-white flex-1 min-w-0 text-lg font-mono"
                   />
@@ -280,7 +338,9 @@ const OwnerHomepage = () => {
             className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3 mx-auto relative overflow-hidden"
           >
             <FiSettings className="text-2xl animate-spin-slow" />
-            <span>Manage Your Salon Dashboard</span>
+            <span onClick={() => router.push(`/${userid}/dashboard`)}>
+              Manage Your Salon Dashboard
+            </span>
           </motion.button>
         </motion.div>
       </motion.div>
