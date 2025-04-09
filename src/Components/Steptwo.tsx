@@ -113,7 +113,7 @@ export const StepTwo = ({ setStep }: { setStep: (step: number) => void }) => {
         if (branchData.isbranch) {
           console.log(branchData);
           setBranches(
-            branchData.brances.map((branch: BranchAPIResponse) => ({
+            branchData.branches.map((branch: BranchAPIResponse) => ({
               id: branch.id,
               name: branch.branch_name,
               location: branch.branch_location,
