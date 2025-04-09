@@ -1,50 +1,50 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { FaCrown, FaBusinessTime } from 'react-icons/fa';
-import LoadingSpinner from '@/Components/LoadingSpinner';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+import { FaCrown, FaBusinessTime } from "react-icons/fa";
+import LoadingSpinner from "@/Components/LoadingSpinner";
+import axios from "axios";
 
 const DashboardPage = () => {
   const router = useRouter();
   const pathname = usePathname();
-  
 
   const [hasSalon, setHasSalon] = useState<boolean | null>(null);
   const [countdown, setCountdown] = useState(5);
   const [name, setName] = useState("");
 
   // Extract userId from pathname like /1234 or /5678/anything
-  const userId = pathname.split('/')[1];
+  const userId = pathname.split("/")[1];
 
   useEffect(() => {
     const checkSalonStatus = async () => {
       try {
-        const response = await axios.get(`https://salon-backend-3.onrender.com/api/users/${userId}`);
+        const response = await axios.get(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`
+        );
         const data = response.data;
         setName(data.user.fullname);
-        console.log(data.user.step)
-        if(data.user.step==0){
-             router.push(`/${userId}/salon/not_created`)
-        }else if(data.user.step==6){
-          // router.push(`/${userId}/ownerhomepage`)
-          setHasSalon(true);const timer = setInterval(() => {
-                    setCountdown((prev) => {
-                      if (prev === 1) {
-                        clearInterval(timer);
-                        // router.push(`/${userId}/ownerhomepage`);
-                      }
-                      return prev - 1;
-                    });
-                  }, 1000);
-
-        }else{
-          router.push(`/${userId}/salon/creating`)
+        console.log(data.user.step);
+        if (data.user.step == 0) {
+          router.push(`/${userId}/salon/not_created`);
+        } else if (data.user.step == 6) {
+          setHasSalon(true);
+          const timer = setInterval(() => {
+            setCountdown((prev) => {
+              if (prev === 1) {
+                clearInterval(timer);
+                router.push(`/${userId}/ownerhomepage`);
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        } else {
+          router.push(`/${userId}/salon/creating`);
         }
       } catch (error) {
-        console.error('Error checking salon status:', error);
+        console.error("Error checking salon status:", error);
         // router.push('/error');
       }
     };
@@ -52,7 +52,6 @@ const DashboardPage = () => {
     if (userId) {
       checkSalonStatus();
     }
-    
   }, [userId, router]);
 
   if (hasSalon === null) {
@@ -106,7 +105,7 @@ const DashboardPage = () => {
               <h2 className="text-3xl font-semibold text-gray-800 mb-4">
                 Hi, {name}!
               </h2>
-              
+
               <div className="flex items-center justify-center gap-4 mb-6">
                 <FaBusinessTime className="text-4xl text-[#b76e79] animate-pulse" />
                 <span className="text-2xl font-medium text-gray-700">
@@ -118,7 +117,11 @@ const DashboardPage = () => {
                 className="text-xl text-gray-600 mb-8"
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
-                transition={{ repeat: Infinity, repeatType: 'mirror', duration: 1 }}
+                transition={{
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  duration: 1,
+                }}
               >
                 Redirecting in {countdown} seconds...
               </motion.div>
@@ -126,8 +129,8 @@ const DashboardPage = () => {
               <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden mx-auto max-w-xs">
                 <motion.div
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#b76e79] to-[#e8c4c0]"
-                  initial={{ width: '100%' }}
-                  animate={{ width: '0%' }}
+                  initial={{ width: "100%" }}
+                  animate={{ width: "0%" }}
                   transition={{ duration: 5, ease: "linear" }}
                 />
               </div>
