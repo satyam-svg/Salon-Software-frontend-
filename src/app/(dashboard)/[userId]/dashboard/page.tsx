@@ -1,50 +1,9 @@
 // app/dashboard/page.tsx
 'use client';
-
 import { AreaChartComponent, BarChartComponent, LineChartComponent } from '@/Components/Charts';
 import { motion } from 'framer-motion';
-
 import { FiDollarSign, FiUserPlus, FiCalendar, FiSettings, FiBox, FiUsers } from 'react-icons/fi';
-
 const DashboardPage = () => {
-  // Dummy data
-
-  const generateData = () => {
-    const data = [];
-    const today = new Date();
-    
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      
-      data.push({
-        day: `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}`,
-        revenue: Math.floor(Math.random() * (800 - 300 + 1)) + 300,
-        newClients: Math.floor(Math.random() * (10 - 2 + 1)) + 2,
-        appointments: Math.floor(Math.random() * (20 - 5 + 1)) + 5
-      });
-    }
-  
-    return data.reverse();
-  };
-  
-  const allData = generateData();
-  
-  const financialData = allData.map(item => ({
-    day: item.day,
-    value: item.revenue
-  }));
-  
-  const clientsData = allData.map(item => ({
-    day: item.day,
-    value: item.newClients
-  }));
-  
-  const appointmentsData = allData.map(item => ({
-    day: item.day,
-    value: item.appointments
-  }));
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
