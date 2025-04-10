@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronRight,
-  FiChevronLeft,
   FiSettings,
   FiUsers,
   FiDollarSign,
@@ -14,6 +13,7 @@ import {
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
@@ -24,7 +24,8 @@ export default function DashboardLayout({
   const [isMobile, setIsMobile] = useState(false);
   const touchStartX = useRef(0);
   const arrowRef = useRef<HTMLButtonElement>(null);
-
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
@@ -102,15 +103,17 @@ export default function DashboardLayout({
                     onClick={() => setIsSidebarOpen(false)}
                     whileHover={{ scale: 1.1 }}
                     className="text-gray-500 hover:text-purple-600 p-2"
-                  >
-                    <FiChevronLeft className="text-xl" />
-                  </motion.button>
+                  ></motion.button>
                 )}
               </div>
 
               <div className="space-y-4 mt-10">
                 {[
-                  { icon: <FiCalendar />, label: "Appointments", href: "#" },
+                  {
+                    icon: <FiCalendar />,
+                    label: "Appointments",
+                    href: `/${userid}/dashboard/Appointement`,
+                  },
                   { icon: <FiDollarSign />, label: "Finance", href: "#" },
                   { icon: <FiUsers />, label: "Clients", href: "#" },
                   { icon: <FiBox />, label: "Inventory", href: "#" },
@@ -143,7 +146,7 @@ export default function DashboardLayout({
       <motion.main
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-11 ${
+        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-20  ${
           !isMobile && isSidebarOpen ? "ml-64" : ""
         }`}
       >
