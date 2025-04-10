@@ -7,7 +7,6 @@ import {
   LineChartComponent,
 } from "@/Components/Charts";
 import { motion } from "framer-motion";
-
 import {
   FiDollarSign,
   FiUserPlus,
@@ -16,48 +15,28 @@ import {
   FiBox,
   FiUsers,
 } from "react-icons/fi";
+import { ReactNode } from "react";
+
+interface StatCardProps {
+  icon: ReactNode;
+  title: string;
+  value: string;
+  trend: string;
+  color: string;
+}
+
+interface ChartCardProps {
+  title: string;
+  children: ReactNode;
+}
+
+interface QuickActionCardProps {
+  icon: ReactNode;
+  title: string;
+  color: string;
+}
 
 const DashboardPage = () => {
-  // Dummy data
-
-  const generateData = () => {
-    const data = [];
-    const today = new Date();
-
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-
-      data.push({
-        day: `${date.getDate()} ${date.toLocaleString("default", {
-          month: "short",
-        })}`,
-        revenue: Math.floor(Math.random() * (800 - 300 + 1)) + 300,
-        newClients: Math.floor(Math.random() * (10 - 2 + 1)) + 2,
-        appointments: Math.floor(Math.random() * (20 - 5 + 1)) + 5,
-      });
-    }
-
-    return data.reverse();
-  };
-
-  const allData = generateData();
-
-  const financialData = allData.map((item) => ({
-    day: item.day,
-    value: item.revenue,
-  }));
-
-  const clientsData = allData.map((item) => ({
-    day: item.day,
-    value: item.newClients,
-  }));
-
-  const appointmentsData = allData.map((item) => ({
-    day: item.day,
-    value: item.appointments,
-  }));
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -80,21 +59,21 @@ const DashboardPage = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          icon={<FiDollarSign />}
+          icon={<FiDollarSign className="text-white text-xl" />}
           title="Monthly Revenue"
           value="$12,450"
           trend="+15% from last month"
           color="from-purple-600 to-pink-500"
         />
         <StatCard
-          icon={<FiUserPlus />}
+          icon={<FiUserPlus className="text-white text-xl" />}
           title="New Clients"
           value="84"
           trend="+23% from last month"
           color="from-emerald-500 to-cyan-500"
         />
         <StatCard
-          icon={<FiCalendar />}
+          icon={<FiCalendar className="text-white text-xl" />}
           title="Appointments"
           value="216"
           trend="+8% from last month"
@@ -122,22 +101,22 @@ const DashboardPage = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <QuickActionCard
-          icon={<FiCalendar />}
+          icon={<FiCalendar className="text-xl" />}
           title="New Appointment"
           color="bg-purple-100 text-purple-600"
         />
         <QuickActionCard
-          icon={<FiUsers />}
+          icon={<FiUsers className="text-xl" />}
           title="Add Client"
           color="bg-emerald-100 text-emerald-600"
         />
         <QuickActionCard
-          icon={<FiBox />}
+          icon={<FiBox className="text-xl" />}
           title="Manage Inventory"
           color="bg-amber-100 text-amber-600"
         />
         <QuickActionCard
-          icon={<FiDollarSign />}
+          icon={<FiDollarSign className="text-xl" />}
           title="View Reports"
           color="bg-cyan-100 text-cyan-600"
         />
@@ -147,7 +126,7 @@ const DashboardPage = () => {
 };
 
 // Reusable Components
-const StatCard = ({ icon, title, value, trend, color }) => (
+const StatCard = ({ icon, title, value, trend, color }: StatCardProps) => (
   <motion.div
     whileHover={{ y: -5 }}
     className="bg-white p-6 rounded-xl shadow-sm"
@@ -163,7 +142,7 @@ const StatCard = ({ icon, title, value, trend, color }) => (
   </motion.div>
 );
 
-const ChartCard = ({ title, children }) => (
+const ChartCard = ({ title, children }: ChartCardProps) => (
   <motion.div
     whileHover={{ scale: 1.01 }}
     className="bg-white p-6 rounded-xl shadow-sm"
@@ -173,7 +152,7 @@ const ChartCard = ({ title, children }) => (
   </motion.div>
 );
 
-const QuickActionCard = ({ icon, title, color }) => (
+const QuickActionCard = ({ icon, title, color }: QuickActionCardProps) => (
   <motion.button
     whileHover={{ scale: 1.05 }}
     className={`p-6 rounded-xl ${color} flex items-center gap-3`}
