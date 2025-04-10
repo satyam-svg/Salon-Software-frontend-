@@ -1,234 +1,186 @@
 // app/dashboard/page.tsx
+"use client";
+
 import {
-  HiBell,
-  HiUsers,
-  HiCurrencyDollar,
-  HiScissors,
-  HiCalendar,
-} from "react-icons/hi";
+  AreaChartComponent,
+  BarChartComponent,
+  LineChartComponent,
+} from "@/Components/Charts";
 import { motion } from "framer-motion";
-import { BarChart, LineChart, PieChart } from "@components/charts"; // Create these chart components
-import { Avatar } from "@components/ui/avatar";
 
-export default function DashboardPage() {
-  const stats = [
-    {
-      title: "Total Clients",
-      value: "1,234",
-      icon: <HiUsers className="h-6 w-6" />,
-      color: "bg-rose-100",
-    },
-    {
-      title: "Monthly Revenue",
-      value: "$45,678",
-      icon: <HiCurrencyDollar className="h-6 w-6" />,
-      color: "bg-emerald-100",
-    },
-    {
-      title: "Services Booked",
-      value: "326",
-      icon: <HiScissors className="h-6 w-6" />,
-      color: "bg-indigo-100",
-    },
-    {
-      title: "Upcoming Appointments",
-      value: "58",
-      icon: <HiCalendar className="h-6 w-6" />,
-      color: "bg-amber-100",
-    },
-  ];
+import {
+  FiDollarSign,
+  FiUserPlus,
+  FiCalendar,
+  FiSettings,
+  FiBox,
+  FiUsers,
+} from "react-icons/fi";
 
-  const revenueData = [
-    { month: "Jan", revenue: 65 },
-    { month: "Feb", revenue: 59 },
-    { month: "Mar", revenue: 80 },
-    { month: "Apr", revenue: 81 },
-    { month: "May", revenue: 56 },
-    { month: "Jun", revenue: 55 },
-  ];
+const DashboardPage = () => {
+  // Dummy data
 
-  const serviceData = [
-    { service: "Haircut", bookings: 120 },
-    { service: "Massage", bookings: 86 },
-    { service: "Facial", bookings: 75 },
-    { service: "Manicure", bookings: 93 },
-  ];
+  const generateData = () => {
+    const data = [];
+    const today = new Date();
+
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+
+      data.push({
+        day: `${date.getDate()} ${date.toLocaleString("default", {
+          month: "short",
+        })}`,
+        revenue: Math.floor(Math.random() * (800 - 300 + 1)) + 300,
+        newClients: Math.floor(Math.random() * (10 - 2 + 1)) + 2,
+        appointments: Math.floor(Math.random() * (20 - 5 + 1)) + 5,
+      });
+    }
+
+    return data.reverse();
+  };
+
+  const allData = generateData();
+
+  const financialData = allData.map((item) => ({
+    day: item.day,
+    value: item.revenue,
+  }));
+
+  const clientsData = allData.map((item) => ({
+    day: item.day,
+    value: item.newClients,
+  }));
+
+  const appointmentsData = allData.map((item) => ({
+    day: item.day,
+    value: item.appointments,
+  }));
 
   return (
-    <div className="h-full">
-      {/* Animated Top Navigation */}
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6"
-      >
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800">
-            Welcome back, <span className="text-rose-600">Admin</span>
-          </h1>
-        </div>
-
-        <div className="flex items-center space-x-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-8"
+    >
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
-            className="text-slate-600 hover:text-slate-800 relative"
+            className="p-2 rounded-full bg-white shadow"
           >
-            <HiBell className="h-6 w-6" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-rose-500 rounded-full"></span>
+            <FiSettings className="text-xl text-gray-600" />
           </motion.button>
-          <div className="h-8 w-px bg-gray-200"></div>
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="flex items-center space-x-3 cursor-pointer"
-          >
-            <Avatar src="/admin-avatar.png" fallback="SA" />
-            <div>
-              <p className="text-sm font-medium text-slate-800">
-                Salonsphere Admin
-              </p>
-            </div>
-          </motion.div>
         </div>
-      </motion.header>
+      </div>
 
-      {/* Content Area with Proper Spacing */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="p-6 space-y-8"
-      >
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.title}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className={`p-6 rounded-xl ${stat.color} backdrop-blur-sm border border-gray-100`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-bold text-slate-800 mt-2">
-                    {stat.value}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-white/50">{stat.icon}</div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard
+          icon={<FiDollarSign />}
+          title="Monthly Revenue"
+          value="$12,450"
+          trend="+15% from last month"
+          color="from-purple-600 to-pink-500"
+        />
+        <StatCard
+          icon={<FiUserPlus />}
+          title="New Clients"
+          value="84"
+          trend="+23% from last month"
+          color="from-emerald-500 to-cyan-500"
+        />
+        <StatCard
+          icon={<FiCalendar />}
+          title="Appointments"
+          value="216"
+          trend="+8% from last month"
+          color="from-amber-500 to-orange-500"
+        />
+      </div>
 
-        {/* Charts Section */}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart */}
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="p-6 bg-white rounded-xl border border-gray-200"
-          >
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Revenue Trend
-            </h3>
-            <div className="h-64">
-              <LineChart
-                data={revenueData}
-                xKey="month"
-                yKey="revenue"
-                color="#e11d48"
-              />
-            </div>
-          </motion.div>
+          <ChartCard title="Financial Overview">
+            <LineChartComponent />
+          </ChartCard>
 
-          {/* Service Popularity */}
-          <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="p-6 bg-white rounded-xl border border-gray-200"
-          >
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Service Popularity
-            </h3>
-            <div className="h-64">
-              <BarChart
-                data={serviceData}
-                xKey="service"
-                yKey="bookings"
-                color="#7c3aed"
-              />
-            </div>
-          </motion.div>
+          <ChartCard title="Client Growth">
+            <BarChartComponent />
+          </ChartCard>
+
+          <ChartCard title="Appointment Trends">
+            <AreaChartComponent />
+          </ChartCard>
         </div>
+      </div>
 
-        {/* Recent Activity & Demographics */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Client Demographics */}
-          <motion.div
-            className="p-6 bg-white rounded-xl border border-gray-200"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-          >
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Client Demographics
-            </h3>
-            <div className="h-64">
-              <PieChart
-                data={[
-                  { name: "Female", value: 75 },
-                  { name: "Male", value: 22 },
-                  { name: "Other", value: 3 },
-                ]}
-                colors={["#e11d48", "#3b82f6", "#10b981"]}
-              />
-            </div>
-          </motion.div>
-
-          {/* Recent Appointments */}
-          <motion.div
-            className="p-6 bg-white rounded-xl border border-gray-200 lg:col-span-2"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-          >
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Recent Appointments
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-gray-600 border-b">
-                    <th className="pb-3">Client</th>
-                    <th className="pb-3">Service</th>
-                    <th className="pb-3">Staff</th>
-                    <th className="pb-3">Time</th>
-                    <th className="pb-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...Array(5)].map((_, i) => (
-                    <tr key={i} className="border-b last:border-b-0">
-                      <td className="py-3">
-                        <div className="flex items-center">
-                          <Avatar size="sm" className="mr-2" />
-                          <span>Client {i + 1}</span>
-                        </div>
-                      </td>
-                      <td>Haircut & Styling</td>
-                      <td>Stylist {i + 1}</td>
-                      <td>2:00 PM</td>
-                      <td>
-                        <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm">
-                          Confirmed
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </div>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <QuickActionCard
+          icon={<FiCalendar />}
+          title="New Appointment"
+          color="bg-purple-100 text-purple-600"
+        />
+        <QuickActionCard
+          icon={<FiUsers />}
+          title="Add Client"
+          color="bg-emerald-100 text-emerald-600"
+        />
+        <QuickActionCard
+          icon={<FiBox />}
+          title="Manage Inventory"
+          color="bg-amber-100 text-amber-600"
+        />
+        <QuickActionCard
+          icon={<FiDollarSign />}
+          title="View Reports"
+          color="bg-cyan-100 text-cyan-600"
+        />
+      </div>
+    </motion.div>
   );
-}
+};
+
+// Reusable Components
+const StatCard = ({ icon, title, value, trend, color }) => (
+  <motion.div
+    whileHover={{ y: -5 }}
+    className="bg-white p-6 rounded-xl shadow-sm"
+  >
+    <div className="flex items-center gap-4">
+      <div className={`p-3 rounded-lg bg-gradient-to-r ${color}`}>{icon}</div>
+      <div>
+        <h3 className="text-gray-500 text-sm">{title}</h3>
+        <p className="text-2xl font-bold text-gray-800">{value}</p>
+        <span className="text-sm text-green-500">{trend}</span>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const ChartCard = ({ title, children }) => (
+  <motion.div
+    whileHover={{ scale: 1.01 }}
+    className="bg-white p-6 rounded-xl shadow-sm"
+  >
+    <h3 className="text-lg font-semibold mb-4">{title}</h3>
+    <div className="h-64">{children}</div>
+  </motion.div>
+);
+
+const QuickActionCard = ({ icon, title, color }) => (
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    className={`p-6 rounded-xl ${color} flex items-center gap-3`}
+  >
+    {icon}
+    <span className="font-medium">{title}</span>
+  </motion.button>
+);
+
+export default DashboardPage;
