@@ -1,108 +1,199 @@
 // app/dashboard/layout.tsx
-import {
-  HiViewGrid,
-  HiCurrencyDollar,
-  HiScissors,
-  HiUsers,
-  HiBriefcase,
-  HiCog,
-  HiMap, // ✅ Replacement for HiLocationMarker
-} from "react-icons/hi";
-import { MdOutlineAdminPanelSettings } from "react-icons/md";
-import { motion } from "framer-motion";
+"use client";
 
-const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+import {
+  HiOutlineViewGrid,
+  HiOutlineCurrencyDollar,
+  HiOutlineScissors,
+  HiOutlineMap,
+  HiOutlineUsers,
+  HiOutlineBriefcase,
+  HiOutlineCog,
+  HiOutlineUserCircle,
+} from "react-icons/hi";
+import { motion, useAnimation, useInView } from "framer-motion";
+import { useEffect, useRef } from "react";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: false, margin: "-100px" });
+
+  // Animation variants
+
+  const itemVariants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+      },
+    },
+  };
+
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    } else {
+      controls.start("hidden");
+    }
+  }, [isInView, controls]);
+
   const menuItems = [
-    { name: "Dashboard", icon: <HiViewGrid className="h-5 w-5" /> },
-    { name: "Financial", icon: <HiCurrencyDollar className="h-5 w-5" /> },
-    { name: "Services", icon: <HiScissors className="h-5 w-5" /> },
-    { name: "Branches", icon: <HiMap className="h-5 w-5" /> }, // ✅ Updated
-    { name: "Clients", icon: <HiUsers className="h-5 w-5" /> },
-    { name: "Staff", icon: <HiBriefcase className="h-5 w-5" /> },
-    { name: "Settings", icon: <HiCog className="h-5 w-5" /> },
+    { name: "Dashboard", icon: <HiOutlineViewGrid className="h-5 w-5" /> },
+    {
+      name: "Financial",
+      icon: <HiOutlineCurrencyDollar className="h-5 w-5" />,
+    },
+    { name: "Services", icon: <HiOutlineScissors className="h-5 w-5" /> },
+    { name: "Branches", icon: <HiOutlineMap className="h-5 w-5" /> },
+    { name: "Clients", icon: <HiOutlineUsers className="h-5 w-5" /> },
+    { name: "Staff", icon: <HiOutlineBriefcase className="h-5 w-5" /> },
+    { name: "Settings", icon: <HiOutlineCog className="h-5 w-5" /> },
   ];
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Sidebar */}
+    <div className="h-screen w-full bg-gradient-to-br from-[#fff9f7] to-[#f5e8e5] relative overflow-hidden">
+      {/* Animated Sidebar */}
       <motion.aside
-        initial={{ x: -100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100 }}
-        className="fixed inset-y-0 left-0 z-50 w-64 border-r border-gray-200 bg-gradient-to-b from-slate-900 to-slate-800 shadow-2xl"
+        ref={ref}
+        initial={{ x: -300 }}
+        animate={{ x: 0 }}
+        transition={{ type: "spring", stiffness: 120 }}
+        className="fixed inset-y-0 left-0 z-50 w-64 border-r border-[#e8c4c0] bg-gradient-to-b from-[#2a1a1f] to-[#3d252d] shadow-2xl"
       >
-        {/* Logo */}
+        {/* Logo Section */}
         <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="flex h-20 items-center justify-center border-b border-slate-700 hover:bg-slate-800/50 transition-all"
+          whileHover={{ scale: 1.05 }}
+          className="flex h-20 items-center justify-center border-b border-[#4d323a] hover:bg-[#3d252d] transition-all"
         >
-          <span className="text-2xl font-bold text-white tracking-tighter">
-            <span className="text-rose-500">SALON</span>SPHERE
-          </span>
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-2xl font-bold text-white tracking-tighter"
+            style={{ fontFamily: "'Dancing Script', cursive" }}
+          >
+            <span className="text-[#b76e79]">SALON</span>SPHERE
+          </motion.span>
         </motion.div>
 
-        {/* Navigation */}
+        {/* Navigation Menu */}
         <nav className="mt-8 space-y-2 px-4">
           {menuItems.map((item, index) => (
             <motion.button
-              key={item.name}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.1 * index }}
-              whileHover={{ x: 5 }}
-              whileTap={{ scale: 0.98 }}
+              key={index}
+              variants={itemVariants}
+              initial="hidden"
+              animate={controls}
+              whileHover={{
+                x: 10,
+                backgroundColor: "#4d323a",
+                boxShadow: "0 4px 15px -3px rgba(183, 110, 121, 0.3)",
+              }}
+              whileTap={{ scale: 0.97 }}
               className="flex w-full items-center space-x-3 rounded-lg px-4 py-3.5 text-sm font-medium
-                           text-slate-200 hover:bg-slate-700/50 hover:text-white transition-all
-                           focus:outline-none focus:ring-2 focus:ring-rose-500/70"
+                       text-[#e8c4c0] hover:text-white transition-all group relative"
             >
+              <motion.span
+                className="absolute left-0 w-1 h-6 bg-[#b76e79] rounded-r-full opacity-0 group-hover:opacity-100"
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              />
               {item.icon}
-              <span>{item.name} Management</span>
+              <motion.span
+                className="group-hover:drop-shadow-[0_2px_2px_rgba(183,110,121,0.4)]"
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {item.name} Management
+              </motion.span>
             </motion.button>
           ))}
         </nav>
 
         {/* Profile Section */}
         <motion.div
+          className="absolute bottom-0 left-0 right-0 border-t border-[#4d323a] p-4 bg-[#3d252d]/50 backdrop-blur-sm"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="absolute bottom-0 left-0 right-0 border-t border-slate-700 p-4 bg-slate-800/40 backdrop-blur-sm"
         >
-          <div className="flex items-center space-x-3 group cursor-pointer">
+          <motion.div
+            className="flex items-center space-x-3 group cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+          >
             <motion.div
               whileHover={{ rotate: 10 }}
-              className="h-10 w-10 rounded-full bg-slate-600 flex items-center justify-center"
+              className="h-10 w-10 rounded-full bg-[#4d323a] flex items-center justify-center"
             >
-              <MdOutlineAdminPanelSettings className="h-6 w-6 text-rose-400" />
+              <HiOutlineUserCircle className="h-6 w-6 text-[#b76e79]" />
             </motion.div>
             <div className="transition-all">
-              <p className="text-sm font-medium text-white group-hover:text-rose-100">
+              <p className="text-sm font-medium text-white group-hover:text-[#e8c4c0]">
                 Salonsphere Admin
               </p>
-              <p className="text-xs text-slate-400 group-hover:text-slate-300">
+              <p className="text-xs text-[#a78a8f] group-hover:text-[#d8b4b9]">
                 admin@salonsphere.com
               </p>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
+
+        {/* Decorative Sidebar Elements */}
+        <motion.div
+          className="absolute top-1/3 -right-6 w-12 h-12 bg-[#b76e79] rounded-full blur-xl opacity-20"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
       </motion.aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="ml-64 h-full overflow-y-auto">
-        <div className="min-h-full pb-8">
-          <div className="h-20 w-full" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="min-h-full pb-8 relative"
+        >
+          {/* Animated Header */}
+
+          {/* Content Container */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="px-8 pt-6"
+            transition={{ delay: 0.2 }}
+            className="px-8 pt-6 space-y-6"
           >
             {children}
           </motion.div>
-        </div>
+        </motion.div>
       </main>
+
+      {/* Background Effects */}
+      <motion.div
+        className="fixed top-20 right-10 w-32 h-32 rounded-full bg-[#e8c4c0] opacity-20 mix-blend-multiply filter blur-xl animate-blob"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{
+          delay: 0.5,
+          type: "spring",
+          stiffness: 100,
+          damping: 10,
+        }}
+      />
     </div>
   );
-};
-
-export default DashboardLayout;
+}
