@@ -11,8 +11,6 @@ import {
   FiUserPlus,
   FiCalendar,
   FiSettings,
-  FiBox,
-  FiUsers,
 } from "react-icons/fi";
 import { ReactNode } from "react";
 
@@ -27,12 +25,6 @@ interface StatCardProps {
 interface ChartCardProps {
   title: string;
   children: ReactNode;
-}
-
-interface QuickActionCardProps {
-  icon: ReactNode;
-  title: string;
-  color: string;
 }
 
 const DashboardPage = () => {
@@ -96,28 +88,6 @@ const DashboardPage = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <QuickActionCard
-          icon={<FiCalendar className="text-xl" />}
-          title="New Appointment"
-          color="bg-purple-100 text-purple-600"
-        />
-        <QuickActionCard
-          icon={<FiUsers className="text-xl" />}
-          title="Add Client"
-          color="bg-emerald-100 text-emerald-600"
-        />
-        <QuickActionCard
-          icon={<FiBox className="text-xl" />}
-          title="Manage Inventory"
-          color="bg-amber-100 text-amber-600"
-        />
-        <QuickActionCard
-          icon={<FiDollarSign className="text-xl" />}
-          title="View Reports"
-          color="bg-cyan-100 text-cyan-600"
-        />
-      </div>
     </motion.div>
   );
 };
@@ -147,16 +117,6 @@ const ChartCard = ({ title, children }: ChartCardProps) => (
     <h3 className="text-lg font-semibold mb-4">{title}</h3>
     <div className="h-64">{children}</div>
   </motion.div>
-);
-
-const QuickActionCard = ({ icon, title, color }: QuickActionCardProps) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    className={`p-6 rounded-xl ${color} flex items-center gap-3`}
-  >
-    {icon}
-    <span className="font-medium">{title}</span>
-  </motion.button>
 );
 
 export default DashboardPage;
