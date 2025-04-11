@@ -10,7 +10,19 @@ import {
   FiMapPin,
   FiChevronDown,
   FiChevronUp,
+  FiDownload,
 } from "react-icons/fi";
+import {
+  pdf,
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+} from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
+import AppointmentManagementForm from "@/Components/dashboard/AppointmentManagementForm";
 
 // Types (same as before)
 interface User {
@@ -218,6 +230,129 @@ const initialAppointments: Appointment[] = [
   },
 ];
 
+Font.register({
+  family: "Inter",
+  fonts: [
+    {
+      src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZg.ttf",
+      fontWeight: 400,
+    },
+    {
+      src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYMZg.ttf",
+      fontWeight: 600,
+    },
+  ],
+});
+
+const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
+  const styles = StyleSheet.create({
+    page: {
+      fontFamily: "Inter",
+      padding: 40,
+    },
+    header: {
+      marginBottom: 30,
+      borderBottomWidth: 2,
+      borderBottomColor: "#4f46e5",
+      paddingBottom: 20,
+    },
+    section: {
+      marginBottom: 20,
+    },
+    h1: {
+      fontSize: 24,
+      fontWeight: 600,
+      color: "#1f2937",
+      marginBottom: 8,
+    },
+    h2: {
+      fontSize: 18,
+      fontWeight: 600,
+      color: "#374151",
+      marginBottom: 6,
+    },
+    text: {
+      fontSize: 12,
+      color: "#4b5563",
+      marginBottom: 4,
+    },
+    grid: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 20,
+    },
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 8,
+    },
+    total: {
+      fontSize: 14,
+      fontWeight: 600,
+      color: "#1f2937",
+    },
+  });
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.h1}>{appointment.salon.salon_name}</Text>
+          <Text style={styles.text}>Invoice #{appointment.id.slice(0, 8)}</Text>
+          <Text style={styles.text}>{appointment.salon.contact_number}</Text>
+        </View>
+
+        <View style={styles.grid}>
+          <View style={styles.section}>
+            <Text style={styles.h2}>Client Details</Text>
+            <Text style={styles.text}>{appointment.client.client_name}</Text>
+            <Text style={styles.text}>{appointment.client.email}</Text>
+            <Text style={styles.text}>{appointment.client.contact}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.h2}>Appointment Details</Text>
+            <Text style={styles.text}>
+              Date: {new Date(appointment.date).toLocaleDateString()}
+            </Text>
+            <Text style={styles.text}>Time: {appointment.time}</Text>
+            <Text style={styles.text}>Status: {appointment.status}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.h2}>Service Details</Text>
+          <View style={styles.row}>
+            <Text style={styles.text}>Service:</Text>
+            <Text style={styles.text}>{appointment.service.service_name}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.text}>Duration:</Text>
+            <Text style={styles.text}>{appointment.service.time} minutes</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.text}>Staff:</Text>
+            <Text style={styles.text}>{appointment.staff.fullname}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.text}>Location:</Text>
+            <Text style={styles.text}>
+              {appointment.branch.branch_location}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.row, { marginTop: 20 }]}>
+          <Text style={styles.total}>Total Amount:</Text>
+          <Text style={styles.total}>
+            ${appointment.service.service_price.toFixed(2)}
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
 export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -268,6 +403,13 @@ export default function AppointmentsPage() {
 
     return () => clearTimeout(timer);
   }, [searchQuery, clientName, serviceName, selectedStatus, selectedDate]);
+
+  const handleDownloadInvoice = async (appointment: Appointment) => {
+    const blob = await pdf(
+      <InvoiceDocument appointment={appointment} />
+    ).toBlob();
+    saveAs(blob, `invoice-${appointment.id}.pdf`);
+  };
 
   // Handle scroll progress
   useEffect(() => {
@@ -616,8 +758,17 @@ export default function AppointmentsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-lg font-bold text-indigo-600">
-                        ${appointment.service.service_price.toFixed(2)}
+                      <div className="flex items-center gap-2">
+                        <div className="text-lg font-bold text-indigo-600">
+                          ${appointment.service.service_price.toFixed(2)}
+                        </div>
+                        <button
+                          onClick={() => handleDownloadInvoice(appointment)}
+                          className="p-1 hover:bg-indigo-100 rounded-lg transition-colors"
+                          title="Download Invoice"
+                        >
+                          <FiDownload className="text-indigo-600" />
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -666,6 +817,8 @@ export default function AppointmentsPage() {
             </motion.div>
           )}
         </div>
+
+        <AppointmentManagementForm />
       </motion.div>
     </div>
   );

@@ -10,8 +10,13 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@react-pdf/renderer": "^4.3.0",
     "axios": "^1.8.4",
+<<<<<<< HEAD
     "date-fns": "^4.1.0",
+=======
+    "file-saver": "^2.0.5",
+>>>>>>> 3a32e9f0f3faa22e0d14768dbb19f3b7628fd379
     "framer-motion": "^12.6.3",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
@@ -31,6 +36,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/file-saver": "^2.0.7",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
