@@ -3,7 +3,7 @@ import {
   AreaChartComponent,
   BarChartComponent,
   LineChartComponent,
-} from "@/Components/Charts";
+} from "@/Components/dashboard/Charts";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,

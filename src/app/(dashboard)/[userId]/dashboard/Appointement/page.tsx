@@ -10,7 +10,9 @@ import {
   FiMapPin,
   FiChevronDown,
   FiChevronUp,
+  FiPlus,
 } from "react-icons/fi";
+import AppointmentManagementForm from "@/Components/dashboard/AppointmentManagementForm";
 
 // Types (same as before)
 interface User {
@@ -666,6 +668,8 @@ export default function AppointmentsPage() {
             </motion.div>
           )}
         </div>
+
+        <AppointmentManagementForm />
       </motion.div>
     </div>
   );
