@@ -159,7 +159,7 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <motion.main
-        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15${
+        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15 ${
           !isMobile && isSidebarOpen ? "ml-64" : ""
         }`}
       >
