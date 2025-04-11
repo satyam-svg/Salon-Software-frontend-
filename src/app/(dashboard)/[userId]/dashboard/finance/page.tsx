@@ -13,9 +13,9 @@ import {
 } from "react-icons/fi";
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
-import { LineChartComponent } from "@/Components/Charts";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+import { LineChartComponent } from "@/Components/dashboard/Charts";
 
 const FinancialPage = () => {
     const [dateRange, setDateRange] = useState<Range[]>([
@@ -82,8 +82,8 @@ const FinancialPage = () => {
             Financial Overview
           </h1>
           <p className="text-gray-600 mt-2">
-            {format(dateRange[0].startDate, "MMM dd, yyyy")} -{" "}
-            {format(dateRange[0].endDate, "MMM dd, yyyy")}
+            {format(dateRange[0].startDate ||0, "MMM dd, yyyy")} -{" "}
+            {format(dateRange[0].endDate ||0, "MMM dd, yyyy")}
           </p>
         </div>
 

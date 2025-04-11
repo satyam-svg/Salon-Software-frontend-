@@ -51,13 +51,13 @@ const DashboardPage = () => {
     {
       icon: <FiDollarSign className="text-2xl" />,
       label: "Finance Management",
-      href: "#",
+      href: `/${userId}/dashboard/finance`,
       description: "Track transactions, invoices, and financial reports",
     },
     {
       icon: <FiUsers className="text-2xl" />,
       label: "Clients Management",
-      href: "#",
+      href: `/${userId}/dashboard/Clients`,
       description: "View client profiles and manage relationships",
     },
     {
