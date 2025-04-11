@@ -94,8 +94,16 @@ export default function DashboardLayout({
                     label: "Appointments",
                     href: `/${userid}/dashboard/Appointement`,
                   },
-                  { icon: <FiDollarSign />, label: "Finance", href: `/${userid}/dashboard/finance` },
-                  { icon: <FiUsers />, label: "Clients", href: "#" },
+                  {
+                    icon: <FiDollarSign />,
+                    label: "Finance",
+                    href: `/${userid}/dashboard/finance`,
+                  },
+                  {
+                    icon: <FiUsers />,
+                    label: "Clients",
+                    href: `/${userid}/dashboard/Clients`,
+                  },
                   { icon: <FiBox />, label: "Inventory", href: "#" },
                   { icon: <FiClipboard />, label: "Services", href: "#" },
                   { icon: <FiStar />, label: "Feedback", href: "#" },
