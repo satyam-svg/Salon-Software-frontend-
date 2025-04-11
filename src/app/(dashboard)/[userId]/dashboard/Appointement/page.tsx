@@ -294,7 +294,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto mb-20">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -303,7 +303,7 @@ export default function AppointmentsPage() {
       >
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Appointment Dashboard
+            Appointment Management
           </h1>
           <p className="text-gray-500 mt-1">
             Manage and track all salon appointments

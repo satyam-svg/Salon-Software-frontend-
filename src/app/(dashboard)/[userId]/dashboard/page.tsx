@@ -114,7 +114,7 @@ const DashboardPage = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-8 p-6"
+      className="space-y-8 px-6 mb-20"
     >
       {/* Header */}
       <motion.div

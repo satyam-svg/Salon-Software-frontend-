@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronRight,
+  FiX,
   FiSettings,
   FiUsers,
   FiDollarSign,
@@ -22,31 +23,17 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const touchStartX = useRef(0);
   const arrowRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const touchEndX = e.changedTouches[0].clientX;
-    const deltaX = touchEndX - touchStartX.current;
-
-    if (deltaX > 30 && !isSidebarOpen) {
-      setIsSidebarOpen(true);
-    } else if (deltaX < -30 && isSidebarOpen) {
-      setIsSidebarOpen(false);
-    }
-  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -67,6 +54,7 @@ export default function DashboardLayout({
       {isMobile && !isSidebarOpen && (
         <motion.button
           ref={arrowRef}
+          onClick={() => setIsSidebarOpen(true)}
           initial={{ opacity: 0, x: -10 }}
           animate={{
             opacity: 1,
@@ -78,13 +66,15 @@ export default function DashboardLayout({
               ease: "easeInOut",
             },
           }}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 p-2 bg-purple-600 text-white rounded-r-full shadow-lg"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 p-3 bg-purple-600 text-white rounded-r-full shadow-lg hover:bg-purple-700 transition-colors"
         >
-          <FiChevronRight className="text-lg" />
+          <FiChevronRight className="text-xl" />
         </motion.button>
       )}
 
-      {/* Swipeable Sidebar */}
+      {/* Sidebar */}
       <AnimatePresence>
         {(!isMobile || isSidebarOpen) && (
           <motion.nav
@@ -97,16 +87,6 @@ export default function DashboardLayout({
             } overflow-y-auto`}
           >
             <div className="p-6 space-y-6">
-              <div className="flex justify-end">
-                {isMobile && (
-                  <motion.button
-                    onClick={() => setIsSidebarOpen(false)}
-                    whileHover={{ scale: 1.1 }}
-                    className="text-gray-500 hover:text-purple-600 p-2"
-                  ></motion.button>
-                )}
-              </div>
-
               <div className="space-y-4 mt-10">
                 {[
                   {
@@ -136,6 +116,41 @@ export default function DashboardLayout({
                     </Link>
                   </motion.div>
                 ))}
+
+                {/* Beautiful Animated Close Button */}
+                {isMobile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="pt-10"
+                  >
+                    <motion.button
+                      ref={closeBtnRef}
+                      onClick={() => setIsSidebarOpen(false)}
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: "#f3f4f6",
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      <motion.span
+                        animate={{
+                          rotate: [0, 20, -20, 0],
+                          transition: {
+                            repeat: Infinity,
+                            repeatType: "mirror",
+                            duration: 2,
+                          },
+                        }}
+                      >
+                        <FiX className="text-xl" />
+                      </motion.span>
+                      <span className="font-medium">Close SideBar</span>
+                    </motion.button>
+                  </motion.div>
+                )}
               </div>
             </div>
           </motion.nav>
@@ -144,9 +159,7 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <motion.main
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-20  ${
+        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15${
           !isMobile && isSidebarOpen ? "ml-64" : ""
         }`}
       >
