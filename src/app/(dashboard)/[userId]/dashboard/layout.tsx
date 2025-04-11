@@ -94,7 +94,7 @@ export default function DashboardLayout({
                     label: "Appointments",
                     href: `/${userid}/dashboard/Appointement`,
                   },
-                  { icon: <FiDollarSign />, label: "Finance", href: "#" },
+                  { icon: <FiDollarSign />, label: "Finance", href: `/${userid}/dashboard/finance` },
                   { icon: <FiUsers />, label: "Clients", href: "#" },
                   { icon: <FiBox />, label: "Inventory", href: "#" },
                   { icon: <FiClipboard />, label: "Services", href: "#" },
@@ -159,7 +159,7 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <motion.main
-        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15${
+        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15 ${
           !isMobile && isSidebarOpen ? "ml-64" : ""
         }`}
       >
