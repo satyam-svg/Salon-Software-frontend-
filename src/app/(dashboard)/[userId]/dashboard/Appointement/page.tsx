@@ -249,103 +249,267 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
     page: {
       fontFamily: "Inter",
       padding: 40,
+      backgroundColor: "#f8fafc",
     },
     header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
       marginBottom: 30,
-      borderBottomWidth: 2,
-      borderBottomColor: "#4f46e5",
-      paddingBottom: 20,
+      padding: 20,
+      backgroundColor: "#ffffff",
+      borderRadius: 12,
+      shadowColor: "#64748b",
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
+    salonInfo: {
+      flex: 2,
+    },
+    invoiceMeta: {
+      flex: 1,
+      alignItems: "flex-end",
+    },
+    decorativeStrip: {
+      height: 4,
+      width: "100%",
+      marginVertical: 20,
+      backgroundColor: "#4f46e5",
+      borderRadius: 2,
     },
     section: {
-      marginBottom: 20,
+      marginBottom: 24,
+      padding: 20,
+      backgroundColor: "#ffffff",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#e2e8f0",
     },
-    h1: {
-      fontSize: 24,
-      fontWeight: 600,
-      color: "#1f2937",
-      marginBottom: 8,
-    },
-    h2: {
+    sectionTitle: {
       fontSize: 18,
-      fontWeight: 600,
-      color: "#374151",
-      marginBottom: 6,
+      fontWeight: "bold",
+      color: "#0f172a",
+      marginBottom: 16,
+      letterSpacing: 0.5,
     },
-    text: {
+    gridContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 20,
+    },
+    gridColumn: {
+      flex: 1,
+    },
+    table: {
+      marginVertical: 16,
+      borderWidth: 1,
+      borderColor: "#e2e8f0",
+      borderRadius: 6,
+    },
+    tableRow: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderColor: "#e2e8f0",
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    tableHeader: {
+      backgroundColor: "#f1f5f9",
+      fontWeight: 600,
+      color: "#475569",
+    },
+    tableCell: {
+      flex: 1,
       fontSize: 12,
-      color: "#4b5563",
-      marginBottom: 4,
+      color: "#475569",
     },
-    grid: {
+    totalContainer: {
       flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 20,
+      justifyContent: "flex-end",
+      marginTop: 24,
     },
-    row: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 8,
+    totalBox: {
+      width: "40%",
+      padding: 16,
+      backgroundColor: "#f8fafc",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#e2e8f0",
     },
-    total: {
+    priceText: {
       fontSize: 14,
+      fontWeight: "semibold",
+      color: "#0f172a",
+      textAlign: "right",
+    },
+    badge: {
+      alignSelf: "flex-start",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+      backgroundColor: "#dcfce7",
+      color: "#166534",
+      fontSize: 10,
       fontWeight: 600,
-      color: "#1f2937",
+    },
+    watermark: {
+      position: "absolute",
+      right: 40,
+      top: 200,
+      fontSize: 48,
+      color: "#e2e8f020",
+      fontWeight: 800,
+      transform: "rotate(-25deg)",
     },
   });
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.h1}>{appointment.salon.salon_name}</Text>
-          <Text style={styles.text}>Invoice #{appointment.id.slice(0, 8)}</Text>
-          <Text style={styles.text}>{appointment.salon.contact_number}</Text>
-        </View>
+        {appointment.status === "paid" && (
+          <Text style={styles.watermark}>PAID</Text>
+        )}
 
-        <View style={styles.grid}>
-          <View style={styles.section}>
-            <Text style={styles.h2}>Client Details</Text>
-            <Text style={styles.text}>{appointment.client.client_name}</Text>
-            <Text style={styles.text}>{appointment.client.email}</Text>
-            <Text style={styles.text}>{appointment.client.contact}</Text>
+        <View style={styles.header}>
+          <View style={styles.salonInfo}>
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: 800,
+                color: "#0f172a",
+                marginBottom: 4,
+              }}
+            >
+              {appointment.salon.salon_name}
+            </Text>
+            <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>
+              {appointment.branch.branch_location}
+            </Text>
+            <Text style={{ fontSize: 12, color: "#64748b" }}>
+              {appointment.salon.contact_number}
+            </Text>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.h2}>Appointment Details</Text>
-            <Text style={styles.text}>
-              Date: {new Date(appointment.date).toLocaleDateString()}
+          <View style={styles.invoiceMeta}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: "#4f46e5",
+                marginBottom: 8,
+              }}
+            >
+              Invoice
             </Text>
-            <Text style={styles.text}>Time: {appointment.time}</Text>
-            <Text style={styles.text}>Status: {appointment.status}</Text>
+            <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>
+              #{appointment.id.slice(0, 8)}
+            </Text>
+            <Text style={{ fontSize: 12, color: "#64748b" }}>
+              {new Date().toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.gridContainer}>
+          <View style={[styles.gridColumn, { marginRight: 20 }]}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Client Details</Text>
+              <Text style={{ fontSize: 14, color: "#0f172a", marginBottom: 4 }}>
+                {appointment.client.client_name}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>
+                {appointment.client.email}
+              </Text>
+              <Text style={{ fontSize: 12, color: "#64748b" }}>
+                {appointment.client.contact}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.gridColumn}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Appointment</Text>
+              <View style={{ flexDirection: "row", marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: "#64748b" }}>Date</Text>
+                  <Text style={{ fontSize: 14, color: "#0f172a" }}>
+                    {new Date(appointment.date).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: "#64748b" }}>Time</Text>
+                  <Text style={{ fontSize: 14, color: "#0f172a" }}>
+                    {appointment.time}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.badge}>
+                {appointment.status.toUpperCase()}
+              </View>
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.h2}>Service Details</Text>
-          <View style={styles.row}>
-            <Text style={styles.text}>Service:</Text>
-            <Text style={styles.text}>{appointment.service.service_name}</Text>
+          <Text style={styles.sectionTitle}>Service Details</Text>
+          <View style={styles.table}>
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <Text style={styles.tableCell}>Service</Text>
+              <Text style={styles.tableCell}>Duration</Text>
+              <Text style={styles.tableCell}>Staff</Text>
+              <Text style={styles.tableCell}>Price</Text>
+            </View>
+
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCell}>
+                {appointment.service.service_name}
+              </Text>
+              <Text style={styles.tableCell}>
+                {appointment.service.time} mins
+              </Text>
+              <Text style={styles.tableCell}>{appointment.staff.fullname}</Text>
+              <Text style={styles.tableCell}>
+                ${appointment.service.service_price.toFixed(2)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.text}>Duration:</Text>
-            <Text style={styles.text}>{appointment.service.time} minutes</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.text}>Staff:</Text>
-            <Text style={styles.text}>{appointment.staff.fullname}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.text}>Location:</Text>
-            <Text style={styles.text}>
-              {appointment.branch.branch_location}
-            </Text>
+
+          <View style={styles.totalBox}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <Text style={styles.priceText}>Subtotal:</Text>
+              <Text style={styles.priceText}>
+                ${appointment.service.service_price.toFixed(2)}
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text style={styles.priceText}>Total:</Text>
+              <Text
+                style={[styles.priceText, { color: "#4f46e5", fontSize: 16 }]}
+              >
+                ${appointment.service.service_price.toFixed(2)}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View style={[styles.row, { marginTop: 20 }]}>
-          <Text style={styles.total}>Total Amount:</Text>
-          <Text style={styles.total}>
-            ${appointment.service.service_price.toFixed(2)}
+        <View
+          style={{
+            marginTop: 20,
+            padding: 16,
+            backgroundColor: "#f1f5f9",
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ fontSize: 10, color: "#64748b", textAlign: "center" }}>
+            Thank you for choosing {appointment.salon.salon_name}! Please
+            present this invoice upon arrival. Cancellation policy applies.
           </Text>
         </View>
       </Page>
