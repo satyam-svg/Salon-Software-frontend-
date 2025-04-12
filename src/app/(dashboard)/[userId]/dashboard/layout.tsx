@@ -104,8 +104,8 @@ export default function DashboardLayout({
                     label: "Clients",
                     href: `/${userid}/dashboard/Clients`,
                   },
-                  { icon: <FiBox />, label: "Inventory", href: "#" },
-                  { icon: <FiClipboard />, label: "Services", href: "#" },
+                  { icon: <FiBox />, label: "Inventory", href: `/${userid}/dashboard/inventory` },
+                  { icon: <FiClipboard />, label: "Services", href: `/${userid}/dashboard/service` },
                   { icon: <FiStar />, label: "Feedback", href: "#" },
                   { icon: <FiSettings />, label: "Settings", href: "#" },
                 ].map((item) => (
