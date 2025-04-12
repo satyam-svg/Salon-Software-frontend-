@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
-
+import LoadingScreen from "@/Components/LoadingSpinner";
 const floatingStars = Array(30).fill(null);
 
 interface Salon {
@@ -27,7 +27,15 @@ const OwnerHomepage = () => {
   const [daysOperating, setDaysOperating] = useState(0);
   const [yearsOperating, setYearsOperating] = useState(0);
   const [salonid, setsalonid] = useState("");
+  const [imageLoading, setImageLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
+  const handleDashboardClick = () => {
+    setIsRedirecting(true);
+    setTimeout(() => {
+      router.push(`/${userid}/dashboard`);
+    }, 2000); // Small delay to ensure loading state shows
+  };
   const [salon, setsalon] = useState<Salon>({
     salon_name: "",
     salon_tag: "",
@@ -76,6 +84,12 @@ const OwnerHomepage = () => {
     };
     getsalon();
   }, [salonid]);
+
+  useEffect(() => {
+    if (salon.salon_img_url) {
+      setImageLoading(true);
+    }
+  }, [salon.salon_img_url]);
 
   useEffect(() => {
     if (!salon?.opening_time) return;
@@ -143,13 +157,25 @@ const OwnerHomepage = () => {
             transition={{ type: "spring", stiffness: 100 }}
             className="relative w-72 h-72 rounded-[4rem] overflow-hidden shadow-2xl border-8 border-white"
           >
-            <Image
-              src={salon.salon_img_url}
-              alt={salon.salon_name}
-              layout="fill"
-              objectFit="cover"
-              className="transform hover:scale-105 transition-transform"
-            />
+            {salon.salon_img_url && (
+              <Image
+                src={salon.salon_img_url}
+                alt={salon.salon_name}
+                layout="fill"
+                objectFit="cover"
+                className="transform hover:scale-105 transition-transform"
+                onLoadingComplete={() => setImageLoading(false)}
+              />
+            )}
+
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-sm">
+                <div className="relative h-16 w-16">
+                  <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
+                  <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-purple-400 border-l-pink-400 animate-spin animation-reverse animation-duration-2s"></div>
+                </div>
+              </div>
+            )}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -332,16 +358,19 @@ const OwnerHomepage = () => {
           initial={{ y: 50, opacity: 0 }}
           whileInView={{ y: 0, opacity: 1 }}
         >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3 mx-auto relative overflow-hidden"
-          >
-            <FiSettings className="text-2xl animate-spin-slow" />
-            <span onClick={() => router.push(`/${userid}/dashboard`)}>
-              Manage Your Salon Dashboard
-            </span>
-          </motion.button>
+          {isRedirecting ? (
+            <LoadingScreen />
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3 mx-auto relative overflow-hidden"
+              onClick={handleDashboardClick}
+            >
+              <FiSettings className="text-2xl animate-spin-slow" />
+              <span>Manage Your Salon Dashboard</span>
+            </motion.button>
+          )}
         </motion.div>
       </motion.div>
 

@@ -11,10 +11,12 @@ import {
   FiBox,
   FiStar,
   FiClipboard,
+  FiBarChart2,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import LoadingScreen from "@/Components/LoadingSpinner";
 
 export default function DashboardLayout({
   children,
@@ -23,9 +25,11 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const arrowRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
+
   const userid = pathname.split("/")[1];
 
   useEffect(() => {
@@ -34,6 +38,17 @@ export default function DashboardLayout({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  const handleNavigation = (href: string) => {
+    if (pathname !== href) {
+      setIsLoading(true);
+      if (isMobile) setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [pathname]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -49,6 +64,9 @@ export default function DashboardLayout({
           scrollbar-width: none;
         }
       `}</style>
+
+      {/* Loading Screen */}
+      <AnimatePresence>{isLoading && <LoadingScreen />}</AnimatePresence>
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (
@@ -90,6 +108,11 @@ export default function DashboardLayout({
               <div className="space-y-4 mt-10">
                 {[
                   {
+                    icon: <FiBarChart2 />,
+                    label: "Dashboard",
+                    href: `/${userid}/dashboard/`,
+                  },
+                  {
                     icon: <FiCalendar />,
                     label: "Appointments",
                     href: `/${userid}/dashboard/Appointement`,
@@ -109,7 +132,11 @@ export default function DashboardLayout({
                     label: "Inventory",
                     href: `/${userid}/dashboard/inventory`,
                   },
-                  { icon: <FiClipboard />, label: "Services", href: "#" },
+                  {
+                    icon: <FiClipboard />,
+                    label: "Services",
+                    href: `/${userid}/dashboard/service`,
+                  },
                   { icon: <FiStar />, label: "Feedback", href: "#" },
                   { icon: <FiSettings />, label: "Settings", href: "#" },
                 ].map((item) => (
@@ -121,7 +148,7 @@ export default function DashboardLayout({
                     <Link
                       href={item.href}
                       className="flex items-center gap-3 p-3 text-gray-600 hover:text-purple-600"
-                      onClick={() => isMobile && setIsSidebarOpen(false)}
+                      onClick={() => handleNavigation(item.href)}
                     >
                       {item.icon}
                       <span className="font-medium">{item.label}</span>

@@ -172,6 +172,16 @@ export default function ClientManagementPage() {
     setNewClient({ status: "active" });
   };
 
+  type InputCompatibleValue = string | number | Appointment[] | undefined;
+  function getInputValue(
+    value: InputCompatibleValue
+  ): string | number | undefined {
+    if (typeof value === "string" || typeof value === "number") {
+      return value;
+    }
+    return undefined;
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">
       {/* Add Client Modal */}
@@ -252,7 +262,9 @@ export default function ClientManagementPage() {
                           }
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
                           placeholder=" "
-                          value={newClient[field as keyof Client] ?? ""}
+                          value={getInputValue(
+                            newClient[field as keyof Client]
+                          )}
                           onChange={(e) =>
                             setNewClient({
                               ...newClient,
@@ -260,6 +272,7 @@ export default function ClientManagementPage() {
                             })
                           }
                         />
+
                         <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
                           {field.charAt(0).toUpperCase() + field.slice(1)}
                         </label>
