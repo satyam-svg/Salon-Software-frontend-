@@ -11,10 +11,12 @@ import {
   FiBox,
   FiStar,
   FiClipboard,
+  FiBarChart2,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import LoadingScreen from "@/Components/LoadingSpinner";
 
 export default function DashboardLayout({
   children,
@@ -23,9 +25,19 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const arrowRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
+
+  const isActiveLink = (href: string) => {
+    // Handle dashboard root path specifically
+    if (href === `/${userid}/dashboard/`) {
+      return pathname === href || pathname === `/${userid}/dashboard`;
+    }
+    return pathname === href;
+  };
+
   const userid = pathname.split("/")[1];
 
   useEffect(() => {
@@ -34,6 +46,17 @@ export default function DashboardLayout({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  const handleNavigation = (href: string) => {
+    if (pathname !== href) {
+      setIsLoading(true);
+      if (isMobile) setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, [pathname]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -49,6 +72,9 @@ export default function DashboardLayout({
           scrollbar-width: none;
         }
       `}</style>
+
+      {/* Loading Screen */}
+      <AnimatePresence>{isLoading && <LoadingScreen />}</AnimatePresence>
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (
@@ -90,6 +116,11 @@ export default function DashboardLayout({
               <div className="space-y-4 mt-10">
                 {[
                   {
+                    icon: <FiBarChart2 />,
+                    label: "Dashboard",
+                    href: `/${userid}/dashboard/`,
+                  },
+                  {
                     icon: <FiCalendar />,
                     label: "Appointments",
                     href: `/${userid}/dashboard/Appointement`,
@@ -104,10 +135,26 @@ export default function DashboardLayout({
                     label: "Clients",
                     href: `/${userid}/dashboard/Clients`,
                   },
-                  { icon: <FiBox />, label: "Inventory", href: `/${userid}/dashboard/inventory` },
-                  { icon: <FiClipboard />, label: "Services", href: `/${userid}/dashboard/service` },
-                  { icon: <FiStar />, label: "Feedback", href: `/${userid}/dashboard/feedback` },
-                  { icon: <FiSettings />, label: "Settings", href: `/${userid}/dashboard/setting` },
+                  {
+                    icon: <FiBox />,
+                    label: "Inventory",
+                    href: `/${userid}/dashboard/inventory`,
+                  },
+                  {
+                    icon: <FiClipboard />,
+                    label: "Services",
+                    href: `/${userid}/dashboard/service`,
+                  },
+                  {
+                    icon: <FiStar />,
+                    label: "Feedback",
+                    href: `/${userid}/dashboard/feedback`,
+                  },
+                  {
+                    icon: <FiSettings />,
+                    label: "Settings",
+                    href: `/${userid}/dashboard/setting`,
+                  },
                 ].map((item) => (
                   <motion.div
                     key={item.label}
@@ -116,8 +163,12 @@ export default function DashboardLayout({
                   >
                     <Link
                       href={item.href}
-                      className="flex items-center gap-3 p-3 text-gray-600 hover:text-purple-600"
-                      onClick={() => isMobile && setIsSidebarOpen(false)}
+                      className={`flex items-center gap-3 p-3 transition-colors ${
+                        isActiveLink(item.href)
+                          ? "bg-blue-100 text-blue-600 border-l-4 border-blue-500"
+                          : "text-gray-600 hover:text-purple-600"
+                      }`}
+                      onClick={() => handleNavigation(item.href)}
                     >
                       {item.icon}
                       <span className="font-medium">{item.label}</span>

@@ -1,12 +1,37 @@
-'use client';
+"use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
-import { FiStar, FiUser, FiMail, FiPhone, FiEdit, FiTrash, FiCheckSquare, FiFilter, FiChevronDown } from 'react-icons/fi';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import {
+  FiStar,
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiEdit,
+  FiTrash,
+  FiCheckSquare,
+  FiFilter,
+  FiChevronDown,
+} from "react-icons/fi";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface Feedback {
   id: string;
@@ -23,89 +48,98 @@ interface Feedback {
 }
 
 const FeedbackManagementPage = () => {
-  const [branches] = useState(['Downtown Branch', 'Uptown Branch', 'Westside Branch', 'Eastside Branch']);
+  const [branches] = useState([
+    "Downtown Branch",
+    "Uptown Branch",
+    "Westside Branch",
+    "Eastside Branch",
+  ]);
   const [selectedBranch, setSelectedBranch] = useState(branches[0]);
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingFeedback, setEditingFeedback] = useState<Feedback | null>(null);
 
   // Dummy Feedback Data
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([
     {
-      id: '1',
-      clientName: 'Sarah Johnson',
-      phone: '(555) 123-4567',
-      email: 'sarah@example.com',
-      date: '2024-03-15',
+      id: "1",
+      clientName: "Sarah Johnson",
+      phone: "(555) 123-4567",
+      email: "sarah@example.com",
+      date: "2024-03-15",
       rating: 5,
-      review: 'Exceptional service! The staff was incredibly professional.',
-      service: 'Premium Haircut',
-      staffName: 'Emma Wilson',
+      review: "Exceptional service! The staff was incredibly professional.",
+      service: "Premium Haircut",
+      staffName: "Emma Wilson",
       featured: true,
-      branch: 'Downtown Branch'
+      branch: "Downtown Branch",
     },
     {
-      id: '2',
-      clientName: 'Michael Chen',
-      phone: '(555) 234-5678',
-      email: 'michael@example.com',
-      date: '2024-03-14',
+      id: "2",
+      clientName: "Michael Chen",
+      phone: "(555) 234-5678",
+      email: "michael@example.com",
+      date: "2024-03-14",
       rating: 4,
-      review: 'Good experience, but waited a bit longer than expected.',
-      service: 'Color Treatment',
-      staffName: 'James Brown',
+      review: "Good experience, but waited a bit longer than expected.",
+      service: "Color Treatment",
+      staffName: "James Brown",
       featured: false,
-      branch: 'Downtown Branch'
+      branch: "Downtown Branch",
     },
     {
-      id: '3',
-      clientName: 'Olivia Davis',
-      phone: '(555) 345-6789',
-      email: 'olivia@example.com',
-      date: '2024-03-13',
+      id: "3",
+      clientName: "Olivia Davis",
+      phone: "(555) 345-6789",
+      email: "olivia@example.com",
+      date: "2024-03-13",
       rating: 5,
-      review: 'Best salon experience ever! Highly recommended.',
-      service: 'Spa Treatment',
-      staffName: 'Sophia Miller',
+      review: "Best salon experience ever! Highly recommended.",
+      service: "Spa Treatment",
+      staffName: "Sophia Miller",
       featured: true,
-      branch: 'Uptown Branch'
-    }
+      branch: "Uptown Branch",
+    },
   ]);
 
   // Filtered Feedbacks
-  const filteredFeedbacks = feedbacks.filter(feedback => 
-    feedback.branch === selectedBranch &&
-    feedback.rating >= minRating &&
-    (selectedDate ? feedback.date === selectedDate : true)
+  const filteredFeedbacks = feedbacks.filter(
+    (feedback) =>
+      feedback.branch === selectedBranch &&
+      feedback.rating >= minRating &&
+      (selectedDate ? feedback.date === selectedDate : true)
   );
 
   // Statistics Calculations
   const totalFeedbacks = filteredFeedbacks.length;
-  const averageRating = filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks;
-  const featuredCount = filteredFeedbacks.filter(f => f.featured).length;
+  const averageRating =
+    filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks;
+  const featuredCount = filteredFeedbacks.filter((f) => f.featured).length;
 
   // Rating Distribution Data
   const ratingDistribution = [0, 0, 0, 0, 0];
-  filteredFeedbacks.forEach(f => ratingDistribution[f.rating - 1]++);
+  filteredFeedbacks.forEach((f) => ratingDistribution[f.rating - 1]++);
 
   // Chart Data
   const chartData = {
-    labels: ['5 Stars', '4 Stars', '3 Stars', '2 Stars', '1 Star'],
-    datasets: [{
-      label: 'Rating Distribution',
-      data: ratingDistribution,
-      backgroundColor: '#7C3AED',
-      borderRadius: 8
-    }]
+    labels: ["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"],
+    datasets: [
+      {
+        label: "Rating Distribution",
+        data: ratingDistribution,
+        backgroundColor: "#7C3AED",
+        borderRadius: 8,
+      },
+    ],
   };
 
   // Form Handling
   const [formData, setFormData] = useState({
     rating: 5,
     featured: false,
-    review: ''
+    review: "",
   });
 
   const handleEdit = (feedback: Feedback) => {
@@ -113,25 +147,27 @@ const FeedbackManagementPage = () => {
     setFormData({
       rating: feedback.rating,
       featured: feedback.featured,
-      review: feedback.review
+      review: feedback.review,
     });
     setShowModal(true);
   };
 
   const handleSubmit = () => {
     if (editingFeedback) {
-      setFeedbacks(feedbacks.map(f => 
-        f.id === editingFeedback.id ? { ...editingFeedback, ...formData } : f
-      ));
+      setFeedbacks(
+        feedbacks.map((f) =>
+          f.id === editingFeedback.id ? { ...editingFeedback, ...formData } : f
+        )
+      );
     }
     setShowModal(false);
     setEditingFeedback(null);
   };
 
   const toggleFeatured = (id: string) => {
-    setFeedbacks(feedbacks.map(f => 
-      f.id === id ? { ...f, featured: !f.featured } : f
-    ));
+    setFeedbacks(
+      feedbacks.map((f) => (f.id === id ? { ...f, featured: !f.featured } : f))
+    );
   };
 
   return (
@@ -139,13 +175,15 @@ const FeedbackManagementPage = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
-          <select 
+          <select
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
             className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-0"
           >
-            {branches.map(branch => (
-              <option key={branch} value={branch}>{branch}</option>
+            {branches.map((branch) => (
+              <option key={branch} value={branch}>
+                {branch}
+              </option>
             ))}
           </select>
           <FiChevronDown className="absolute right-3 top-4 text-gray-400" />
@@ -166,20 +204,24 @@ const FeedbackManagementPage = () => {
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="bg-white p-6 rounded-xl shadow-sm mb-8"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Minimum Rating</label>
+                <label className="block text-sm font-medium mb-2">
+                  Minimum Rating
+                </label>
                 <select
                   className="w-full p-2 border rounded-lg"
                   value={minRating}
                   onChange={(e) => setMinRating(Number(e.target.value))}
                 >
-                  {[0, 1, 2, 3, 4, 5].map(num => (
-                    <option key={num} value={num}>{num === 0 ? 'All Ratings' : `${num}+ Stars`}</option>
+                  {[0, 1, 2, 3, 4, 5].map((num) => (
+                    <option key={num} value={num}>
+                      {num === 0 ? "All Ratings" : `${num}+ Stars`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -199,7 +241,7 @@ const FeedbackManagementPage = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <motion.div 
+        <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"
           whileHover={{ y: -2 }}
         >
@@ -214,7 +256,7 @@ const FeedbackManagementPage = () => {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"
           whileHover={{ y: -2 }}
         >
@@ -229,7 +271,7 @@ const FeedbackManagementPage = () => {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"
           whileHover={{ y: -2 }}
         >
@@ -267,9 +309,9 @@ const FeedbackManagementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredFeedbacks.map(feedback => (
-                <tr 
-                  key={feedback.id} 
+              {filteredFeedbacks.map((feedback) => (
+                <tr
+                  key={feedback.id}
                   className="border-t border-gray-100 hover:bg-gray-50"
                 >
                   <td className="p-4 font-medium">{feedback.clientName}</td>
@@ -293,7 +335,7 @@ const FeedbackManagementPage = () => {
                       {[...Array(5)].map((_, i) => (
                         <FiStar
                           key={i}
-                          className={i < feedback.rating ? 'fill-current' : ''}
+                          className={i < feedback.rating ? "fill-current" : ""}
                         />
                       ))}
                     </div>
@@ -341,19 +383,19 @@ const FeedbackManagementPage = () => {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="text-2xl font-semibold mb-6">Rating Distribution</h2>
         <div className="h-96">
-          <Bar 
+          <Bar
             data={chartData}
             options={{
               responsive: true,
               maintainAspectRatio: false,
               plugins: {
                 legend: { display: false },
-                title: { display: false }
+                title: { display: false },
               },
               scales: {
-                y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                x: { grid: { display: false } }
-              }
+                y: { beginAtZero: true, grid: { color: "#f3f4f6" } },
+                x: { grid: { display: false } },
+              },
             }}
           />
         </div>
@@ -377,13 +419,21 @@ const FeedbackManagementPage = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Rating</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Rating
+                  </label>
                   <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map(star => (
+                    {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
-                        onClick={() => setFormData({ ...formData, rating: star })}
-                        className={`text-2xl ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                        onClick={() =>
+                          setFormData({ ...formData, rating: star })
+                        }
+                        className={`text-2xl ${
+                          star <= formData.rating
+                            ? "text-yellow-400"
+                            : "text-gray-300"
+                        }`}
                       >
                         <FiStar />
                       </button>
@@ -392,11 +442,15 @@ const FeedbackManagementPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Review</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Review
+                  </label>
                   <textarea
                     className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 h-32"
                     value={formData.review}
-                    onChange={(e) => setFormData({ ...formData, review: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, review: e.target.value })
+                    }
                   />
                 </div>
 
@@ -404,10 +458,14 @@ const FeedbackManagementPage = () => {
                   <input
                     type="checkbox"
                     checked={formData.featured}
-                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, featured: e.target.checked })
+                    }
                     className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                   />
-                  <label className="text-sm font-medium">Feature on Homepage</label>
+                  <label className="text-sm font-medium">
+                    Feature on Homepage
+                  </label>
                 </div>
               </div>
 

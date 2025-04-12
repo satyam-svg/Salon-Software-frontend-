@@ -63,7 +63,7 @@ const DashboardPage = () => {
     {
       icon: <FiBox className="text-2xl" />,
       label: "Inventory Management",
-      href: "#",
+      href: `/${userId}/dashboard/inventory`,
       description: "Monitor stock levels and product management",
     },
     {
