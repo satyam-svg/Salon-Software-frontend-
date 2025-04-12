@@ -30,6 +30,14 @@ export default function DashboardLayout({
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
+  const isActiveLink = (href: string) => {
+    // Handle dashboard root path specifically
+    if (href === `/${userid}/dashboard/`) {
+      return pathname === href || pathname === `/${userid}/dashboard`;
+    }
+    return pathname === href;
+  };
+
   const userid = pathname.split("/")[1];
 
   useEffect(() => {
@@ -147,7 +155,11 @@ export default function DashboardLayout({
                   >
                     <Link
                       href={item.href}
-                      className="flex items-center gap-3 p-3 text-gray-600 hover:text-purple-600"
+                      className={`flex items-center gap-3 p-3 transition-colors ${
+                        isActiveLink(item.href)
+                          ? "bg-blue-100 text-blue-600 border-l-4 border-blue-500"
+                          : "text-gray-600 hover:text-purple-600"
+                      }`}
                       onClick={() => handleNavigation(item.href)}
                     >
                       {item.icon}

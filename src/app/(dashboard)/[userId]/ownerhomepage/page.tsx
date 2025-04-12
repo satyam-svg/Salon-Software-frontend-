@@ -53,6 +53,7 @@ const OwnerHomepage = () => {
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
+      console.log(userData);
 
       if (!userData.user?.salonId) throw new Error("Salon not found");
       setsalonid(userData.user.salonId);
