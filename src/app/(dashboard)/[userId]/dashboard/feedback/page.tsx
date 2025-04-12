@@ -1,256 +1,496 @@
 "use client";
-import { motion, useInView } from "framer-motion";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import {
   FiStar,
-  FiClock,
-  FiScissors,
-  FiSmile,
   FiUser,
-  FiChevronRight,
+  FiMail,
+  FiPhone,
+  FiEdit,
+  FiTrash,
+  FiCheckSquare,
+  FiFilter,
+  FiChevronDown,
 } from "react-icons/fi";
-import { format } from "date-fns";
-import { useRef } from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-interface FeedbackItem {
-  id: number;
-  name: string;
-  feedback: string;
-  timestamp: Date;
-  service: string;
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface Feedback {
+  id: string;
+  clientName: string;
+  phone: string;
+  email: string;
+  date: string;
   rating: number;
-  avatar: string;
+  review: string;
+  service: string;
+  staffName: string;
+  featured: boolean;
+  branch: string;
 }
 
-const FeedbackPage = () => {
-  const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+const FeedbackManagementPage = () => {
+  const [branches] = useState([
+    "Downtown Branch",
+    "Uptown Branch",
+    "Westside Branch",
+    "Eastside Branch",
+  ]);
+  const [selectedBranch, setSelectedBranch] = useState(branches[0]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [minRating, setMinRating] = useState(0);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingFeedback, setEditingFeedback] = useState<Feedback | null>(null);
 
-  const dummyFeedback: FeedbackItem[] = [
+  // Dummy Feedback Data
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([
     {
-      id: 1,
-      name: "Sarah Johnson",
-      feedback:
-        "Absolutely loved my new haircut! The stylist was incredibly professional and really listened to what I wanted.",
-      timestamp: new Date(2024, 2, 15, 14, 30),
-      service: "Haircut",
+      id: "1",
+      clientName: "Sarah Johnson",
+      phone: "(555) 123-4567",
+      email: "sarah@example.com",
+      date: "2024-03-15",
       rating: 5,
-      avatar: "https://randomuser.me/api/portraits/women/1.jpg",
+      review: "Exceptional service! The staff was incredibly professional.",
+      service: "Premium Haircut",
+      staffName: "Emma Wilson",
+      featured: true,
+      branch: "Downtown Branch",
     },
     {
-      id: 2,
-      name: "Michael Chen",
-      feedback:
-        "The coloring service was good, though it took a bit longer than expected. End result was worth it!",
-      timestamp: new Date(2024, 2, 14, 11, 15),
-      service: "Hair Coloring",
+      id: "2",
+      clientName: "Michael Chen",
+      phone: "(555) 234-5678",
+      email: "michael@example.com",
+      date: "2024-03-14",
       rating: 4,
-      avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+      review: "Good experience, but waited a bit longer than expected.",
+      service: "Color Treatment",
+      staffName: "James Brown",
+      featured: false,
+      branch: "Downtown Branch",
     },
     {
-      id: 3,
-      name: "Emma Williams",
-      feedback:
-        "Best facial treatment I've ever had. My skin feels rejuvenated and the ambiance was so relaxing.",
-      timestamp: new Date(2024, 2, 13, 16, 45),
-      service: "Facial Treatment",
+      id: "3",
+      clientName: "Olivia Davis",
+      phone: "(555) 345-6789",
+      email: "olivia@example.com",
+      date: "2024-03-13",
       rating: 5,
-      avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+      review: "Best salon experience ever! Highly recommended.",
+      service: "Spa Treatment",
+      staffName: "Sophia Miller",
+      featured: true,
+      branch: "Uptown Branch",
     },
-    // Add more dummy data as needed
-  ];
+  ]);
 
-  const ServiceIcon = ({ service }: { service: string }) => {
-    const icons = {
-      Haircut: <FiScissors className="text-purple-600" />,
-      "Hair Coloring": <FiSmile className="text-pink-500" />,
-      "Facial Treatment": <FiUser className="text-blue-500" />,
-    };
+  // Filtered Feedbacks
+  const filteredFeedbacks = feedbacks.filter(
+    (feedback) =>
+      feedback.branch === selectedBranch &&
+      feedback.rating >= minRating &&
+      (selectedDate ? feedback.date === selectedDate : true)
+  );
 
-    return (
-      <motion.div
-        whileHover={{ rotate: 360, scale: 1.1 }}
-        className="p-3 bg-white rounded-full shadow-md"
-      >
-        {icons[service as keyof typeof icons] || <FiStar />}
-      </motion.div>
+  // Statistics Calculations
+  const totalFeedbacks = filteredFeedbacks.length;
+  const averageRating =
+    filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks;
+  const featuredCount = filteredFeedbacks.filter((f) => f.featured).length;
+
+  // Rating Distribution Data
+  const ratingDistribution = [0, 0, 0, 0, 0];
+  filteredFeedbacks.forEach((f) => ratingDistribution[f.rating - 1]++);
+
+  // Chart Data
+  const chartData = {
+    labels: ["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"],
+    datasets: [
+      {
+        label: "Rating Distribution",
+        data: ratingDistribution,
+        backgroundColor: "#7C3AED",
+        borderRadius: 8,
+      },
+    ],
+  };
+
+  // Form Handling
+  const [formData, setFormData] = useState({
+    rating: 5,
+    featured: false,
+    review: "",
+  });
+
+  const handleEdit = (feedback: Feedback) => {
+    setEditingFeedback(feedback);
+    setFormData({
+      rating: feedback.rating,
+      featured: feedback.featured,
+      review: feedback.review,
+    });
+    setShowModal(true);
+  };
+
+  const handleSubmit = () => {
+    if (editingFeedback) {
+      setFeedbacks(
+        feedbacks.map((f) =>
+          f.id === editingFeedback.id ? { ...editingFeedback, ...formData } : f
+        )
+      );
+    }
+    setShowModal(false);
+    setEditingFeedback(null);
+  };
+
+  const toggleFeatured = (id: string) => {
+    setFeedbacks(
+      feedbacks.map((f) => (f.id === id ? { ...f, featured: !f.featured } : f))
     );
   };
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50, scale: 0.95 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { delay: i * 0.15, duration: 0.5, type: "spring" },
-    }),
-    hover: { y: -10 },
-  };
-
-  const starVariants = {
-    hidden: { scale: 0 },
-    visible: { scale: 1 },
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen  py-20 px-4 sm:px-6 lg:px-8"
-      ref={containerRef}
-    >
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-5xl font-bold text-gray-900 mb-4 relative inline-block">
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-8 -left-8"
-            >
-              ✨
-            </motion.span>
-            Client Experiences
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -bottom-8 -right-8"
-            >
-              ✨
-            </motion.span>
-          </h1>
-          <p className="text-xl text-gray-600">
-            Discover what our clients say about our services
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {dummyFeedback.map((feedback, index) => (
-            <motion.div
-              key={feedback.id}
-              variants={cardVariants}
-              initial="hidden"
-              animate={isInView ? "visible" : "hidden"}
-              whileHover="hover"
-              custom={index}
-              className="relative group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-
-              <div className="h-full bg-white rounded-3xl shadow-xl overflow-hidden transform transition-all duration-300 group-hover:shadow-2xl relative">
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center space-x-4">
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        className="relative"
-                      >
-                        <img
-                          src={feedback.avatar}
-                          alt={feedback.name}
-                          className="w-14 h-14 rounded-full object-cover border-4 border-white shadow-lg"
-                        />
-                        <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                          <FiStar className="text-white text-xs" />
-                        </div>
-                      </motion.div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {feedback.name}
-                        </h3>
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <motion.div
-                              key={i}
-                              variants={starVariants}
-                              initial="hidden"
-                              animate="visible"
-                              transition={{ delay: i * 0.1 }}
-                            >
-                              <FiStar
-                                className={`w-5 h-5 ${
-                                  i < feedback.rating
-                                    ? "text-amber-400 fill-current"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <ServiceIcon service={feedback.service} />
-                  </div>
-
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-gray-600 mb-6 italic relative before:content-['“'] before:text-4xl before:absolute before:-left-2 before:-top-4 before:text-gray-200 after:content-['”'] after:text-4xl after:absolute after:-right-2 after:-bottom-4 after:text-gray-200"
-                  >
-                    {feedback.feedback}
-                  </motion.p>
-
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center space-x-2 text-gray-500">
-                      <FiClock className="text-purple-500" />
-                      <span>{format(feedback.timestamp, "MMM d, yyyy")}</span>
-                    </div>
-                    <motion.div
-                      whileHover={{ x: 5 }}
-                      className="flex items-center text-purple-600 font-medium cursor-pointer"
-                    >
-                      <span>Read More</span>
-                      <FiChevronRight className="ml-1" />
-                    </motion.div>
-                  </div>
-                </div>
-
-                <motion.div
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={isInView ? { y: 0, opacity: 1 } : {}}
-                  transition={{ delay: index * 0.2 + 0.3 }}
-                  className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                />
-              </div>
-            </motion.div>
-          ))}
+    <div className="min-h-screen bg-gray-50 p-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="relative flex-1 max-w-xs">
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-0"
+          >
+            {branches.map((branch) => (
+              <option key={branch} value={branch}>
+                {branch}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown className="absolute right-3 top-4 text-gray-400" />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 text-center"
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 bg-white text-gray-600 px-6 py-3 rounded-xl border-2 border-gray-200"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-purple-600 to-blue-500 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+          <FiFilter className="text-lg" />
+          Filter Feedbacks
+        </motion.button>
+      </div>
+
+      {/* Filters Section */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-white p-6 rounded-xl shadow-sm mb-8"
           >
-            <span className="relative z-10">Explore More Reviews</span>
-            <div className="absolute inset-0 bg-white opacity-0 hover:opacity-10 transition-opacity duration-300" />
-          </motion.button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Minimum Rating
+                </label>
+                <select
+                  className="w-full p-2 border rounded-lg"
+                  value={minRating}
+                  onChange={(e) => setMinRating(Number(e.target.value))}
+                >
+                  {[0, 1, 2, 3, 4, 5].map((num) => (
+                    <option key={num} value={num}>
+                      {num === 0 ? "All Ratings" : `${num}+ Stars`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Date</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded-lg"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <motion.div
+          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <FiStar className="text-2xl text-purple-600" />
+            </div>
+            <div>
+              <p className="text-gray-500">Average Rating</p>
+              <p className="text-2xl font-bold">{averageRating.toFixed(1)}/5</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <FiUser className="text-2xl text-blue-600" />
+            </div>
+            <div>
+              <p className="text-gray-500">Total Feedbacks</p>
+              <p className="text-2xl font-bold">{totalFeedbacks}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <FiCheckSquare className="text-2xl text-green-600" />
+            </div>
+            <div>
+              <p className="text-gray-500">Featured Feedbacks</p>
+              <p className="text-2xl font-bold">{featuredCount}</p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
-      {/* Animated background elements */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        className="absolute top-20 left-20 w-48 h-48 bg-purple-100 rounded-full opacity-30 mix-blend-multiply blur-xl -z-10"
-      />
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.2 }}
-        className="absolute bottom-20 right-20 w-64 h-64 bg-blue-100 rounded-full opacity-30 mix-blend-multiply blur-xl -z-10"
-      />
-    </motion.div>
+      {/* Feedback Table */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-2xl font-semibold">Client Feedback</h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-4 text-left">Client</th>
+                <th className="p-4 text-left">Contact</th>
+                <th className="p-4 text-left">Date</th>
+                <th className="p-4 text-left">Rating</th>
+                <th className="p-4 text-left">Review</th>
+                <th className="p-4 text-left">Service</th>
+                <th className="p-4 text-left">Staff</th>
+                <th className="p-4 text-left">Featured</th>
+                <th className="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredFeedbacks.map((feedback) => (
+                <tr
+                  key={feedback.id}
+                  className="border-t border-gray-100 hover:bg-gray-50"
+                >
+                  <td className="p-4 font-medium">{feedback.clientName}</td>
+                  <td className="p-4">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <FiPhone className="text-gray-500" />
+                        <span>{feedback.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <FiMail className="text-gray-500" />
+                        <span>{feedback.email}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    {new Date(feedback.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex gap-1 text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <FiStar
+                          key={i}
+                          className={i < feedback.rating ? "fill-current" : ""}
+                        />
+                      ))}
+                    </div>
+                  </td>
+                  <td className="p-4 max-w-xs">
+                    <p className="line-clamp-2">{feedback.review}</p>
+                  </td>
+                  <td className="p-4">
+                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                      {feedback.service}
+                    </span>
+                  </td>
+                  <td className="p-4">{feedback.staffName}</td>
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={feedback.featured}
+                      onChange={() => toggleFeatured(feedback.id)}
+                      className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                    />
+                  </td>
+                  <td className="p-4 flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      className="text-purple-600 hover:text-purple-700"
+                      onClick={() => handleEdit(feedback)}
+                    >
+                      <FiEdit />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <FiTrash />
+                    </motion.button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Rating Distribution Chart */}
+      <div className="bg-white rounded-xl shadow-sm p-6">
+        <h2 className="text-2xl font-semibold mb-6">Rating Distribution</h2>
+        <div className="h-96">
+          <Bar
+            data={chartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                title: { display: false },
+              },
+              scales: {
+                y: { beginAtZero: true, grid: { color: "#f3f4f6" } },
+                x: { grid: { display: false } },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Edit Feedback Modal */}
+      <AnimatePresence>
+        {showModal && editingFeedback && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              className="bg-white p-8 rounded-2xl w-full max-w-md"
+            >
+              <h3 className="text-2xl font-semibold mb-6">Edit Feedback</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Rating
+                  </label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() =>
+                          setFormData({ ...formData, rating: star })
+                        }
+                        className={`text-2xl ${
+                          star <= formData.rating
+                            ? "text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        <FiStar />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Review
+                  </label>
+                  <textarea
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 h-32"
+                    value={formData.review}
+                    onChange={(e) =>
+                      setFormData({ ...formData, review: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) =>
+                      setFormData({ ...formData, featured: e.target.checked })
+                    }
+                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                  />
+                  <label className="text-sm font-medium">
+                    Feature on Homepage
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={handleSubmit}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl"
+                >
+                  Update Feedback
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl"
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
-export default FeedbackPage;
+export default FeedbackManagementPage;
