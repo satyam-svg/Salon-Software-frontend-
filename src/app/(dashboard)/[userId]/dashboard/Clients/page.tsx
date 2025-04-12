@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
   FiUser,
-  FiMail,
   FiCalendar,
   FiDollarSign,
   FiChevronDown,
@@ -182,87 +181,156 @@ export default function ClientManagementPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/20 backdrop-blur-lg z-50"
           >
             <motion.div
-              initial={{ y: 50 }}
-              animate={{ y: 0 }}
-              className="bg-white p-6 rounded-xl w-full max-w-md"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
             >
-              <h2 className="text-2xl font-bold mb-4">Add New Client</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-lg"
-                    value={newClient.name || ""}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, name: e.target.value })
-                    }
+              <motion.div
+                initial={{ y: 20, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 20, opacity: 0, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="flex items-center justify-center min-h-screen"
+              >
+                <motion.div
+                  className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl relative overflow-hidden"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
+                  }}
+                >
+                  {/* Decorative elements */}
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.6 }}
+                    className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full p-2 border rounded-lg"
-                    value={newClient.email || ""}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, email: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Contact
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full p-2 border rounded-lg"
-                    value={newClient.contact || ""}
-                    onChange={(e) =>
-                      setNewClient({ ...newClient, contact: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg"
-                    value={newClient.status}
-                    onChange={(e) =>
-                      setNewClient({
-                        ...newClient,
-                        status: e.target.value as "active" | "inactive",
-                      })
-                    }
+
+                  <h2 className="text-3xl font-bold mb-6 text-gray-800 mt-2">
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="block"
+                    >
+                      Add New Client
+                    </motion.span>
+                  </h2>
+
+                  <motion.div
+                    className="space-y-6"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: { staggerChildren: 0.1 },
+                      },
+                    }}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-6 flex gap-3 justify-end">
-                <button
-                  onClick={() => setIsAddingClient(false)}
-                  className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddClient}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                >
-                  Add Client
-                </button>
-              </div>
+                    {["name", "email", "contact"].map((field, index) => (
+                      <motion.div
+                        key={index}
+                        variants={{
+                          hidden: { y: 10, opacity: 0 },
+                          visible: { y: 0, opacity: 1 },
+                        }}
+                        className="relative group"
+                      >
+                        <input
+                          type={
+                            field === "email"
+                              ? "email"
+                              : field === "contact"
+                              ? "tel"
+                              : "text"
+                          }
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
+                          placeholder=" "
+                          value={newClient[field as keyof Client] ?? ""}
+                          onChange={(e) =>
+                            setNewClient({
+                              ...newClient,
+                              [field as keyof Client]: e.target.value,
+                            })
+                          }
+                        />
+                        <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
+                          {field.charAt(0).toUpperCase() + field.slice(1)}
+                        </label>
+                      </motion.div>
+                    ))}
+
+                    <motion.div
+                      variants={{
+                        hidden: { y: 10, opacity: 0 },
+                        visible: { y: 0, opacity: 1 },
+                      }}
+                    >
+                      <div className="relative">
+                        <select
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none appearance-none bg-white"
+                          value={newClient.status}
+                          onChange={(e) =>
+                            setNewClient({
+                              ...newClient,
+                              status: e.target.value as Client["status"],
+                            })
+                          }
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                        <div className="absolute right-4 top-4 text-gray-400">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+
+                  <motion.div
+                    className="mt-8 flex gap-3 justify-end"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <button
+                      onClick={() => setIsAddingClient(false)}
+                      className="px-6 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddClient}
+                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium relative overflow-hidden"
+                    >
+                      <span className="relative z-10">Add Client</span>
+                      <motion.div
+                        className="absolute inset-0 bg-white/10"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "0%" }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </button>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
@@ -479,16 +547,16 @@ export default function ClientManagementPage() {
                   Client
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiMail className="inline mr-1" /> Contact
+                  Contact
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiCalendar className="inline mr-1" /> Registered
+                  Registered
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
                   Appointments
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiDollarSign className="inline mr-1" /> Total Spent
+                  Total Spent
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
                   Status
