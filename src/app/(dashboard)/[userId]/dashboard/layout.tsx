@@ -12,6 +12,7 @@ import {
   FiStar,
   FiClipboard,
   FiBarChart2,
+  FiGitBranch,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -139,6 +140,11 @@ export default function DashboardLayout({
                     icon: <FiBox />,
                     label: "Inventory",
                     href: `/${userid}/dashboard/inventory`,
+                  },
+                  {
+                    icon: <FiGitBranch />,
+                    label: "Branch",
+                    href: `/${userid}/dashboard/branch`,
                   },
                   {
                     icon: <FiClipboard />,
