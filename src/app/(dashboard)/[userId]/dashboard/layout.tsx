@@ -151,10 +151,15 @@ export default function DashboardLayout({
                     href: `/${userid}/dashboard/feedback`,
                   },
                   {
+                    icon: <FiUsers />,
+                    label: "Staffs",
+                    href: `/${userid}/dashboard/staff`,
+                  },
+                  {
                     icon: <FiSettings />,
                     label: "Settings",
                     href: `/${userid}/dashboard/setting`,
-                  },
+                  }
                 ].map((item) => (
                   <motion.div
                     key={item.label}
