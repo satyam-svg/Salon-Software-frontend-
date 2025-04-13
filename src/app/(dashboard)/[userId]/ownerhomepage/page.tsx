@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import LoadingScreen from "@/Components/LoadingSpinner";
+import { FaArrowRight } from "react-icons/fa";
 const floatingStars = Array(30).fill(null);
 
 interface Salon {
@@ -231,6 +232,44 @@ const OwnerHomepage = () => {
                 transition={{ type: "spring", stiffness: 300 }}
               />
             </motion.div>
+            <motion.div
+              className=""
+              initial={{ y: 50, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+            >
+              {isRedirecting ? (
+                <LoadingScreen />
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 group relative overflow-hidden"
+                  onClick={handleDashboardClick}
+                >
+                  {/* Animated background */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    initial={{ opacity: 0 }}
+                  />
+
+                  {/* Button content */}
+                  <span className="relative z-10">Manage Salon Dashboard</span>
+                  <motion.div
+                    className="relative z-10"
+                    initial={{ x: 0 }}
+                    animate={{
+                      x: ["0%", "20%", "0%"],
+                      transition: { repeat: Infinity, duration: 2 },
+                    }}
+                  >
+                    <FiSettings className="w-5 h-5 group-hover:rotate-180 transition-transform" />
+                  </motion.div>
+
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 rounded-xl border-2 border-white/20 group-hover:border-white/40 transition-all" />
+                </motion.button>
+              )}
+            </motion.div>
           </motion.div>
         </div>
 
@@ -354,25 +393,6 @@ const OwnerHomepage = () => {
         </motion.div>
 
         {/* Dashboard CTA */}
-        <motion.div
-          className="text-center"
-          initial={{ y: 50, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-        >
-          {isRedirecting ? (
-            <LoadingScreen />
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transition-all flex items-center gap-3 mx-auto relative overflow-hidden"
-              onClick={handleDashboardClick}
-            >
-              <FiSettings className="text-2xl animate-spin-slow" />
-              <span>Manage Your Salon Dashboard</span>
-            </motion.button>
-          )}
-        </motion.div>
       </motion.div>
 
       {/* Background Effects */}
