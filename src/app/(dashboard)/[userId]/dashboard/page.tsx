@@ -15,13 +15,15 @@ import {
   FiClipboard,
   FiStar,
 } from "react-icons/fi";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import axios from "axios";
+import { FaRupeeSign } from "react-icons/fa";
 
 interface StatCardProps {
   icon: ReactNode;
   title: string;
-  value: string;
+  value: number;
   trend: string;
   color: string;
 }
@@ -41,6 +43,51 @@ interface NavCardProps {
 const DashboardPage = () => {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
+  const [revenue, setrevenue] = useState(0);
+  const [salonid, setsalonid] = useState("");
+  const [clients, setclients] = useState(0);
+  const [appointments, setappointments] = useState(0);
+
+  useEffect(() => {
+    const getsalonid = async () => {
+      const userResponse = await fetch(
+        `https://salon-backend-3.onrender.com/api/users/${userId}`
+      );
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+      console.log(userData);
+
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+      setsalonid(userData.user.salonId);
+      console.log(userResponse);
+    };
+    getsalonid();
+  }, [userId]);
+
+  useEffect(() => {
+    const gettotalrevenue = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/appoiment/totalprice/${salonid}`
+      );
+      setrevenue(response.data.totalRevenue);
+    };
+    const gettotalclients = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/clients/totalclients/${salonid}`
+      );
+      setclients(response.data.totalClients);
+    };
+
+    const gettotalappointments = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/appoiment/latestappointment/${salonid}`
+      );
+      setappointments(response.data.totalAppointments);
+    };
+    gettotalrevenue();
+    gettotalclients();
+    gettotalappointments();
+  }, [salonid]);
   const navigationOptions = [
     {
       icon: <FiCalendar className="text-2xl" />,
@@ -82,23 +129,23 @@ const DashboardPage = () => {
 
   const statsData = [
     {
-      icon: <FiDollarSign className="text-white text-xl" />,
+      icon: <FaRupeeSign className="text-white text-xl" />,
       title: "Monthly Revenue",
-      value: "$12,450",
+      value: revenue,
       trend: "+15% from last month",
       color: "from-purple-600 to-pink-500",
     },
     {
       icon: <FiUserPlus className="text-white text-xl" />,
       title: "New Clients",
-      value: "84",
+      value: clients,
       trend: "+23% from last month",
       color: "from-emerald-500 to-cyan-500",
     },
     {
       icon: <FiCalendar className="text-white text-xl" />,
       title: "Appointments",
-      value: "216",
+      value: appointments,
       trend: "+8% from last month",
       color: "from-amber-500 to-orange-500",
     },

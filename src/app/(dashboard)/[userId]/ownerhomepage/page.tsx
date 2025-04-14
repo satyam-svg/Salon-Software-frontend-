@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import LoadingScreen from "@/Components/LoadingSpinner";
-import { FaArrowRight } from "react-icons/fa";
+
 const floatingStars = Array(30).fill(null);
 
 interface Salon {
@@ -30,6 +30,9 @@ const OwnerHomepage = () => {
   const [salonid, setsalonid] = useState("");
   const [imageLoading, setImageLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [totalclients, settotalclient] = useState(0);
+  const [totalstaff, settotalstaff] = useState(0);
+  const [totalservice, settotalservice] = useState(0);
 
   const handleDashboardClick = () => {
     setIsRedirecting(true);
@@ -62,6 +65,30 @@ const OwnerHomepage = () => {
     };
     getsalonid();
   }, [userid]);
+
+  useEffect(() => {
+    const gettotalclients = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/number/totalclient/${salonid}`
+      );
+      settotalclient(response.data.totalClients);
+    };
+    const gettotalstaff = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/number/totalstaff/${salonid}`
+      );
+      settotalstaff(response.data.totalStaff);
+    };
+    const gettotalservice = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/number/totalservice/${salonid}`
+      );
+      settotalservice(response.data.totalServices);
+    };
+    gettotalclients();
+    gettotalstaff();
+    gettotalservice();
+  }, [salonid]);
 
   useEffect(() => {
     const getsalon = async () => {
@@ -282,17 +309,17 @@ const OwnerHomepage = () => {
           {[
             { value: daysOperating, label: "Days Operating", color: "purple" },
             {
-              value: 225,
+              value: totalclients,
               label: "Happy Customers",
               color: "pink",
             },
             {
-              value: 300,
+              value: totalstaff,
               label: "Expert Staff",
               color: "purple",
             },
             {
-              value: 100,
+              value: totalservice,
               label: "Services Offered",
               color: "pink",
             },
