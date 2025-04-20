@@ -1,4 +1,3 @@
-// components/Charts.tsx
 "use client";
 
 import {
@@ -19,14 +18,16 @@ import { motion } from "framer-motion";
 import React from "react";
 
 // Define chart data type
-interface ChartData {
+export interface ChartData {
   day: string;
   revenue: number;
   newClients: number;
   appointments: number;
 }
 
-// Define tooltip payload item type from recharts
+interface ChartProps {
+  data: ChartData[];
+}
 
 // Props for CustomTooltip component
 interface CustomTooltipProps {
@@ -34,30 +35,6 @@ interface CustomTooltipProps {
   payload?: { name: string; value: number; color: string }[];
   label?: string;
 }
-
-// Generate 30 days of dummy data
-const generateData = (): ChartData[] => {
-  const data: ChartData[] = [];
-  const today = new Date();
-
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-
-    data.push({
-      day: `${date.getDate()} ${date.toLocaleString("default", {
-        month: "short",
-      })}`,
-      revenue: Math.floor(Math.random() * (800 - 300 + 1)) + 300,
-      newClients: Math.floor(Math.random() * (10 - 2 + 1)) + 2,
-      appointments: Math.floor(Math.random() * (20 - 5 + 1)) + 5,
-    });
-  }
-
-  return data.reverse();
-};
-
-const chartData = generateData();
 
 // Custom Tooltip Component
 const CustomTooltip: React.FC<CustomTooltipProps> = ({
@@ -94,9 +71,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 };
 
 // Line Chart Component
-export const LineChartComponent: React.FC = () => (
+export const LineChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
-    <LineChart data={chartData}>
+    <LineChart data={data}>
       <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
       <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
       <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
@@ -115,9 +92,9 @@ export const LineChartComponent: React.FC = () => (
 );
 
 // Bar Chart Component
-export const BarChartComponent: React.FC = () => (
+export const BarChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
-    <BarChart data={chartData}>
+    <BarChart data={data}>
       <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
       <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
       <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
@@ -129,9 +106,9 @@ export const BarChartComponent: React.FC = () => (
 );
 
 // Area Chart Component
-export const AreaChartComponent: React.FC = () => (
+export const AreaChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
-    <AreaChart data={chartData}>
+    <AreaChart data={data}>
       <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
       <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
       <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />

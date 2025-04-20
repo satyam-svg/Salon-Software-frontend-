@@ -28,6 +28,13 @@ interface StatCardProps {
   color: string;
 }
 
+interface ChartData {
+  day: string;
+  revenue: number;
+  newClients: number;
+  appointments: number;
+}
+
 interface ChartCardProps {
   title: string;
   children: ReactNode;
@@ -47,7 +54,7 @@ const DashboardPage = () => {
   const [salonid, setsalonid] = useState("");
   const [clients, setclients] = useState(0);
   const [appointments, setappointments] = useState(0);
-
+  const [chartData, setChartData] = useState<ChartData[]>([]);
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
@@ -75,6 +82,7 @@ const DashboardPage = () => {
       const response = await axios.get(
         `https://salon-backend-3.onrender.com/api/clients/totalclients/${salonid}`
       );
+
       setclients(response.data.totalClients);
     };
 
@@ -84,6 +92,14 @@ const DashboardPage = () => {
       );
       setappointments(response.data.totalAppointments);
     };
+    const fetchChartData = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/chart/three/${salonid}`
+      );
+
+      setChartData(response.data);
+    };
+    fetchChartData();
     gettotalrevenue();
     gettotalclients();
     gettotalappointments();
@@ -152,9 +168,18 @@ const DashboardPage = () => {
   ];
 
   const chartsData = [
-    { title: "Financial Overview", component: <LineChartComponent /> },
-    { title: "Client Growth", component: <BarChartComponent /> },
-    { title: "Appointment Trends", component: <AreaChartComponent /> },
+    {
+      title: "Financial Overview",
+      component: <LineChartComponent data={chartData} />,
+    },
+    {
+      title: "Client Growth",
+      component: <BarChartComponent data={chartData} />,
+    },
+    {
+      title: "Appointment Trends",
+      component: <AreaChartComponent data={chartData} />,
+    },
   ];
 
   return (
@@ -281,5 +306,4 @@ const ChartCard = ({ title, children }: ChartCardProps) => (
     <div className="h-64">{children}</div>
   </motion.div>
 );
-
 export default DashboardPage;

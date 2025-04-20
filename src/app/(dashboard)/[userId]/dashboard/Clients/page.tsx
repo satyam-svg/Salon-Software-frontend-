@@ -9,78 +9,57 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiEdit,
-  FiTrash,
-  FiUserCheck,
   FiPlus,
+  FiX,
+  FiSave,
 } from "react-icons/fi";
+import { usePathname } from "next/navigation";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 interface Appointment {
   id: string;
   date: string;
-  service: string;
-  price: number;
+  service: Service;
 }
 
-interface Client {
+interface Service {
+  service_price: number;
+}
+
+interface clientresponse {
   id: string;
-  name: string;
+  client_name: string;
   email: string;
   contact: string;
-  registrationDate: string;
+  createdAt: string;
   appointments: Appointment[];
-  status: "active" | "inactive";
-  totalSpent: number;
 }
-
-const dummyClients: Client[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    contact: "+1 555-1234",
-    registrationDate: "2023-01-15",
-    appointments: [
-      { id: "a1", date: "2024-03-15", service: "Hair Color", price: 150 },
-      { id: "a2", date: "2024-04-02", service: "Haircut", price: 75 },
-    ],
-    status: "active",
-    totalSpent: 225,
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "michael@example.com",
-    contact: "+1 555-5678",
-    registrationDate: "2023-03-22",
-    appointments: [
-      { id: "a3", date: "2024-02-10", service: "Beard Trim", price: 40 },
-    ],
-    status: "active",
-    totalSpent: 40,
-  },
-  {
-    id: "3",
-    name: "Emma Wilson",
-    email: "emma@example.com",
-    contact: "+1 555-8765",
-    registrationDate: "2024-01-10",
-    appointments: [],
-    status: "inactive",
-    totalSpent: 0,
-  },
-];
 
 export default function ClientManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<clientresponse[]>([]);
+
+  const [client, setclient] = useState<clientresponse[]>([]);
   const [isAddingClient, setIsAddingClient] = useState(false);
-  const [newClient, setNewClient] = useState<Partial<Client>>({
-    status: "active",
-  });
+  const [salonid, setsalonid] = useState("");
+  const [name, setname] = useState("");
+  const [email, setemail] = useState("");
+  const [contact, setcontact] = useState("");
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
+  const [clientcount, settotalcount] = useState(0);
+  const [avgappointments, setavgappointments] = useState(0.0);
   const tableRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [revenue, setrevenue] = useState(0);
+  const [avgrevenue, setavgrevenue] = useState(0.0);
+  const [editing, setEditing] = useState<{
+    clientId: string;
+    field: string;
+    value: string;
+  } | null>(null);
 
   // Filters
   const [minAppointments, setMinAppointments] = useState("");
@@ -89,25 +68,42 @@ export default function ClientManagementPage() {
   // Fetch dummy data
   useEffect(() => {
     setTimeout(() => {
-      setClients(dummyClients);
-      setFilteredClients(dummyClients);
+      setFilteredClients(client);
     }, 500);
   }, []);
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const userResponse = await fetch(
+          `https://salon-backend-3.onrender.com/api/users/${userid}`
+        );
+        if (!userResponse.ok) throw new Error("Failed to fetch user data");
+        const userData = await userResponse.json();
+        console.log(userData);
+
+        if (!userData.user?.salonId) throw new Error("Salon not found");
+        setsalonid(userData.user.salonId);
+        console.log(salonid);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchBranches();
+  }, [userid]);
 
   // Filter clients
   useEffect(() => {
     const timer = setTimeout(() => {
-      const filtered = clients.filter((client) => {
+      const filtered = client.filter((client) => {
         const matchesSearch = [
-          client.name.toLowerCase(),
+          client.client_name.toLowerCase(),
           client.email.toLowerCase(),
           client.contact.toLowerCase(),
-          client.totalSpent.toString(),
           client.appointments.length.toString(),
         ].some((value) => value.includes(searchQuery.toLowerCase()));
 
         const matchesAdvanced = [
-          registrationDate ? client.registrationDate >= registrationDate : true,
+          registrationDate ? client.createdAt >= registrationDate : true,
           minAppointments
             ? client.appointments.length >= parseInt(minAppointments)
             : true,
@@ -120,7 +116,7 @@ export default function ClientManagementPage() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, clients, minAppointments, registrationDate]);
+  }, [searchQuery, client, minAppointments, registrationDate]);
 
   // Scroll progress
   useEffect(() => {
@@ -138,49 +134,152 @@ export default function ClientManagementPage() {
     return () => table.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Status colors
-  const statusColors = {
-    active: "bg-emerald-100 text-emerald-800",
-    inactive: "bg-rose-100 text-rose-800",
+  // Add handleSave function
+  const handleSave = async () => {
+    if (!editing) return;
+
+    try {
+      const clientToUpdate = client.find((c) => c.id === editing.clientId);
+      if (!clientToUpdate) {
+        toast.error("Client not found");
+        return;
+      }
+
+      const updatedData = {
+        client_name:
+          editing.field === "client_name"
+            ? editing.value
+            : clientToUpdate.client_name,
+        email: editing.field === "email" ? editing.value : clientToUpdate.email,
+        contact:
+          editing.field === "contact" ? editing.value : clientToUpdate.contact,
+      };
+
+      const response = await axios.put(
+        `https://salon-backend-3.onrender.com/api/clients/updateclient/${editing.clientId}`,
+        updatedData
+      );
+
+      if (response.data.success) {
+        const updatedClients = client.map((c) => {
+          if (c.id === editing.clientId) {
+            return { ...c, ...updatedData };
+          }
+          return c;
+        });
+        setclient(updatedClients);
+        toast.success("Client updated successfully");
+        setEditing(null);
+      } else {
+        toast.error(response.data.message || "Failed to update client");
+      }
+    } catch (error) {
+      console.error("Error updating client:", error);
+      toast.error("Failed to update client");
+    }
+  };
+  const getclients = async () => {
+    const response = await axios.get(
+      `https://salon-backend-3.onrender.com/api/clients/gettotalclient/${salonid}`
+    );
+    if (!response.data.success) {
+      toast.error(response.data.message);
+    } else {
+      settotalcount(response.data.total);
+      setclient(response.data.clients);
+    }
   };
 
+  const renderEditableField = (
+    client: clientresponse,
+    field: "client_name" | "email" | "contact",
+    value: string
+  ) => {
+    const isEditing =
+      editing?.clientId === client.id && editing?.field === field;
+
+    return (
+      <div className="flex items-center gap-2 group">
+        {isEditing ? (
+          <input
+            type={field === "email" ? "email" : "text"}
+            value={editing.value}
+            onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+            className="border-b-2 border-indigo-500 px-1 py-0.5 focus:outline-none"
+            autoFocus
+          />
+        ) : (
+          <>
+            <span>{value}</span>
+            <button
+              onClick={() => setEditing({ clientId: client.id, field, value })}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500 hover:text-indigo-700"
+            >
+              <FiEdit className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    getclients();
+  }, [salonid]);
+
+  useEffect(() => {
+    console.log(client);
+
+    if (client && client.length > 0) {
+      let sum = 0;
+      let revenue = 0;
+      client.forEach((c) => {
+        sum += c.appointments?.length || 0; // safely handle undefined appointments
+        c.appointments.forEach((a) => {
+          revenue += a.service.service_price;
+        });
+      });
+      setrevenue(revenue);
+
+      const totalClients = client.length;
+      setavgappointments(sum / totalClients);
+      setavgrevenue(revenue / totalClients);
+    } else {
+      setavgappointments(0);
+    }
+  }, [client]);
+
   // Add new client
-  const handleAddClient = () => {
-    if (
-      !newClient.name ||
-      !newClient.email ||
-      !newClient.contact ||
-      !newClient.status
-    ) {
+  const handleAddClient = async () => {
+    if (!name || !email || !contact) {
       alert("Please fill all required fields");
       return;
     }
 
-    const client: Client = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newClient.name,
-      email: newClient.email,
-      contact: newClient.contact,
-      registrationDate: new Date().toISOString().split("T")[0],
-      appointments: [],
-      status: newClient.status,
-      totalSpent: 0,
-    };
+    const response = await axios.post(
+      "https://salon-backend-3.onrender.com/api/clients/addclients",
+      { client_name: name, email: email, contact: contact, salon_id: salonid }
+    );
 
-    setClients([...clients, client]);
-    setIsAddingClient(false);
-    setNewClient({ status: "active" });
+    console.log(response);
+    resetform();
+    getclients();
   };
 
-  type InputCompatibleValue = string | number | Appointment[] | undefined;
-  function getInputValue(
-    value: InputCompatibleValue
-  ): string | number | undefined {
-    if (typeof value === "string" || typeof value === "number") {
-      return value;
-    }
-    return undefined;
-  }
+  const resetform = () => {
+    setname("");
+    setemail("");
+    setcontact("");
+    setIsAddingClient(false);
+  };
+
+  const getclientrevenue = (client: clientresponse) => {
+    let price = 0;
+    client.appointments.forEach((a) => {
+      price += a.service.service_price;
+    });
+    return price;
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">
@@ -213,7 +312,7 @@ export default function ClientManagementPage() {
                       "linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)",
                   }}
                 >
-                  {/* Decorative elements */}
+                  {/* Decorative top border animation */}
                   <motion.div
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
@@ -243,80 +342,76 @@ export default function ClientManagementPage() {
                       },
                     }}
                   >
-                    {["name", "email", "contact"].map((field, index) => (
-                      <motion.div
-                        key={index}
-                        variants={{
-                          hidden: { y: 10, opacity: 0 },
-                          visible: { y: 0, opacity: 1 },
-                        }}
-                        className="relative group"
-                      >
-                        <input
-                          type={
-                            field === "email"
-                              ? "email"
-                              : field === "contact"
-                              ? "tel"
-                              : "text"
-                          }
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
-                          placeholder=" "
-                          value={getInputValue(
-                            newClient[field as keyof Client]
-                          )}
-                          onChange={(e) =>
-                            setNewClient({
-                              ...newClient,
-                              [field as keyof Client]: e.target.value,
-                            })
-                          }
-                        />
-
-                        <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
-                          {field.charAt(0).toUpperCase() + field.slice(1)}
-                        </label>
-                      </motion.div>
-                    ))}
-
+                    {/* Client Name Field */}
                     <motion.div
                       variants={{
                         hidden: { y: 10, opacity: 0 },
                         visible: { y: 0, opacity: 1 },
                       }}
+                      className="relative group"
                     >
-                      <div className="relative">
-                        <select
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none appearance-none bg-white"
-                          value={newClient.status}
-                          onChange={(e) =>
-                            setNewClient({
-                              ...newClient,
-                              status: e.target.value as Client["status"],
-                            })
-                          }
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                        <div className="absolute right-4 top-4 text-gray-400">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
+                        placeholder=" "
+                        value={name}
+                        onChange={(e) => setname(e.target.value)}
+                      />
+                      <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
+                        Client Name
+                      </label>
                     </motion.div>
+
+                    {/* Email Field */}
+                    <motion.div
+                      variants={{
+                        hidden: { y: 10, opacity: 0 },
+                        visible: { y: 0, opacity: 1 },
+                      }}
+                      className="relative group"
+                    >
+                      <input
+                        type="email"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
+                        placeholder=" "
+                        value={email}
+                        onChange={(e) => setemail(e.target.value)}
+                      />
+                      <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
+                        Email
+                      </label>
+                    </motion.div>
+
+                    {/* Contact Field */}
+                    <motion.div
+                      variants={{
+                        hidden: { y: 10, opacity: 0 },
+                        visible: { y: 0, opacity: 1 },
+                      }}
+                      className="relative group"
+                    >
+                      <input
+                        type="tel"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none peer bg-transparent"
+                        placeholder=" "
+                        value={contact}
+                        onChange={(e) => setcontact(e.target.value)}
+                      />
+                      <label className="absolute left-4 top-3.5 px-1 transition-all transform -translate-y-5 scale-75 text-gray-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:-translate-y-5 peer-focus:scale-75 peer-focus:text-indigo-600 bg-white group-hover:text-gray-600">
+                        Contact
+                      </label>
+                    </motion.div>
+
+                    {/* Status Dropdown */}
+                    <motion.div
+                      variants={{
+                        hidden: { y: 10, opacity: 0 },
+                        visible: { y: 0, opacity: 1 },
+                      }}
+                    ></motion.div>
                   </motion.div>
 
+                  {/* Form Buttons */}
                   <motion.div
                     className="mt-8 flex gap-3 justify-end"
                     initial={{ opacity: 0 }}
@@ -324,7 +419,12 @@ export default function ClientManagementPage() {
                     transition={{ delay: 0.4 }}
                   >
                     <button
-                      onClick={() => setIsAddingClient(false)}
+                      onClick={() => {
+                        setIsAddingClient(false);
+                        setname("");
+                        setemail("");
+                        setcontact("");
+                      }}
                       className="px-6 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium"
                     >
                       Cancel
@@ -462,7 +562,7 @@ export default function ClientManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Clients</p>
-              <p className="text-2xl font-bold">{filteredClients.length}</p>
+              <p className="text-2xl font-bold">{clientcount}</p>
             </div>
             <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
               <FiUser className="text-xl" />
@@ -476,34 +576,8 @@ export default function ClientManagementPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Active Clients</p>
-              <p className="text-2xl font-bold">
-                {filteredClients.filter((c) => c.status === "active").length}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-emerald-100 text-emerald-600">
-              <FiUserCheck className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
               <p className="text-sm text-gray-500">Avg Appointments</p>
-              <p className="text-2xl font-bold">
-                {filteredClients.length > 0
-                  ? (
-                      filteredClients.reduce(
-                        (sum, c) => sum + c.appointments.length,
-                        0
-                      ) / filteredClients.length
-                    ).toFixed(1)
-                  : 0}
-              </p>
+              <p className="text-2xl font-bold">{avgappointments}</p>
             </div>
             <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
               <FiCalendar className="text-xl" />
@@ -518,12 +592,22 @@ export default function ClientManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold">
-                $
-                {filteredClients
-                  .reduce((sum, c) => sum + c.totalSpent, 0)
-                  .toFixed(2)}
-              </p>
+              <p className="text-2xl font-bold">${revenue}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
+              <FiDollarSign className="text-xl" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ y: -5 }}
+          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Average Revenue</p>
+              <p className="text-2xl font-bold">${avgrevenue}</p>
             </div>
             <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
               <FiDollarSign className="text-xl" />
@@ -571,12 +655,12 @@ export default function ClientManagementPage() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
                   Total Spent
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Actions
-                </th>
+
+                {editing && (
+                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -593,26 +677,24 @@ export default function ClientManagementPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                          {client.name.charAt(0)}
+                          {client.client_name.charAt(0)}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {client.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {client.email}
-                          </div>
+                        <div className="ml-4 space-y-2">
+                          {renderEditableField(
+                            client,
+                            "client_name",
+                            client.client_name
+                          )}
+                          {renderEditableField(client, "email", client.email)}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {client.contact}
-                      </div>
+                      {renderEditableField(client, "contact", client.contact)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(client.registrationDate).toLocaleDateString()}
+                        {new Date(client.createdAt).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -622,54 +704,34 @@ export default function ClientManagementPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-indigo-600">
-                        ${client.totalSpent.toFixed(2)}
+                        ${getclientrevenue(client).toFixed(2)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          statusColors[client.status]
-                        }`}
-                      >
-                        {client.status.charAt(0).toUpperCase() +
-                          client.status.slice(1)}
-                      </span>
-                    </td>
+
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
-                        {/* Edit Button */}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-600 relative"
-                        >
-                          <FiEdit className="text-sm" />
-
-                          {/* Edit Tooltip */}
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity duration-200">
-                            <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                              <FiEdit className="text-xs" />
-                              <span>Update Client</span>
-                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                            </div>
-                          </div>
-                        </motion.button>
-
-                        {/* Delete Button */}
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          className="p-2 hover:bg-rose-100 rounded-lg text-rose-600 relative"
-                        >
-                          <FiTrash className="text-sm" />
-
-                          {/* Delete Tooltip */}
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 group-hover:opacity-100 transition-opacity duration-200">
-                            <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                              <FiTrash className="text-xs" />
-                              <span>Delete Client</span>
-                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                            </div>
-                          </div>
-                        </motion.button>
+                        {editing?.clientId === client.id ? (
+                          <>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              onClick={handleSave}
+                              className="p-2 hover:bg-green-100 rounded-lg text-green-600 tooltip"
+                              data-tip="Save Changes"
+                            >
+                              <FiSave className="text-lg" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              onClick={() => setEditing(null)}
+                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 tooltip"
+                              data-tip="Cancel"
+                            >
+                              <FiX className="text-lg" />
+                            </motion.button>
+                          </>
+                        ) : (
+                          <></>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

@@ -11,6 +11,7 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiDownload,
+  FiFlag,
 } from "react-icons/fi";
 import {
   pdf,
@@ -23,52 +24,90 @@ import {
 } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import AppointmentManagementForm from "@/Components/dashboard/AppointmentManagementForm";
+import { usePathname } from "next/navigation";
+import axios from "axios";
 
-// Types (same as before)
-interface User {
-  fullname: string;
-  email: string;
-  profile_img: string;
+interface Appointment {
+  id: string;
+  client_name: string;
+  client_email: string;
+  client_contact: string;
+  service_name: string;
+  service_time: number;
+  staff_name: string;
+  location: string;
+  date: string;
+  time: string;
+  price: number;
+  status: string;
+  salon_name: string;
 }
 
-interface Staff {
+interface UserResponse {
   id: string;
   fullname: string;
   email: string;
   contact: string;
-  user: User;
+  password: string;
+  profile_img?: string;
+  salonId?: string;
+  step?: number;
 }
 
-interface Service {
+interface StaffResponse {
+  id: string;
+  fullname: string;
+  email: string;
+  contact: string;
+  password: string;
+  profile_img?: string;
+  user_id: string;
+  branch_id: string;
+  staff_id: string;
+  user: UserResponse;
+}
+
+interface SalonResponse {
+  id: string;
+  salon_name: string;
+  salon_tag: string;
+  opening_time?: string;
+  contact_email: string;
+  contact_number: string;
+  branch_url?: string;
+  salon_img_url?: string;
+}
+
+interface BranchResponse {
+  id: string;
+  branch_name: string;
+  branch_location: string;
+  salon_id: string;
+  contact_email: string;
+  contact_number: string;
+  opning_time: string;
+  closeings_time: string;
+}
+
+interface ServiceResponse {
   id: string;
   service_name: string;
   service_price: number;
   time: number;
+  branch_id: string;
 }
 
-interface Client {
+interface ClientResponse {
   id: string;
   client_name: string;
   email: string;
   contact: string;
+  branch_id: string;
+  staff_id?: string;
+  createdAt: string; // or Date if you parse it
 }
 
-interface Branch {
-  id: string;
-  branch_name: string;
-  branch_location: string;
-  contact_number: string;
-}
-
-interface Salon {
-  id: string;
-  salon_name: string;
-  salon_tag: string;
-  contact_email: string;
-  contact_number: string;
-}
-
-interface Appointment {
+interface AppointmentResponse {
   id: string;
   salon_id: string;
   branch_id: string;
@@ -78,157 +117,14 @@ interface Appointment {
   date: string;
   time: string;
   status: string;
-  salon: Salon;
-  branch: Branch;
-  staff: Staff;
-  service: Service;
-  client: Client;
+  salon: SalonResponse;
+  branch: BranchResponse;
+  staff: StaffResponse;
+  service: ServiceResponse;
+  client: ClientResponse;
 }
 
 // Sample Data (same as before)
-const initialAppointments: Appointment[] = [
-  {
-    id: "550e8400-e29b-41d4-a716-446655440000",
-    salon_id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-    branch_id: "4f2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-    staff_id: "7d8e9f0a-1b2c-3d4e-5f6a-7b8c9d0e1f2a",
-    service_id: "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
-    client_id: "6c5d4e3f-2a1b-0c9d-8e7f-6a5b4c3d2e1f",
-    date: "2024-03-20",
-    time: "14:30",
-    status: "confirmed",
-    salon: {
-      id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-      salon_name: "Luxe Hair Studio",
-      salon_tag: "Premium Hair Services",
-      contact_email: "info@luxehair.com",
-      contact_number: "+1 555-1234",
-    },
-    branch: {
-      id: "4f2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      branch_name: "Downtown Branch",
-      branch_location: "123 Main Street, City Center",
-      contact_number: "+1 555-5678",
-    },
-    staff: {
-      id: "7d8e9f0a-1b2c-3d4e-5f6a-7b8c9d0e1f2a",
-      fullname: "Sarah Johnson",
-      email: "sarah@luxehair.com",
-      contact: "+1 555-8765",
-      user: {
-        fullname: "Sarah Johnson",
-        email: "sarah@luxehair.com",
-        profile_img: "https://example.com/sarah.jpg",
-      },
-    },
-    service: {
-      id: "9a8b7c6d-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
-      service_name: "Premium Haircut",
-      service_price: 75,
-      time: 60,
-    },
-    client: {
-      id: "6c5d4e3f-2a1b-0c9d-8e7f-6a5b4c3d2e1f",
-      client_name: "John Doe",
-      email: "john.doe@example.com",
-      contact: "+1 555-4321",
-    },
-  },
-  {
-    id: "670e8501-e29c-42d5-b717-556755550001",
-    salon_id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-    branch_id: "4f2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-    staff_id: "8e9f0a1b-2c3d-4e5f-6a7b-8c9d0e1f2a3b",
-    service_id: "a9b8c7d6-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
-    client_id: "7d6e5f4a-3b2c-1d0e-9f8a-7b6c5d4e3f2a",
-    date: "2024-03-20",
-    time: "16:00",
-    status: "pending",
-    salon: {
-      id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-      salon_name: "Luxe Hair Studio",
-      salon_tag: "Premium Hair Services",
-      contact_email: "info@luxehair.com",
-      contact_number: "+1 555-1234",
-    },
-    branch: {
-      id: "4f2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-      branch_name: "Downtown Branch",
-      branch_location: "123 Main Street, City Center",
-      contact_number: "+1 555-5678",
-    },
-    staff: {
-      id: "8e9f0a1b-2c3d-4e5f-6a7b-8c9d0e1f2a3b",
-      fullname: "Michael Chen",
-      email: "michael@luxehair.com",
-      contact: "+1 555-1122",
-      user: {
-        fullname: "Michael Chen",
-        email: "michael@luxehair.com",
-        profile_img: "https://example.com/michael.jpg",
-      },
-    },
-    service: {
-      id: "a9b8c7d6-5e4f-3a2b-1c0d-9e8f7a6b5c4d",
-      service_name: "Hair Coloring",
-      service_price: 150,
-      time: 120,
-    },
-    client: {
-      id: "7d6e5f4a-3b2c-1d0e-9f8a-7b6c5d4e3f2a",
-      client_name: "Emma Wilson",
-      email: "emma.w@example.com",
-      contact: "+1 555-3344",
-    },
-  },
-  {
-    id: "790e8602-e29d-43d6-c718-666866660002",
-    salon_id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-    branch_id: "5g3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
-    staff_id: "9f0a1b2c-3d4e-5f6a-7b8c-9d0e1f2a3b4c",
-    service_id: "b9c8d7e6-5f4e-3a2b-1c0d-9e8f7a6b5c4d",
-    client_id: "8e7f6a5b-4c3d-2e1f-0a9b-8c7d6e5f4a3b",
-    date: "2024-03-21",
-    time: "11:00",
-    status: "completed",
-    salon: {
-      id: "3e1b5a5a-7a5d-4b3d-8c1a-1a1a1a1a1a1a",
-      salon_name: "Luxe Hair Studio",
-      salon_tag: "Premium Hair Services",
-      contact_email: "info@luxehair.com",
-      contact_number: "+1 555-1234",
-    },
-    branch: {
-      id: "5g3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
-      branch_name: "Westside Branch",
-      branch_location: "456 Oak Avenue, West District",
-      contact_number: "+1 555-9999",
-    },
-    staff: {
-      id: "9f0a1b2c-3d4e-5f6a-7b8c-9d0e1f2a3b4c",
-      fullname: "David Martinez",
-      email: "david@luxehair.com",
-      contact: "+1 555-7788",
-      user: {
-        fullname: "David Martinez",
-        email: "david@luxehair.com",
-        profile_img: "https://example.com/david.jpg",
-      },
-    },
-    service: {
-      id: "b9c8d7e6-5f4e-3a2b-1c0d-9e8f7a6b5c4d",
-      service_name: "Beard Trim & Style",
-      service_price: 40,
-      time: 30,
-    },
-    client: {
-      id: "8e7f6a5b-4c3d-2e1f-0a9b-8c7d6e5f4a3b",
-      client_name: "James Smith",
-      email: "james.s@example.com",
-      contact: "+1 555-5566",
-    },
-  },
-];
 
 Font.register({
   family: "Inter",
@@ -379,13 +275,13 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
                 marginBottom: 4,
               }}
             >
-              {appointment.salon.salon_name}
+              {appointment.salon_name}
             </Text>
             <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>
-              {appointment.branch.branch_location}
+              {appointment.location}
             </Text>
             <Text style={{ fontSize: 12, color: "#64748b" }}>
-              {appointment.salon.contact_number}
+              {appointment.client_contact}
             </Text>
           </View>
 
@@ -414,13 +310,13 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Client Details</Text>
               <Text style={{ fontSize: 14, color: "#0f172a", marginBottom: 4 }}>
-                {appointment.client.client_name}
+                {appointment.client_name}
               </Text>
               <Text style={{ fontSize: 12, color: "#64748b", marginBottom: 2 }}>
-                {appointment.client.email}
+                {appointment.client_email}
               </Text>
               <Text style={{ fontSize: 12, color: "#64748b" }}>
-                {appointment.client.contact}
+                {appointment.client_contact}
               </Text>
             </View>
           </View>
@@ -460,15 +356,13 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
             </View>
 
             <View style={styles.tableRow}>
+              <Text style={styles.tableCell}>{appointment.service_name}</Text>
               <Text style={styles.tableCell}>
-                {appointment.service.service_name}
+                {appointment.service_time} mins
               </Text>
+              <Text style={styles.tableCell}>{appointment.staff_name}</Text>
               <Text style={styles.tableCell}>
-                {appointment.service.time} mins
-              </Text>
-              <Text style={styles.tableCell}>{appointment.staff.fullname}</Text>
-              <Text style={styles.tableCell}>
-                ${appointment.service.service_price.toFixed(2)}
+                ${appointment.price.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -483,7 +377,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
             >
               <Text style={styles.priceText}>Subtotal:</Text>
               <Text style={styles.priceText}>
-                ${appointment.service.service_price.toFixed(2)}
+                ${appointment.price.toFixed(2)}
               </Text>
             </View>
             <View
@@ -493,7 +387,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
               <Text
                 style={[styles.priceText, { color: "#4f46e5", fontSize: 16 }]}
               >
-                ${appointment.service.service_price.toFixed(2)}
+                ${appointment.price.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -508,8 +402,8 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
           }}
         >
           <Text style={{ fontSize: 10, color: "#64748b", textAlign: "center" }}>
-            Thank you for choosing {appointment.salon.salon_name}! Please
-            present this invoice upon arrival. Cancellation policy applies.
+            Thank you for choosing {appointment.salon_name}! Please present this
+            invoice upon arrival. Cancellation policy applies.
           </Text>
         </View>
       </Page>
@@ -520,8 +414,8 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
 export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [filteredAppointments, setFilteredAppointments] =
-    useState<Appointment[]>(initialAppointments);
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
   const tableRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -529,29 +423,76 @@ export default function AppointmentsPage() {
   const [serviceName, setServiceName] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [appointment, setappointments] = useState<Appointment[]>([]);
+  const [salonid, setsalonid] = useState("");
+
+  useEffect(() => {
+    const getsalonid = async () => {
+      const userResponse = await fetch(
+        `https://salon-backend-3.onrender.com/api/users/${userid}`
+      );
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+      console.log(userData);
+
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+      setsalonid(userData.user.salonId);
+      console.log(userResponse);
+    };
+    getsalonid();
+  }, [userid]);
+  const [formbtn, setformbtn] = useState(false);
+
+  useEffect(() => {
+    const getappointment = async () => {
+      const response = await axios.get(
+        `https://salon-backend-3.onrender.com/api/appoiment/${salonid}`
+      );
+      if (response.data.appointments) {
+        const data = response.data.appointments;
+        setappointments(
+          data.map((appoiment: AppointmentResponse) => ({
+            id: appoiment.id,
+            client_name: appoiment.client.client_name,
+            client_email: appoiment.client.email,
+            client_contact: appoiment.client.contact,
+            service_name: appoiment.service.service_name,
+            service_time: appoiment.service.time,
+            staff_name: appoiment.staff.fullname,
+            location: appoiment.branch.branch_location,
+            date: appoiment.date,
+            time: appoiment.time,
+            price: appoiment.service.service_price,
+            status: appoiment.status,
+            salon_name: appoiment.salon.salon_name,
+          }))
+        );
+      }
+    };
+    getappointment();
+  }, [salonid, formbtn]);
 
   // Filter appointments with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      const filtered = initialAppointments.filter((appointment) => {
+      const filtered = appointment.filter((appointment) => {
         const matchesSearch = [
-          appointment.client.client_name.toLowerCase(),
-          appointment.client.contact.toLowerCase(),
-          appointment.client.email.toLowerCase(),
-          appointment.service.service_name.toLowerCase(),
-          appointment.staff.fullname.toLowerCase(),
-          appointment.branch.branch_name.toLowerCase(),
-          appointment.service.service_price.toString(),
+          appointment.client_name.toLowerCase(),
+          appointment.client_contact.toLowerCase(),
+          appointment.client_email.toLowerCase(),
+          appointment.service_name.toLowerCase(),
+          appointment.staff_name.toLowerCase(),
+          appointment.price.toString(),
         ].some((value) => value.includes(searchQuery.toLowerCase()));
 
         const matchesAdvanced = [
           clientName
-            ? appointment.client.client_name
+            ? appointment.client_name
                 .toLowerCase()
                 .includes(clientName.toLowerCase())
             : true,
           serviceName
-            ? appointment.service.service_name
+            ? appointment.service_name
                 .toLowerCase()
                 .includes(serviceName.toLowerCase())
             : true,
@@ -562,7 +503,7 @@ export default function AppointmentsPage() {
         return matchesSearch && matchesAdvanced;
       });
 
-      setFilteredAppointments(filtered);
+      setappointments(filtered);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -621,10 +562,24 @@ export default function AppointmentsPage() {
           layout
           className={`relative ${
             isExpanded ? "w-full md:w-96" : "w-full md:w-94"
-          }`}
+          } space-y-4`}
         >
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          {/* Schedule Appointment Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setformbtn(true)}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-6 rounded-xl shadow-lg
+              transition-all duration-300 font-semibold text-lg flex items-center justify-center
+              gap-2 hover:shadow-indigo-200 active:scale-95"
+          >
+            <FiCalendar className="text-xl" />
+            Schedule Appointment
+          </motion.button>
+
+          {/* Search Section */}
+          <div className="relative group">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 z-10" />
             <input
               type="text"
               placeholder={
@@ -632,59 +587,81 @@ export default function AppointmentsPage() {
                   ? "Search by client, service, staff, branch or price..."
                   : "Search appointments..."
               }
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+              className="w-full pl-11 pr-12 py-4 rounded-xl border-2 border-indigo-100 bg-white
+               focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100
+               placeholder-gray-400 text-gray-700 transition-all duration-300 shadow-sm
+               hover:border-indigo-200"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <button
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 rounded-lg
+                text-indigo-600 hover:bg-indigo-100 transition-colors duration-200"
             >
-              {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
-            </button>
+              {isExpanded ? (
+                <FiChevronUp className="w-5 h-5" />
+              ) : (
+                <FiChevronDown className="w-5 h-5" />
+              )}
+            </motion.button>
           </div>
 
-          {/* Advanced Search (appears when expanded) */}
+          {/* Advanced Search Section */}
           <AnimatePresence>
             {isExpanded && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-2 bg-white p-4 rounded-xl shadow-lg border border-gray-100"
+                transition={{ type: "spring", stiffness: 150, damping: 20 }}
+                className="mt-2 bg-white p-6 rounded-xl shadow-lg border border-indigo-50 space-y-6"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Client Input */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
+                      <FiUser className="text-indigo-500" />
                       Client Name
                     </label>
                     <input
                       type="text"
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
+                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200 placeholder-gray-400"
                       placeholder="Filter by client"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+
+                  {/* Service Input */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
+                      <FiScissors className="text-indigo-500" />
                       Service
                     </label>
                     <input
                       type="text"
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
+                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200 placeholder-gray-400"
                       placeholder="Filter by service"
                       value={serviceName}
                       onChange={(e) => setServiceName(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+
+                  {/* Status Dropdown */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
+                      <FiFlag className="text-indigo-500" />
                       Status
                     </label>
                     <select
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
+                        focus:ring-2 focus:ring-indigo-100 transition-all duration-200 appearance-none
+                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2MzVmOTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLWRvd24iPjxwYXRoIGQ9Im02IDkgNiA2IDYtNiIvPjwvc3ZnPg==')] 
+                        bg-no-repeat bg-[center_right_1rem]"
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
                     >
@@ -694,13 +671,20 @@ export default function AppointmentsPage() {
                       <option value="completed">Completed</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+
+                  {/* Date Input */}
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
+                      <FiCalendar className="text-indigo-500" />
                       Date
                     </label>
                     <input
                       type="date"
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
+                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200
+                       [&::-webkit-calendar-picker-indicator]:bg-indigo-500 
+                       [&::-webkit-calendar-picker-indicator]:rounded-md
+                       [&::-webkit-calendar-picker-indicator]:p-1"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
                     />
@@ -721,9 +705,7 @@ export default function AppointmentsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Total Appointments</p>
-              <p className="text-2xl font-bold">
-                {filteredAppointments.length}
-              </p>
+              <p className="text-2xl font-bold">{appointment.length}</p>
             </div>
             <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
               <FiCalendar className="text-xl" />
@@ -739,10 +721,7 @@ export default function AppointmentsPage() {
             <div>
               <p className="text-sm text-gray-500">Confirmed</p>
               <p className="text-2xl font-bold">
-                {
-                  filteredAppointments.filter((a) => a.status === "confirmed")
-                    .length
-                }
+                {appointment.filter((a) => a.status === "confirmed").length}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-emerald-100 text-emerald-600">
@@ -759,11 +738,7 @@ export default function AppointmentsPage() {
             <div>
               <p className="text-sm text-gray-500">Services Booked</p>
               <p className="text-2xl font-bold">
-                {
-                  new Set(
-                    filteredAppointments.map((a) => a.service.service_name)
-                  ).size
-                }
+                {new Set(appointment.map((a) => a.service_name)).size}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
@@ -780,10 +755,7 @@ export default function AppointmentsPage() {
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold">
-                $
-                {filteredAppointments
-                  .reduce((sum, a) => sum + a.service.service_price, 0)
-                  .toFixed(2)}
+                ${appointment.reduce((sum, a) => sum + a.price, 0).toFixed(2)}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
@@ -845,7 +817,7 @@ export default function AppointmentsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <AnimatePresence>
-                {filteredAppointments.map((appointment) => (
+                {appointment.map((appointment) => (
                   <motion.tr
                     key={appointment.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -857,11 +829,11 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                          {appointment.client.client_name.charAt(0)}
+                          {appointment.client_name.charAt(0)}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {appointment.client.client_name}
+                            {appointment.client_name}
                           </div>
                           <div className="text-sm text-gray-500">
                             #{appointment.id.split("-")[0]}
@@ -871,39 +843,39 @@ export default function AppointmentsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {appointment.client.email}
+                        {appointment.client_email}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {appointment.client.contact}
+                        {appointment.client_contact}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {appointment.service.service_name}
+                        {appointment.service_name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {appointment.service.time} mins
+                        {appointment.service_time} mins
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">
-                          {appointment.staff.fullname
+                          {appointment.staff_name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </div>
                         <div className="ml-3 text-sm text-gray-900">
-                          {appointment.staff.fullname}
+                          {appointment.staff_name}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                      {/* <div className="text-sm font-medium text-gray-900">
                         {appointment.branch.branch_name}
-                      </div>
+                      </div> */}
                       <div className="text-xs text-gray-500">
-                        {appointment.branch.branch_location}
+                        {appointment.location}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -924,7 +896,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="text-lg font-bold text-indigo-600">
-                          ${appointment.service.service_price.toFixed(2)}
+                          ${appointment.price.toFixed(2)}
                         </div>
                         <button
                           onClick={() => handleDownloadInvoice(appointment)}
@@ -951,7 +923,7 @@ export default function AppointmentsPage() {
             </tbody>
           </table>
 
-          {filteredAppointments.length === 0 && (
+          {appointment.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -982,7 +954,25 @@ export default function AppointmentsPage() {
           )}
         </div>
 
-        <AppointmentManagementForm />
+        {formbtn && (
+          <AnimatePresence>
+            {/* Backdrop with blur effect */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+              animate={{ opacity: 1, backdropFilter: "blur(4px)" }}
+              exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center"
+              onClick={() => setformbtn(false)}
+            >
+              {/* Form Container - Prevent click propagation */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <AppointmentManagementForm setformbtn={setformbtn} />
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
       </motion.div>
     </div>
   );
