@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import {  Zilla_Slab } from "next/font/google";
+import { Zilla_Slab } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
 import { SignupProvider } from "@/context/SignupContext";
 import { LoginProvider } from "@/context/LoginContext";
 import { ForgetPasswordProvider } from "@/context/ForgetpassContext";
-
-
+import { Toaster } from "react-hot-toast";
 
 const zillaSlab = Zilla_Slab({
   subsets: ["latin"],
@@ -17,7 +16,8 @@ const zillaSlab = Zilla_Slab({
 
 export const metadata: Metadata = {
   title: "SalonSphere - Complete Salon Management Platform",
-  description: "SalonSphere empowers salon owners with a comprehensive ecosystem to manage appointments, staff, clients, and operations. All-in-one solution for modern salon management with real-time analytics and booking system.",
+  description:
+    "SalonSphere empowers salon owners with a comprehensive ecosystem to manage appointments, staff, clients, and operations. All-in-one solution for modern salon management with real-time analytics and booking system.",
   keywords: [
     "salon management",
     "beauty business software",
@@ -26,11 +26,12 @@ export const metadata: Metadata = {
     "beauty salon platform",
     "salon owner tools",
     "client management system",
-    "salon administration"
+    "salon administration",
   ],
   openGraph: {
     title: "SalonSphere - Your Complete Salon Management Solution",
-    description: "Transform your salon business with our all-in-one management platform. Streamline operations, enhance client experience, and grow your beauty business.",
+    description:
+      "Transform your salon business with our all-in-one management platform. Streamline operations, enhance client experience, and grow your beauty business.",
     images: [
       {
         url: "/logo.png",
@@ -43,7 +44,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SalonSphere - Digital Ecosystem for Beauty Professionals",
-    description: "Take control of your salon business with integrated management tools, client retention systems, and smart analytics.",
+    description:
+      "Take control of your salon business with integrated management tools, client retention systems, and smart analytics.",
     images: ["/twitter-salonsphere.jpg"],
   },
 };
@@ -56,16 +58,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <LoginProvider>
-      <SignupProvider>
-      <ForgetPasswordProvider>
-      {/* Apply Zilla Slab globally */}
-      <body className={`${zillaSlab.className} antialiased`}>
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
-      </ForgetPasswordProvider>
-      </SignupProvider>
+        <Toaster />
+        <SignupProvider>
+          <ForgetPasswordProvider>
+            {/* Apply Zilla Slab globally */}
+            <body className={`${zillaSlab.className} antialiased`}>
+              <Navbar />
+              {children}
+              <Footer />
+            </body>
+          </ForgetPasswordProvider>
+        </SignupProvider>
       </LoginProvider>
     </html>
   );

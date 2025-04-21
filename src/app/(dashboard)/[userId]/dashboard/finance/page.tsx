@@ -3,71 +3,131 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Range, RangeKeyDict } from 'react-date-range';
-import {
-  FiDollarSign,
-  FiUsers,
-  FiBox,
-  FiDownload,
-  FiChevronRight,
-} from "react-icons/fi";
+import { Range, RangeKeyDict } from "react-date-range";
+import { FiDollarSign, FiUsers, FiBox, FiDownload } from "react-icons/fi";
 import { DateRange } from "react-date-range";
 import { format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
-import { LineChartComponent } from "@/Components/dashboard/Charts";
+import axios from "axios";
+import { usePathname } from "next/navigation";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+interface FinancialData {
+  branches: Array<{
+    branchId: string;
+    branchName: string;
+    earnings: number;
+    staffSalaries: number;
+    productCosts: number;
+    netProfit: number;
+  }>;
+  totals: {
+    earnings: number;
+    staffSalaries: number;
+    productCosts: number;
+    netProfit: number;
+  };
+  trendData: Array<{
+    date: string;
+    amount: number;
+  }>;
+}
 
 const FinancialPage = () => {
-    const [dateRange, setDateRange] = useState<Range[]>([
-        {
-          startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
-          endDate: new Date(),
-          key: 'selection'
-        }
-      ]);
+  const pathname = usePathname();
+  const userId = pathname.split("/")[1];
+  const [salonId, setSalonId] = useState("");
+  const [financialData, setFinancialData] = useState<FinancialData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data
-  const branches = [
+  const [dateRange, setDateRange] = useState<Range[]>([
     {
-      id: 1,
-      name: "Downtown Branch",
-      earnings: 15420,
-      staffSalaries: 6200,
-      productCosts: 2300,
-      netProfit: 6920,
+      startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+      endDate: new Date(),
+      key: "selection",
     },
-    {
-      id: 2,
-      name: "Uptown Branch",
-      earnings: 23450,
-      staffSalaries: 9800,
-      productCosts: 4100,
-      netProfit: 9550,
-    },
-  ];
-
-  const [filteredData, ] = useState(branches);
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  ]);
 
   useEffect(() => {
-    calculateTotals();
-  }, [dateRange]);
+    const fetchSalonId = async () => {
+      try {
+        const response = await axios.get(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`
+        );
+        setSalonId(response.data.user?.salonId);
+      } catch (error) {
+        console.error("Error fetching salon ID:", error);
+      }
+    };
 
-  const calculateTotals = () => {
-    const total = filteredData.reduce(
-      (acc, branch) => acc + branch.netProfit,
-      0
-    );
-    setTotalEarnings(total);
-  };
+    fetchSalonId();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!salonId) return;
+
+      try {
+        setLoading(true);
+        const response = await axios.post(
+          "https://salon-backend-3.onrender.com/api/finance/financialreport",
+          {
+            salonId,
+            startDate: dateRange[0].startDate,
+            endDate: dateRange[0].endDate,
+          }
+        );
+
+        setFinancialData(response.data.data);
+      } catch (error) {
+        console.error("Error fetching financial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [salonId, dateRange]);
 
   const handleDateChange = (ranges: RangeKeyDict) => {
     setDateRange([ranges.selection]);
   };
 
   const exportReport = () => {
-    // Export logic here
+    // Implement export logic using financialData
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (!financialData) return null;
 
   return (
     <motion.div
@@ -82,8 +142,8 @@ const FinancialPage = () => {
             Financial Overview
           </h1>
           <p className="text-gray-600 mt-2">
-            {format(dateRange[0].startDate ||0, "MMM dd, yyyy")} -{" "}
-            {format(dateRange[0].endDate ||0, "MMM dd, yyyy")}
+            {format(dateRange[0].startDate || 0, "MMM dd, yyyy")} -{" "}
+            {format(dateRange[0].endDate || 0, "MMM dd, yyyy")}
           </p>
         </div>
 
@@ -106,7 +166,7 @@ const FinancialPage = () => {
           <div>
             <h2 className="text-2xl font-bold">Net Profit After Deductions</h2>
             <p className="text-4xl font-bold mt-2">
-              ${totalEarnings.toLocaleString()}
+              ${financialData.totals.netProfit.toLocaleString()}
             </p>
             <p className="mt-2 opacity-90">
               (Total Earnings - Staff Salaries - Product Costs)
@@ -134,24 +194,23 @@ const FinancialPage = () => {
       <div className="bg-white p-6 rounded-xl shadow-sm">
         <h3 className="text-lg font-semibold mb-4">Earnings Trend</h3>
         <div className="h-64">
-          <LineChartComponent />
+          <LineChartComponent data={financialData.trendData} />
         </div>
       </div>
 
       {/* Branch-wise Breakdown */}
       <div className="space-y-6">
         <h3 className="text-2xl font-bold text-gray-800">Branch Performance</h3>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {branches.map((branch) => (
+          {financialData.branches.map((branch) => (
             <motion.div
-              key={branch.id}
+              key={branch.branchId}
               whileHover={{ y: -5 }}
               className="bg-white p-6 rounded-xl shadow-sm"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-xl font-semibold">{branch.name}</h4>
+                  <h4 className="text-xl font-semibold">{branch.branchName}</h4>
                   <div className="space-y-2 mt-4">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Earnings:</span>
@@ -179,14 +238,6 @@ const FinancialPage = () => {
                     </div>
                   </div>
                 </div>
-
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  className="text-purple-600 hover:text-purple-700 flex items-center gap-1"
-                >
-                  Manage Staff
-                  <FiChevronRight className="mt-1" />
-                </motion.button>
               </div>
             </motion.div>
           ))}
@@ -202,7 +253,9 @@ const FinancialPage = () => {
               <FiUsers className="text-2xl text-purple-600" />
               <div>
                 <p className="text-gray-600">Total Staff Salaries</p>
-                <p className="text-2xl font-bold">$16,000</p>
+                <p className="text-2xl font-bold">
+                  ${financialData.totals.staffSalaries.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -212,7 +265,9 @@ const FinancialPage = () => {
               <FiBox className="text-2xl text-pink-600" />
               <div>
                 <p className="text-gray-600">Product Costs</p>
-                <p className="text-2xl font-bold">$6,400</p>
+                <p className="text-2xl font-bold">
+                  ${financialData.totals.productCosts.toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -222,7 +277,14 @@ const FinancialPage = () => {
               <FiDollarSign className="text-2xl text-emerald-600" />
               <div>
                 <p className="text-gray-600">Net Profit Margin</p>
-                <p className="text-2xl font-bold">34.2%</p>
+                <p className="text-2xl font-bold">
+                  {(
+                    (financialData.totals.netProfit /
+                      financialData.totals.earnings) *
+                      100 || 0
+                  ).toFixed(1)}
+                  %
+                </p>
               </div>
             </div>
           </div>
@@ -230,6 +292,82 @@ const FinancialPage = () => {
       </div>
     </motion.div>
   );
+};
+
+const LineChartComponent = ({
+  data,
+}: {
+  data: Array<{ date: string; amount: number }>;
+}) => {
+  const chartData = {
+    labels: data.map((item) => format(new Date(item.date), "MMM dd")),
+    datasets: [
+      {
+        label: "Daily Earnings",
+        data: data.map((item) => item.amount),
+        borderColor: "#8B5CF6",
+        backgroundColor: "rgba(139, 92, 246, 0.1)",
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top" as const,
+        labels: {
+          color: "#374151",
+          font: {
+            size: 14,
+            weight: "600" as const,
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: "#1F2937",
+        titleColor: "#F9FAFB",
+        bodyColor: "#E5E7EB",
+        borderColor: "#4B5563",
+        borderWidth: 1,
+        padding: 12,
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: {
+          color: "#6B7280",
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 7,
+        },
+      },
+      y: {
+        grid: { color: "#E5E7EB" },
+        ticks: {
+          color: "#6B7280",
+          callback: (value: number) => `$${value.toLocaleString()}`,
+        },
+        beginAtZero: true,
+      },
+    },
+  };
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center text-gray-500">
+        No data available for the selected period
+      </div>
+    );
+  }
+
+  return <Line data={chartData} options={options} />;
 };
 
 export default FinancialPage;

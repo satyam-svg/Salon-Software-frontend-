@@ -1,76 +1,44 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import { useCallback } from "react";
 import {
   FiSearch,
   FiClock,
   FiMapPin,
-  FiDollarSign,
   FiChevronDown,
   FiChevronUp,
   FiEdit,
-  FiTrash,
   FiPlus,
   FiPhone,
   FiMail,
 } from "react-icons/fi";
+import { usePathname } from "next/navigation";
+
+interface Service {
+  id: string;
+  service_name: string;
+  service_price: number;
+  time: number;
+}
 
 interface Branch {
   id: string;
   branch_name: string;
   branch_location: string;
-  services_offered: string[];
   contact_email: string;
   contact_number: string;
-  opening_time: string;
-  closing_time: string;
-  total_revenue: number;
-  appointments_count: number;
+  opning_time: string;
+  closeings_time: string;
+  salon_id: string;
+  service: Service[];
+  staffCount: number;
+  serviceCount: number;
+  inventoryCount: number;
+  total_revenue?: number;
+  appointments_count?: number;
 }
-
-const dummyBranches: Branch[] = [
-  {
-    id: "1",
-    branch_name: "Downtown Luxury Salon",
-    branch_location: "123 Main St, Downtown",
-    services_offered: [
-      "Hair Coloring",
-      "Spa Treatments",
-      "Bridal Packages",
-      "Men's Grooming",
-    ],
-    contact_email: "downtown@luxurysalon.com",
-    contact_number: "+1 555-1234",
-    opening_time: "09:00",
-    closing_time: "20:00",
-    total_revenue: 25400,
-    appointments_count: 345,
-  },
-  {
-    id: "2",
-    branch_name: "Uptown Style Hub",
-    branch_location: "456 Oak Ave, Uptown",
-    services_offered: ["Hair Extensions", "Makeup Artistry", "Kids Styling"],
-    contact_email: "uptown@luxurysalon.com",
-    contact_number: "+1 555-5678",
-    opening_time: "10:00",
-    closing_time: "19:00",
-    total_revenue: 18200,
-    appointments_count: 234,
-  },
-  {
-    id: "3",
-    branch_name: "Suburban Beauty Lounge",
-    branch_location: "789 Pine Rd, Suburbs",
-    services_offered: ["Skin Care", "Waxing", "Massage Therapy"],
-    contact_email: "suburbs@luxurysalon.com",
-    contact_number: "+1 555-9012",
-    opening_time: "08:30",
-    closing_time: "18:30",
-    total_revenue: 16750,
-    appointments_count: 198,
-  },
-];
 
 export default function BranchManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,62 +46,81 @@ export default function BranchManagementPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [newBranch, setNewBranch] = useState<Partial<Branch>>({});
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [editedBranch, setEditedBranch] = useState<Partial<Branch>>({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [minRevenue, setMinRevenue] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollProgress] = useState(0);
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
+  const [salonid, setsalonid] = useState("");
 
-  // Fetch dummy data
   useEffect(() => {
-    setTimeout(() => {
-      setBranches(dummyBranches);
-      setFilteredBranches(dummyBranches);
-    }, 500);
-  }, []);
+    const getsalonid = async () => {
+      const userResponse = await fetch(
+        `https://salon-backend-3.onrender.com/api/users/${userid}`
+      );
+      if (!userResponse.ok) throw new Error("Failed to fetch user data");
+      const userData = await userResponse.json();
+      console.log(userData);
+
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+      setsalonid(userData.user.salonId);
+      console.log(userResponse);
+    };
+    getsalonid();
+  }, [userid]);
+
+  // Fetch branches from API
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axios.post(
+          "https://salon-backend-3.onrender.com/api/branch/isbranch",
+          { salon_id: salonid }
+        );
+        setBranches(response.data.branches);
+        setFilteredBranches(response.data.branches);
+        setIsLoading(false);
+      } catch (err) {
+        setError("Failed to fetch branches");
+        console.log(err);
+        setIsLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, [salonid]);
 
   // Filter branches
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const filtered = branches.filter((branch) => {
-        const matchesSearch = [
-          branch.branch_name.toLowerCase(),
-          branch.branch_location.toLowerCase(),
-          branch.services_offered.join(" ").toLowerCase(),
-          branch.contact_email.toLowerCase(),
-          branch.total_revenue.toString(),
-        ].some((value) => value.includes(searchQuery.toLowerCase()));
+    const filtered = branches.filter((branch) => {
+      const matchesSearch = [
+        branch.branch_name.toLowerCase(),
+        branch.branch_location.toLowerCase(),
+        branch.service
+          .map((s) => s.service_name)
+          .join(" ")
+          .toLowerCase(),
+        branch.contact_email.toLowerCase(),
+        branch.total_revenue?.toString() || "0",
+      ].some((value) => value.includes(searchQuery.toLowerCase()));
 
-        const matchesAdvanced = [
-          minRevenue ? branch.total_revenue >= parseInt(minRevenue) : true,
-        ].every(Boolean);
+      const matchesRevenue = minRevenue
+        ? (branch.total_revenue || 0) >= parseInt(minRevenue)
+        : true;
 
-        return matchesSearch && matchesAdvanced;
-      });
+      return matchesSearch && matchesRevenue;
+    });
 
-      setFilteredBranches(filtered);
-    }, 300);
-
-    return () => clearTimeout(timer);
+    setFilteredBranches(filtered);
   }, [searchQuery, branches, minRevenue]);
 
-  // Scroll progress
-  useEffect(() => {
-    const table = tableRef.current;
-    if (!table) return;
-
-    const handleScroll = () => {
-      const scrollTop = table.scrollTop;
-      const scrollHeight = table.scrollHeight - table.clientHeight;
-      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-      setScrollProgress(progress);
-    };
-
-    table.addEventListener("scroll", handleScroll);
-    return () => table.removeEventListener("scroll", handleScroll);
-  }, []);
-
   // Add new branch
-  const handleAddBranch = () => {
+  const handleAddBranch = async () => {
     if (
       !newBranch.branch_name ||
       !newBranch.branch_location ||
@@ -144,205 +131,242 @@ export default function BranchManagementPage() {
       return;
     }
 
-    const branch: Branch = {
-      id: Math.random().toString(36).substr(2, 9),
-      branch_name: newBranch.branch_name,
-      branch_location: newBranch.branch_location,
-      services_offered: newBranch.services_offered || [],
-      contact_email: newBranch.contact_email,
-      contact_number: newBranch.contact_number,
-      opening_time: newBranch.opening_time || "09:00",
-      closing_time: newBranch.closing_time || "18:00",
-      total_revenue: newBranch.total_revenue || 0,
-      appointments_count: newBranch.appointments_count || 0,
-    };
+    try {
+      const response = await axios.post(
+        "https://salon-backend-3.onrender.com/api/branch/create",
+        {
+          ...newBranch,
+          salon_id: salonid,
+          opning_time: newBranch.opning_time || "09:00",
+          closeings_time: newBranch.closeings_time || "18:00",
+        }
+      );
 
-    setBranches([...branches, branch]);
-    setIsAddingBranch(false);
-    setNewBranch({});
+      setBranches([...branches, response.data]);
+      setIsAddingBranch(false);
+      setNewBranch({});
+    } catch (err) {
+      alert("Error adding branch");
+      console.log(err);
+    }
   };
 
-  // Service tag colors
-  const serviceColors: { [key: string]: string } = {
-    "Hair Coloring": "bg-purple-100 text-purple-800",
-    "Spa Treatments": "bg-blue-100 text-blue-800",
-    "Bridal Packages": "bg-pink-100 text-pink-800",
-    "Men's Grooming": "bg-green-100 text-green-800",
-    "Hair Extensions": "bg-red-100 text-red-800",
-    "Makeup Artistry": "bg-yellow-100 text-yellow-800",
-    "Kids Styling": "bg-indigo-100 text-indigo-800",
-    "Skin Care": "bg-orange-100 text-orange-800",
-    Waxing: "bg-teal-100 text-teal-800",
-    "Massage Therapy": "bg-cyan-100 text-cyan-800",
+  // Update branch
+  const handleUpdateBranch = async () => {
+    if (!editingBranch) return;
+
+    try {
+      const response = await axios.put(
+        `https://salon-backend-3.onrender.com/api/branch/update/${editingBranch.id}`,
+        {
+          ...editedBranch,
+          opning_time: editedBranch.opning_time,
+          closeings_time: editedBranch.closeings_time,
+        }
+      );
+
+      setBranches(
+        branches.map((b) =>
+          b.id === editingBranch.id ? { ...b, ...response.data } : b
+        )
+      );
+      setEditingBranch(null);
+    } catch (err) {
+      alert("Error updating branch");
+      console.log(err);
+    }
   };
+
+  // Branch Modal Component
+  const BranchModal = React.memo(function BranchModal({
+    branch,
+    onSave,
+    onClose,
+    isEditing,
+    onFieldChange,
+  }: {
+    branch: Partial<Branch>;
+    onSave: () => void;
+    onClose: () => void;
+    isEditing?: boolean;
+    onFieldChange: (field: keyof Branch, value: string) => void;
+  }) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+      >
+        <motion.div
+          initial={{ y: 20, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 20, opacity: 0, scale: 0.95 }}
+          className="flex items-center justify-center min-h-screen"
+        >
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+            <h2 className="text-3xl font-bold mb-6">
+              {isEditing ? "Edit Branch" : "Add New Branch"}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Branch Name*
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-lg"
+                  value={branch.branch_name || ""}
+                  onChange={(e) => onFieldChange("branch_name", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Location*
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-lg"
+                  value={branch.branch_location || ""}
+                  onChange={(e) =>
+                    onFieldChange("branch_location", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Opening Time
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.opning_time || "09:00"}
+                    onChange={(e) =>
+                      onFieldChange("opning_time", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Closing Time
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.closeings_time || "18:00"}
+                    onChange={(e) =>
+                      onFieldChange("closeings_time", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Contact Email*
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.contact_email || ""}
+                    onChange={(e) =>
+                      onFieldChange("contact_email", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Contact Number*
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.contact_number || ""}
+                    onChange={(e) =>
+                      onFieldChange("contact_number", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onSave}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                {isEditing ? "Save Changes" : "Add Branch"}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  });
+
+  const handleFieldChange = useCallback(
+    (field: string, value: string) => {
+      if (editingBranch) {
+        setEditedBranch((prev) => ({ ...prev, [field]: value }));
+      } else {
+        setNewBranch((prev) => ({ ...prev, [field]: value }));
+      }
+    },
+    [editingBranch]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <div className="animate-spin inline-block w-8 h-8 border-4 rounded-full border-t-indigo-500"></div>
+        <p className="mt-2 text-gray-600">Loading branches...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <FiMapPin className="w-16 h-16 mx-auto mb-4" />
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">
-      {/* Add Branch Modal */}
       <AnimatePresence>
         {isAddingBranch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-          >
-            <motion.div
-              initial={{ y: 20, opacity: 0, scale: 0.95 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 20, opacity: 0, scale: 0.95 }}
-              className="flex items-center justify-center min-h-screen"
-            >
-              <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-                <h2 className="text-3xl font-bold mb-6">Add New Branch</h2>
+          <BranchModal
+            branch={newBranch}
+            onSave={handleAddBranch}
+            onClose={() => setIsAddingBranch(false)}
+            onFieldChange={handleFieldChange}
+          />
+        )}
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Branch Name
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      value={newBranch.branch_name || ""}
-                      onChange={(e) =>
-                        setNewBranch({
-                          ...newBranch,
-                          branch_name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      value={newBranch.branch_location || ""}
-                      onChange={(e) =>
-                        setNewBranch({
-                          ...newBranch,
-                          branch_location: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Opening Time
-                      </label>
-                      <input
-                        type="time"
-                        className="w-full p-2 border rounded-lg"
-                        value={newBranch.opening_time || "09:00"}
-                        onChange={(e) =>
-                          setNewBranch({
-                            ...newBranch,
-                            opening_time: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Closing Time
-                      </label>
-                      <input
-                        type="time"
-                        className="w-full p-2 border rounded-lg"
-                        value={newBranch.closing_time || "18:00"}
-                        onChange={(e) =>
-                          setNewBranch({
-                            ...newBranch,
-                            closing_time: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Services (comma separated)
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-lg"
-                      placeholder="e.g., Hair Coloring, Spa Treatments"
-                      value={newBranch.services_offered?.join(", ") || ""}
-                      onChange={(e) =>
-                        setNewBranch({
-                          ...newBranch,
-                          services_offered: e.target.value
-                            .split(", ")
-                            .map((s) => s.trim()),
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Contact Email
-                      </label>
-                      <input
-                        type="email"
-                        className="w-full p-2 border rounded-lg"
-                        value={newBranch.contact_email || ""}
-                        onChange={(e) =>
-                          setNewBranch({
-                            ...newBranch,
-                            contact_email: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">
-                        Contact Number
-                      </label>
-                      <input
-                        type="tel"
-                        className="w-full p-2 border rounded-lg"
-                        value={newBranch.contact_number || ""}
-                        onChange={(e) =>
-                          setNewBranch({
-                            ...newBranch,
-                            contact_number: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex gap-3 justify-end">
-                  <button
-                    onClick={() => setIsAddingBranch(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddBranch}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    Add Branch
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+        {editingBranch && (
+          <BranchModal
+            branch={editedBranch}
+            onSave={handleUpdateBranch}
+            onClose={() => setEditingBranch(null)}
+            isEditing
+            onFieldChange={handleFieldChange}
+          />
         )}
       </AnimatePresence>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
@@ -424,19 +448,13 @@ export default function BranchManagementPage() {
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Avg Revenue</p>
+              <p className="text-sm text-gray-500">Total Staff</p>
               <p className="text-2xl font-bold">
-                $
-                {(
-                  filteredBranches.reduce(
-                    (sum, b) => sum + b.total_revenue,
-                    0
-                  ) / (filteredBranches.length || 1)
-                ).toLocaleString()}
+                {filteredBranches.reduce((sum, b) => sum + b.staffCount, 0)}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-green-100 text-green-600">
-              <FiDollarSign className="text-xl" />
+              <FiPlus className="text-xl" />
             </div>
           </div>
         </div>
@@ -444,36 +462,26 @@ export default function BranchManagementPage() {
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total Appointments</p>
+              <p className="text-sm text-gray-500">Total Services</p>
               <p className="text-2xl font-bold">
-                {filteredBranches.reduce(
-                  (sum, b) => sum + b.appointments_count,
-                  0
-                )}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
-              <FiClock className="text-xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Avg Services/Branch</p>
-              <p className="text-2xl font-bold">
-                {filteredBranches.length > 0
-                  ? (
-                      filteredBranches.reduce(
-                        (sum, b) => sum + b.services_offered.length,
-                        0
-                      ) / filteredBranches.length
-                    ).toFixed(1)
-                  : "0.0"}
+                {filteredBranches.reduce((sum, b) => sum + b.serviceCount, 0)}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
+              <FiPlus className="text-xl" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Total Inventory</p>
+              <p className="text-2xl font-bold">
+                {filteredBranches.reduce((sum, b) => sum + b.inventoryCount, 0)}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
               <FiPlus className="text-xl" />
             </div>
           </div>
@@ -512,7 +520,7 @@ export default function BranchManagementPage() {
                   Hours
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Revenue
+                  Stats
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
                   Actions
@@ -538,15 +546,12 @@ export default function BranchManagementPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-2">
-                      {branch.services_offered.map((service) => (
+                      {branch.service.map((service) => (
                         <span
-                          key={service}
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            serviceColors[service] ||
-                            "bg-gray-100 text-gray-800"
-                          }`}
+                          key={service.id}
+                          className="bg-purple-100 text-purple-800 px-2 py-1 text-xs rounded-full"
                         >
-                          {service}
+                          {service.service_name} (${service.service_price})
                         </span>
                       ))}
                     </div>
@@ -566,24 +571,36 @@ export default function BranchManagementPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 text-sm">
                       <FiClock className="text-gray-500" />
-                      {branch.opening_time} - {branch.closing_time}
+                      {branch.opning_time} - {branch.closeings_time}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-indigo-600">
-                      ${branch.total_revenue.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {branch.appointments_count} appointments
+                    <div className="flex flex-col">
+                      <span className="text-sm">
+                        <strong>{branch.staffCount}</strong> Staff
+                      </span>
+                      <span className="text-sm">
+                        <strong>{branch.serviceCount}</strong> Services
+                      </span>
+                      <span className="text-sm">
+                        <strong>{branch.inventoryCount}</strong> Inventory
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-600">
+                      <button
+                        onClick={() => {
+                          setEditingBranch(branch);
+                          setEditedBranch({
+                            ...branch,
+                            opning_time: branch.opning_time,
+                            closeings_time: branch.closeings_time,
+                          });
+                        }}
+                        className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-600"
+                      >
                         <FiEdit />
-                      </button>
-                      <button className="p-2 hover:bg-red-100 rounded-lg text-red-600">
-                        <FiTrash />
                       </button>
                     </div>
                   </td>

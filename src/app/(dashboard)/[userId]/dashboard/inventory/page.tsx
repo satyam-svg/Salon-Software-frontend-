@@ -1,193 +1,212 @@
 // app/dashboard/inventory/page.tsx
-'use client';
+"use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
-import { FiEdit, FiTrash, FiPlus, FiChevronDown, FiSearch, FiCalendar, FiDollarSign, FiBox } from 'react-icons/fi';
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import {
+  FiEdit,
+  FiTrash,
+  FiPlus,
+  FiChevronDown,
+  FiSearch,
+  FiCalendar,
+  FiDollarSign,
+  FiBox,
+} from "react-icons/fi";
+import { usePathname } from "next/navigation";
 
 interface Product {
   id: string;
-  name: string;
-  branch: string;
-  quantity: number;
+  product_name: string;
+  product_quantity: number;
   price: number;
+}
+
+interface Branch {
+  id: string;
+  branch_name: string;
+  branch_location: string;
+  inventory: Product[];
+  usedProducts: UsedProduct[];
 }
 
 interface UsedProduct {
   id: string;
-  productName: string;
-  branch: string;
-  quantityUsed: number;
-  dateUsed: string;
-  usedBy: string;
-  service: string;
+  product_name: string;
+  price: number;
+  quantity_used: number;
+  staff: {
+    fullname: string;
+  };
+  appointment: {
+    service: {
+      service_name: string;
+    };
+    client: {
+      client_name: string;
+    };
+  };
+  date: string;
 }
 
 const InventoryPage = () => {
-  const [branches] = useState(['Downtown Branch', 'Uptown Branch', 'Westside Branch', 'Eastside Branch']);
-  const [selectedBranch, setSelectedBranch] = useState(branches[0]);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  // Enhanced Dummy Product Data
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      name: 'Premium Shampoo',
-      branch: 'Downtown Branch',
-      quantity: 15,
-      price: 32.99,
-    },
-    {
-      id: '2',
-      name: 'Hair Color Kit',
-      branch: 'Downtown Branch',
-      quantity: 8,
-      price: 45.50,
-    },
-    {
-      id: '3',
-      name: 'Conditioner Pro',
-      branch: 'Uptown Branch',
-      quantity: 12,
-      price: 28.75,
-    },
-    {
-      id: '4',
-      name: 'Styling Gel',
-      branch: 'Westside Branch',
-      quantity: 20,
-      price: 18.99,
-    },
-    {
-      id: '5',
-      name: 'Scalp Treatment',
-      branch: 'Eastside Branch',
-      quantity: 6,
-      price: 55.00,
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
+
+  const fetchBranches = useCallback(async () => {
+    if (!userid || !mounted) return;
+
+    try {
+      setLoading(true);
+      const userResponse = await axios.get(
+        `https://salon-backend-3.onrender.com/api/users/${userid}`
+      );
+
+      const userData = userResponse.data;
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+
+      const branchResponse = await axios.post(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        { salon_id: userData.user.salonId }
+      );
+
+      const branchesData = branchResponse.data.branches || [];
+      setBranches(branchesData);
+      if (branchesData.length > 0) {
+        setSelectedBranch(branchesData[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }, [userid, mounted]);
 
-  // Enhanced Used Product Data
-  const [usedProducts] = useState<UsedProduct[]>([
-    {
-      id: 'u1',
-      productName: 'Premium Shampoo',
-      branch: 'Downtown Branch',
-      quantityUsed: 2,
-      dateUsed: '2024-03-15',
-      usedBy: 'John Doe',
-      service: 'Hair Wash'
-    },
-    {
-      id: 'u2',
-      productName: 'Hair Color Kit',
-      branch: 'Downtown Branch',
-      quantityUsed: 1,
-      dateUsed: '2024-03-15',
-      usedBy: 'Jane Smith',
-      service: 'Color Treatment'
-    },
-    {
-      id: 'u3',
-      productName: 'Conditioner Pro',
-      branch: 'Uptown Branch',
-      quantityUsed: 3,
-      dateUsed: '2024-03-14',
-      usedBy: 'Mike Johnson',
-      service: 'Hair Treatment'
-    },
-    {
-      id: 'u4',
-      productName: 'Styling Gel',
-      branch: 'Westside Branch',
-      quantityUsed: 1,
-      dateUsed: '2024-03-14',
-      usedBy: 'Sarah Wilson',
-      service: 'Styling Service'
-    }
-  ]);
-
+  useEffect(() => {
+    setMounted(true);
+    fetchBranches();
+  }, [fetchBranches]);
 
   // Filtered Products
-  const filteredProducts = products.filter(product => 
-    product.branch === selectedBranch &&
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts =
+    selectedBranch?.inventory.filter((product) =>
+      product.product_name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   // Filtered Used Products
-  const filteredUsedProducts = usedProducts.filter(product => 
-    product.branch === selectedBranch &&
-    (selectedDate ? product.dateUsed === selectedDate : true)
-  );
+  const filteredUsedProducts =
+    selectedBranch?.usedProducts.filter((product) => {
+      if (!selectedDate) return true;
+      const productDate = new Date(product.date).toISOString().split("T")[0];
+      return productDate === selectedDate;
+    }) || [];
+
   // Statistics Calculations
   const totalProducts = filteredProducts.length;
-  const totalValue = filteredProducts.reduce((sum, product) => sum + (product.quantity * product.price), 0);
-  const usedItemsCost = filteredUsedProducts.reduce((sum, usedProduct) => {
-    // Find the corresponding product in the products array
-    const product = products.find(p => 
-      p.name === usedProduct.productName && 
-      p.branch === usedProduct.branch
-    );
-    
-    // Calculate cost for this used product (quantity used * price)
-    return sum + (product ? usedProduct.quantityUsed * product.price : 0);
-  }, 0);
+  const totalValue = filteredProducts.reduce(
+    (sum, product) => sum + product.product_quantity * product.price,
+    0
+  );
+  const usedItemsCost = filteredUsedProducts.reduce(
+    (sum, product) => sum + product.price * product.quantity_used,
+    0
+  );
 
   // Form Handling
   const [formData, setFormData] = useState({
-    name: '',
-    quantity: 0,
+    product_name: "",
+    product_quantity: 0,
     price: 0,
   });
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
-      name: product.name,
-      quantity: product.quantity,
+      product_name: product.product_name,
+      product_quantity: product.product_quantity,
       price: product.price,
     });
     setShowModal(true);
   };
 
-  const handleSubmit = () => {
-    if (editingProduct) {
-      setProducts(products.map(p => 
-        p.id === editingProduct.id ? { ...editingProduct, ...formData } : p
-      ));
-    } else {
-      setProducts([...products, {
-        ...formData,
-        id: Math.random().toString(),
-        branch: selectedBranch
-      }]);
+  const handleSubmit = async () => {
+    if (!selectedBranch) return;
+
+    try {
+      if (editingProduct) {
+        await axios.put(
+          `https://salon-backend-3.onrender.com/api/inventry/updateproduct/${editingProduct.id}`,
+          { ...formData, branch_id: selectedBranch.id }
+        );
+      } else {
+        await axios.post(
+          "https://salon-backend-3.onrender.com/api/inventry/saveproduct",
+          { ...formData, branch_id: selectedBranch.id }
+        );
+      }
+      fetchBranches();
+    } catch (error) {
+      console.error("Error saving product:", error);
+    } finally {
+      setShowModal(false);
+      setEditingProduct(null);
+      setFormData({ product_name: "", product_quantity: 0, price: 0 });
     }
-    setShowModal(false);
-    setEditingProduct(null);
-    setFormData({ name: '', quantity: 0, price: 0 });
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
-    setShowDeleteConfirm(null);
+  const deleteProduct = async (id: string) => {
+    if (!selectedBranch) return;
+
+    try {
+      await axios.delete(
+        `https://salon-backend-3.onrender.com/api/inventry/${id}`
+      );
+      fetchBranches();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    } finally {
+      setShowDeleteConfirm(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 mb-14">
+    <main className="min-h-screen bg-gray-50 p-8 mb-14">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
-          <select 
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
+          <select
+            value={selectedBranch?.id || ""}
+            onChange={(e) => {
+              const branch = branches.find((b) => b.id === e.target.value);
+              if (branch) setSelectedBranch(branch);
+            }}
             className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-purple-500 focus:ring-0"
           >
-            {branches.map(branch => (
-              <option key={branch} value={branch}>{branch}</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.branch_name}
+              </option>
             ))}
           </select>
           <FiChevronDown className="absolute right-3 top-4 text-gray-400" />
@@ -207,7 +226,7 @@ const InventoryPage = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <motion.div 
+        <motion.div
           className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-purple-500"
           whileHover={{ y: -2 }}
         >
@@ -222,7 +241,7 @@ const InventoryPage = () => {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500"
           whileHover={{ y: -2 }}
         >
@@ -232,37 +251,38 @@ const InventoryPage = () => {
             </div>
             <div>
               <p className="text-gray-500">Total Value</p>
-              <p className="text-2xl font-bold">${totalValue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                ${totalValue.toLocaleString()}
+              </p>
             </div>
           </div>
         </motion.div>
 
-        <motion.div 
-  className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500"
-  whileHover={{ y: -2 }}
->
-  <div className="flex items-center gap-4">
-    <div className="p-3 bg-green-100 rounded-xl">
-      <FiDollarSign className="text-2xl text-green-600" />
-    </div>
-    <div>
-      <p className="text-gray-500">Used Items Cost</p>
-      <p className="text-2xl font-bold">
-        ${usedItemsCost.toLocaleString(undefined, { 
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2 
-        })}
-      </p>
-    </div>
-  </div>
-</motion.div>
+        <motion.div
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-xl">
+              <FiDollarSign className="text-2xl text-green-600" />
+            </div>
+            <div>
+              <p className="text-gray-500">Used Items Cost</p>
+              <p className="text-2xl font-bold">
+                ${usedItemsCost.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* All Products Section */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
         <div className="p-6 border-b border-gray-100">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-            <h2 className="text-2xl font-semibold">Product Management - All Products</h2>
+            <h2 className="text-2xl font-semibold">
+              Product Management - All Products
+            </h2>
             <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-xl max-w-md w-full">
               <FiSearch className="text-gray-400" />
               <input
@@ -287,29 +307,27 @@ const InventoryPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map(product => (
-                <tr 
-                  key={product.id} 
+              {filteredProducts.map((product) => (
+                <tr
+                  key={product.id}
                   className="border-t border-gray-100 hover:bg-gray-50 group"
                 >
-                  <td className="p-4 font-medium">{product.name}</td>
-                  <td className="p-4">{product.quantity}</td>
+                  <td className="p-4 font-medium">{product.product_name}</td>
+                  <td className="p-4">{product.product_quantity}</td>
                   <td className="p-4">${product.price.toFixed(2)}</td>
                   <td className="p-4 flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="text-purple-600 hover:text-purple-700"
+                    <button
                       onClick={() => handleEdit(product)}
+                      className="text-blue-600 hover:text-blue-900"
                     >
-                      <FiEdit />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="text-red-600 hover:text-red-700"
+                      <FiEdit size={18} />
+                    </button>
+                    <button
                       onClick={() => setShowDeleteConfirm(product.id)}
+                      className="text-red-600 hover:text-red-900"
                     >
-                      <FiTrash />
-                    </motion.button>
+                      <FiTrash size={18} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -341,28 +359,32 @@ const InventoryPage = () => {
               <tr>
                 <th className="p-4 text-left">Product Name</th>
                 <th className="p-4 text-left">Service</th>
+                <th className="p-4 text-left">Staff</th>
                 <th className="p-4 text-left">Quantity Used</th>
                 <th className="p-4 text-left">Date Used</th>
-                <th className="p-4 text-left">Used By</th>
+                <th className="p-4 text-left">Client</th>
               </tr>
             </thead>
             <tbody>
-              {filteredUsedProducts.map(product => (
-                <tr 
-                  key={product.id} 
+              {filteredUsedProducts.map((product) => (
+                <tr
+                  key={product.id}
                   className="border-t border-gray-100 hover:bg-gray-50"
                 >
-                  <td className="p-4 font-medium">{product.productName}</td>
+                  <td className="p-4 font-medium">{product.product_name}</td>
                   <td className="p-4">
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      {product.service}
+                      {product.appointment.service.service_name}
                     </span>
                   </td>
-                  <td className="p-4">{product.quantityUsed}</td>
-                  <td className="p-4">{new Date(product.dateUsed).toLocaleDateString()}</td>
+                  <td className="p-4">{product.staff.fullname}</td>
+                  <td className="p-4">{product.quantity_used}</td>
+                  <td className="p-4">
+                    {new Date(product.date).toLocaleDateString()}
+                  </td>
                   <td className="p-4">
                     <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                      {product.usedBy}
+                      {product.appointment.client.client_name}
                     </span>
                   </td>
                 </tr>
@@ -387,41 +409,54 @@ const InventoryPage = () => {
               className="bg-white p-8 rounded-2xl w-full max-w-md"
             >
               <h3 className="text-2xl font-semibold mb-6">
-                {editingProduct ? 'Edit Product' : 'New Product'}
+                {editingProduct ? "Edit Product" : "New Product"}
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Product Name</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Product Name
+                  </label>
                   <input
                     type="text"
                     placeholder="Enter product name"
                     className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.product_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, product_name: e.target.value })
+                    }
                   />
                 </div>
 
-               
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Quantity</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Quantity
+                    </label>
                     <input
                       type="number"
                       className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
-                      value={formData.quantity || ''}
-                      onChange={(e) => setFormData({ ...formData, quantity: +e.target.value })}
+                      value={formData.product_quantity || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          product_quantity: +e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Price</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Price
+                    </label>
                     <input
                       type="number"
                       step="0.01"
                       className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
-                      value={formData.price || ''}
-                      onChange={(e) => setFormData({ ...formData, price: +e.target.value })}
+                      value={formData.price || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: +e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -433,14 +468,18 @@ const InventoryPage = () => {
                   onClick={handleSubmit}
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl"
                 >
-                  {editingProduct ? 'Update' : 'Create'}
+                  {editingProduct ? "Update" : "Create"}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => {
                     setShowModal(false);
                     setEditingProduct(null);
-                    setFormData({ name: '', quantity: 0, price: 0});
+                    setFormData({
+                      product_name: "",
+                      product_quantity: 0,
+                      price: 0,
+                    });
                   }}
                   className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl"
                 >
@@ -467,8 +506,11 @@ const InventoryPage = () => {
               className="bg-white p-8 rounded-2xl w-full max-w-md"
             >
               <h3 className="text-2xl font-semibold mb-6">Confirm Delete</h3>
-              <p className="text-gray-600 mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
-              
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this product? This action cannot
+                be undone.
+              </p>
+
               <div className="flex gap-4">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -489,7 +531,7 @@ const InventoryPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 };
 
