@@ -15,6 +15,7 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Service {
   id: string;
@@ -75,23 +76,22 @@ export default function BranchManagementPage() {
   }, [userid]);
 
   // Fetch branches from API
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.post(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        { salon_id: salonid }
+      );
+      setBranches(response.data.branches);
+      setFilteredBranches(response.data.branches);
+      setIsLoading(false);
+    } catch (err) {
+      setError("Failed to fetch branches");
+      console.log(err);
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const response = await axios.post(
-          "https://salon-backend-3.onrender.com/api/branch/isbranch",
-          { salon_id: salonid }
-        );
-        setBranches(response.data.branches);
-        setFilteredBranches(response.data.branches);
-        setIsLoading(false);
-      } catch (err) {
-        setError("Failed to fetch branches");
-        console.log(err);
-        setIsLoading(false);
-      }
-    };
-
     fetchBranches();
   }, [salonid]);
 
@@ -142,7 +142,8 @@ export default function BranchManagementPage() {
         }
       );
 
-      setBranches([...branches, response.data]);
+      toast.success(response.data.message);
+      fetchBranches();
       setIsAddingBranch(false);
       setNewBranch({});
     } catch (err) {
@@ -177,143 +178,7 @@ export default function BranchManagementPage() {
     }
   };
 
-  // Branch Modal Component
-  const BranchModal = React.memo(function BranchModal({
-    branch,
-    onSave,
-    onClose,
-    isEditing,
-    onFieldChange,
-  }: {
-    branch: Partial<Branch>;
-    onSave: () => void;
-    onClose: () => void;
-    isEditing?: boolean;
-    onFieldChange: (field: keyof Branch, value: string) => void;
-  }) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
-      >
-        <motion.div
-          initial={{ y: 20, opacity: 0, scale: 0.95 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: 20, opacity: 0, scale: 0.95 }}
-          className="flex items-center justify-center min-h-screen"
-        >
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-            <h2 className="text-3xl font-bold mb-6">
-              {isEditing ? "Edit Branch" : "Add New Branch"}
-            </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Branch Name*
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded-lg"
-                  value={branch.branch_name || ""}
-                  onChange={(e) => onFieldChange("branch_name", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Location*
-                </label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded-lg"
-                  value={branch.branch_location || ""}
-                  onChange={(e) =>
-                    onFieldChange("branch_location", e.target.value)
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Opening Time
-                  </label>
-                  <input
-                    type="time"
-                    className="w-full p-2 border rounded-lg"
-                    value={branch.opning_time || "09:00"}
-                    onChange={(e) =>
-                      onFieldChange("opning_time", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Closing Time
-                  </label>
-                  <input
-                    type="time"
-                    className="w-full p-2 border rounded-lg"
-                    value={branch.closeings_time || "18:00"}
-                    onChange={(e) =>
-                      onFieldChange("closeings_time", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Contact Email*
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full p-2 border rounded-lg"
-                    value={branch.contact_email || ""}
-                    onChange={(e) =>
-                      onFieldChange("contact_email", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Contact Number*
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full p-2 border rounded-lg"
-                    value={branch.contact_number || ""}
-                    onChange={(e) =>
-                      onFieldChange("contact_number", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3 justify-end">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onSave}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                {isEditing ? "Save Changes" : "Add Branch"}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  });
 
   const handleFieldChange = useCallback(
     (field: string, value: string) => {
@@ -347,25 +212,27 @@ export default function BranchManagementPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">
       <AnimatePresence>
-        {isAddingBranch && (
-          <BranchModal
-            branch={newBranch}
-            onSave={handleAddBranch}
-            onClose={() => setIsAddingBranch(false)}
-            onFieldChange={handleFieldChange}
-          />
-        )}
+  {isAddingBranch && (
+    <BranchModal
+      key="add-branch" // Unique key for add mode
+      branch={newBranch}
+      onSave={handleAddBranch}
+      onClose={() => setIsAddingBranch(false)}
+      onFieldChange={handleFieldChange}
+    />
+  )}
 
-        {editingBranch && (
-          <BranchModal
-            branch={editedBranch}
-            onSave={handleUpdateBranch}
-            onClose={() => setEditingBranch(null)}
-            isEditing
-            onFieldChange={handleFieldChange}
-          />
-        )}
-      </AnimatePresence>
+  {editingBranch && (
+    <BranchModal
+      key={`edit-branch-${editingBranch.id}`} // Unique key for edit mode
+      branch={editedBranch}
+      onSave={handleUpdateBranch}
+      onClose={() => setEditingBranch(null)}
+      isEditing
+      onFieldChange={handleFieldChange}
+    />
+  )}
+</AnimatePresence>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
@@ -627,3 +494,141 @@ export default function BranchManagementPage() {
     </div>
   );
 }
+
+  // Branch Modal Component
+  const BranchModal = React.memo(function BranchModal({
+    branch,
+    onSave,
+    onClose,
+    isEditing,
+    onFieldChange,
+  }: {
+    branch: Partial<Branch>;
+    onSave: () => void;
+    onClose: () => void;
+    isEditing?: boolean;
+    onFieldChange: (field: keyof Branch, value: string) => void;
+  }) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+      >
+        <motion.div
+          initial={{ y: 20, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 20, opacity: 0, scale: 0.95 }}
+          className="flex items-center justify-center min-h-screen"
+        >
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+            <h2 className="text-3xl font-bold mb-6">
+              {isEditing ? "Edit Branch" : "Add New Branch"}
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Branch Name*
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-lg"
+                  value={branch.branch_name || ""}
+                  onChange={(e) => onFieldChange("branch_name", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Location*
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded-lg"
+                  value={branch.branch_location || ""}
+                  onChange={(e) =>
+                    onFieldChange("branch_location", e.target.value)
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Opening Time
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.opning_time || "09:00"}
+                    onChange={(e) =>
+                      onFieldChange("opning_time", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Closing Time
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.closeings_time || "18:00"}
+                    onChange={(e) =>
+                      onFieldChange("closeings_time", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Contact Email*
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.contact_email || ""}
+                    onChange={(e) =>
+                      onFieldChange("contact_email", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Contact Number*
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full p-2 border rounded-lg"
+                    value={branch.contact_number || ""}
+                    onChange={(e) =>
+                      onFieldChange("contact_number", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onSave}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                {isEditing ? "Save Changes" : "Add Branch"}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  });
