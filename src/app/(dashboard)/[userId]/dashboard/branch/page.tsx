@@ -15,6 +15,7 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Service {
   id: string;
@@ -75,23 +76,22 @@ export default function BranchManagementPage() {
   }, [userid]);
 
   // Fetch branches from API
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.post(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        { salon_id: salonid }
+      );
+      setBranches(response.data.branches);
+      setFilteredBranches(response.data.branches);
+      setIsLoading(false);
+    } catch (err) {
+      setError("Failed to fetch branches");
+      console.log(err);
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const response = await axios.post(
-          "https://salon-backend-3.onrender.com/api/branch/isbranch",
-          { salon_id: salonid }
-        );
-        setBranches(response.data.branches);
-        setFilteredBranches(response.data.branches);
-        setIsLoading(false);
-      } catch (err) {
-        setError("Failed to fetch branches");
-        console.log(err);
-        setIsLoading(false);
-      }
-    };
-
     fetchBranches();
   }, [salonid]);
 
@@ -142,7 +142,8 @@ export default function BranchManagementPage() {
         }
       );
 
-      setBranches([...branches, response.data]);
+      toast.success(response.data.message);
+      fetchBranches();
       setIsAddingBranch(false);
       setNewBranch({});
     } catch (err) {
@@ -211,6 +212,7 @@ export default function BranchManagementPage() {
       <AnimatePresence>
         {isAddingBranch && (
           <BranchModal
+            key="add-branch" // Unique key for add mode
             branch={newBranch}
             onSave={handleAddBranch}
             onClose={() => setIsAddingBranch(false)}
@@ -220,6 +222,7 @@ export default function BranchManagementPage() {
 
         {editingBranch && (
           <BranchModal
+            key={`edit-branch-${editingBranch.id}`} // Unique key for edit mode
             branch={editedBranch}
             onSave={handleUpdateBranch}
             onClose={() => setEditingBranch(null)}

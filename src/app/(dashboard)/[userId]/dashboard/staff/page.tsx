@@ -9,6 +9,7 @@ import {
   FiSearch,
   FiSettings,
   FiBriefcase,
+  FiPlus,
 } from "react-icons/fi";
 import {
   Chart as ChartJS,
@@ -133,6 +134,58 @@ const StaffManagementPage = () => {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [totalsalary, settotalsalary] = useState(0);
+
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    fullname: "",
+    contact: "",
+    email: "",
+    password: "",
+    staff_id: "",
+    profile_img: "",
+  });
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!selectedBranch) {
+      setFormError("Please select a branch first");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await axios.post(
+        "https://salon-backend-3.onrender.com/api/staff/signup",
+        {
+          ...formData,
+          branch_id: selectedBranch.id,
+          user_id: userId,
+        }
+      );
+
+      if (response.data.message === "Staff registered successfully") {
+        fetchBranches(); // Refresh the staff list
+        setIsAddStaffModalOpen(false);
+        setFormData({
+          fullname: "",
+          contact: "",
+          email: "",
+          password: "",
+          staff_id: "",
+          profile_img: "",
+        });
+      }
+    } catch (error) {
+      setFormError("Failed to add staff member");
+      console.log(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getrevenuegenrated = (id: string) => {
     if (!mounted || !appointment.length) return 0;
@@ -260,6 +313,135 @@ const StaffManagementPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 mb-16">
+      {isAddStaffModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl p-6 w-full max-w-md"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Add New Staff</h2>
+              <button
+                onClick={() => setIsAddStaffModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleAddStaff} className="space-y-4">
+              {formError && (
+                <div className="text-red-500 text-sm mb-4">{formError}</div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.fullname}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullname: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.contact}
+                  onChange={(e) =>
+                    setFormData({ ...formData, contact: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Staff ID
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.staff_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, staff_id: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Profile Image URL
+                </label>
+                <input
+                  type="url"
+                  className="w-full p-2 border rounded-lg"
+                  value={formData.profile_img}
+                  onChange={(e) =>
+                    setFormData({ ...formData, profile_img: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsAddStaffModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {isSubmitting ? "Adding..." : "Add Staff"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
           {selectedBranch && (
@@ -293,6 +475,14 @@ const StaffManagementPage = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700"
+          onClick={() => setIsAddStaffModalOpen(true)}
+        >
+          <FiPlus className="text-lg" />
+          <span>Add Staff</span>
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
