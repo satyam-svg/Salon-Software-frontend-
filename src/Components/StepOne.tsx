@@ -23,7 +23,7 @@ interface FormData {
 }
 
 const floatingVariants = {
-  hidden: { y: 10, opacity: 0 },
+  hidden: { y: 10, opacity: 1 },
   visible: { y: 0, opacity: 1 },
 };
 
