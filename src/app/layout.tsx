@@ -57,19 +57,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <LoginProvider>
-        <Toaster />
-        <SignupProvider>
-          <ForgetPasswordProvider>
-            {/* Apply Zilla Slab globally */}
-            <body className={`${zillaSlab.className} antialiased`}>
+      <body className={`${zillaSlab.className} antialiased`}>
+        <LoginProvider>
+          <SignupProvider>
+            <ForgetPasswordProvider>
               <Navbar />
               {children}
               <Footer />
-            </body>
-          </ForgetPasswordProvider>
-        </SignupProvider>
-      </LoginProvider>
+              <Toaster
+                position="top-center"
+                containerStyle={{
+                  position: "fixed",
+                  zIndex: 9999,
+                  top: 16,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  pointerEvents: "none",
+                }}
+              />
+            </ForgetPasswordProvider>
+          </SignupProvider>
+        </LoginProvider>
+      </body>
     </html>
   );
 }

@@ -1,178 +1,137 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FiStar,
   FiUser,
   FiMail,
   FiPhone,
-  FiEdit,
-  FiTrash,
   FiCheckSquare,
   FiFilter,
   FiChevronDown,
 } from "react-icons/fi";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { usePathname } from "next/navigation";
+import axios from "axios";
 
 interface Feedback {
   id: string;
-  clientName: string;
-  phone: string;
-  email: string;
   date: string;
+  feature: boolean;
+  staff: {
+    fullname: string;
+  };
+  client: {
+    client_name: string;
+    email: string;
+    contact: string;
+  };
   rating: number;
   review: string;
   service: string;
-  staffName: string;
-  featured: boolean;
-  branch: string;
+}
+
+interface Branch {
+  branch_name: string;
+  feedback: Feedback[];
 }
 
 const FeedbackManagementPage = () => {
-  const [branches] = useState([
-    "Downtown Branch",
-    "Uptown Branch",
-    "Westside Branch",
-    "Eastside Branch",
-  ]);
-  const [selectedBranch, setSelectedBranch] = useState(branches[0]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingFeedback, setEditingFeedback] = useState<Feedback | null>(null);
+  const [hoveredReviewId, setHoveredReviewId] = useState<string | null>(null);
+  const pathname = usePathname();
+  const userid = pathname.split("/")[1];
 
-  // Dummy Feedback Data
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([
-    {
-      id: "1",
-      clientName: "Sarah Johnson",
-      phone: "(555) 123-4567",
-      email: "sarah@example.com",
-      date: "2024-03-15",
-      rating: 5,
-      review: "Exceptional service! The staff was incredibly professional.",
-      service: "Premium Haircut",
-      staffName: "Emma Wilson",
-      featured: true,
-      branch: "Downtown Branch",
-    },
-    {
-      id: "2",
-      clientName: "Michael Chen",
-      phone: "(555) 234-5678",
-      email: "michael@example.com",
-      date: "2024-03-14",
-      rating: 4,
-      review: "Good experience, but waited a bit longer than expected.",
-      service: "Color Treatment",
-      staffName: "James Brown",
-      featured: false,
-      branch: "Downtown Branch",
-    },
-    {
-      id: "3",
-      clientName: "Olivia Davis",
-      phone: "(555) 345-6789",
-      email: "olivia@example.com",
-      date: "2024-03-13",
-      rating: 5,
-      review: "Best salon experience ever! Highly recommended.",
-      service: "Spa Treatment",
-      staffName: "Sophia Miller",
-      featured: true,
-      branch: "Uptown Branch",
-    },
-  ]);
+  const fetchBranches = useCallback(async () => {
+    if (!userid) return;
 
-  // Filtered Feedbacks
-  const filteredFeedbacks = feedbacks.filter(
-    (feedback) =>
-      feedback.branch === selectedBranch &&
-      feedback.rating >= minRating &&
-      (selectedDate ? feedback.date === selectedDate : true)
+    try {
+      const userResponse = await axios.get(
+        `https://salon-backend-3.onrender.com/api/users/${userid}`
+      );
+
+      const userData = userResponse.data;
+      if (!userData.user?.salonId) throw new Error("Salon not found");
+
+      const branchResponse = await axios.post(
+        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        { salon_id: userData.user.salonId }
+      );
+
+      const branchesData = branchResponse.data.branches || [];
+      setBranches(branchesData);
+      if (branchesData.length > 0) {
+        setSelectedBranch(branchesData[0].branch_name);
+      }
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    }
+  }, [userid]);
+
+  useEffect(() => {
+    fetchBranches();
+  }, [fetchBranches]);
+
+  const toggleFeature = async (
+    feedbackId: string,
+    currentFeatureStatus: boolean
+  ) => {
+    try {
+      await axios.put(
+        `https://salon-backend-3.onrender.com/api/feedback/updatefeatur/${feedbackId}`,
+        { isFeatured: !currentFeatureStatus }
+      );
+
+      setBranches((prev) =>
+        prev.map((branch) => ({
+          ...branch,
+          feedback: branch.feedback.map((feedback) =>
+            feedback.id === feedbackId
+              ? { ...feedback, feature: !currentFeatureStatus }
+              : feedback
+          ),
+        }))
+      );
+    } catch (error) {
+      console.error("Error updating feature status:", error);
+    }
+  };
+
+  // Get selected branch data
+  const selectedBranchData = branches.find(
+    (b) => b.branch_name === selectedBranch
   );
+  const branchFeedbacks = selectedBranchData?.feedback || [];
 
+  // Apply filters
+  const filteredFeedbacks = branchFeedbacks.filter(
+    (feedback) =>
+      feedback.rating >= minRating &&
+      (selectedDate ? feedback.date.startsWith(selectedDate) : true)
+  );
   // Statistics Calculations
   const totalFeedbacks = filteredFeedbacks.length;
   const averageRating =
-    filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks;
-  const featuredCount = filteredFeedbacks.filter((f) => f.featured).length;
+    totalFeedbacks > 0
+      ? filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks
+      : 0;
+  const featuredCount = filteredFeedbacks.filter((f) => f.feature).length;
 
-  // Rating Distribution Data
+  // Rating Distribution
   const ratingDistribution = [0, 0, 0, 0, 0];
-  filteredFeedbacks.forEach((f) => ratingDistribution[f.rating - 1]++);
-
-  // Chart Data
-  const chartData = {
-    labels: ["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"],
-    datasets: [
-      {
-        label: "Rating Distribution",
-        data: ratingDistribution,
-        backgroundColor: "#7C3AED",
-        borderRadius: 8,
-      },
-    ],
-  };
-
-  // Form Handling
-  const [formData, setFormData] = useState({
-    rating: 5,
-    featured: false,
-    review: "",
-  });
-
-  const handleEdit = (feedback: Feedback) => {
-    setEditingFeedback(feedback);
-    setFormData({
-      rating: feedback.rating,
-      featured: feedback.featured,
-      review: feedback.review,
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = () => {
-    if (editingFeedback) {
-      setFeedbacks(
-        feedbacks.map((f) =>
-          f.id === editingFeedback.id ? { ...editingFeedback, ...formData } : f
-        )
-      );
+  filteredFeedbacks.forEach((f) => {
+    if (f.rating >= 1 && f.rating <= 5) {
+      ratingDistribution[f.rating - 1]++;
     }
-    setShowModal(false);
-    setEditingFeedback(null);
-  };
-
-  const toggleFeatured = (id: string) => {
-    setFeedbacks(
-      feedbacks.map((f) => (f.id === id ? { ...f, featured: !f.featured } : f))
-    );
-  };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header Section */}
+      {/* Branch Selection */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
           <select
@@ -181,8 +140,8 @@ const FeedbackManagementPage = () => {
             className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-0"
           >
             {branches.map((branch) => (
-              <option key={branch} value={branch}>
-                {branch}
+              <option key={branch.branch_name} value={branch.branch_name}>
+                {branch.branch_name}
               </option>
             ))}
           </select>
@@ -305,7 +264,6 @@ const FeedbackManagementPage = () => {
                 <th className="p-4 text-left">Service</th>
                 <th className="p-4 text-left">Staff</th>
                 <th className="p-4 text-left">Featured</th>
-                <th className="p-4 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -314,16 +272,18 @@ const FeedbackManagementPage = () => {
                   key={feedback.id}
                   className="border-t border-gray-100 hover:bg-gray-50"
                 >
-                  <td className="p-4 font-medium">{feedback.clientName}</td>
+                  <td className="p-4 font-medium">
+                    {feedback.client.client_name}
+                  </td>
                   <td className="p-4">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1">
                         <FiPhone className="text-gray-500" />
-                        <span>{feedback.phone}</span>
+                        <span>{feedback.client.contact}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <FiMail className="text-gray-500" />
-                        <span>{feedback.email}</span>
+                        <span>{feedback.client.email}</span>
                       </div>
                     </div>
                   </td>
@@ -340,37 +300,44 @@ const FeedbackManagementPage = () => {
                       ))}
                     </div>
                   </td>
-                  <td className="p-4 max-w-xs">
-                    <p className="line-clamp-2">{feedback.review}</p>
+                  <td className="p-4 max-w-xs relative">
+                    <div
+                      className="line-clamp-2 cursor-default relative"
+                      onMouseEnter={() => setHoveredReviewId(feedback.id)}
+                      onMouseLeave={() => setHoveredReviewId(null)}
+                    >
+                      {feedback.review}
+                      <AnimatePresence>
+                        {hoveredReviewId === feedback.id && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute left-0 top-full z-50 mt-2 w-full bg-white shadow-lg rounded-lg p-4 border border-gray-200"
+                          >
+                            <p className="text-sm text-gray-700">
+                              {feedback.review}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </td>
                   <td className="p-4">
                     <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
                       {feedback.service}
                     </span>
                   </td>
-                  <td className="p-4">{feedback.staffName}</td>
+                  <td className="p-4">{feedback.staff.fullname}</td>
                   <td className="p-4">
                     <input
                       type="checkbox"
-                      checked={feedback.featured}
-                      onChange={() => toggleFeatured(feedback.id)}
+                      checked={feedback.feature}
+                      onChange={() =>
+                        toggleFeature(feedback.id, feedback.feature)
+                      }
                       className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                     />
-                  </td>
-                  <td className="p-4 flex gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="text-purple-600 hover:text-purple-700"
-                      onClick={() => handleEdit(feedback)}
-                    >
-                      <FiEdit />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <FiTrash />
-                    </motion.button>
                   </td>
                 </tr>
               ))}
@@ -378,117 +345,6 @@ const FeedbackManagementPage = () => {
           </table>
         </div>
       </div>
-
-      {/* Rating Distribution Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-2xl font-semibold mb-6">Rating Distribution</h2>
-        <div className="h-96">
-          <Bar
-            data={chartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false },
-                title: { display: false },
-              },
-              scales: {
-                y: { beginAtZero: true, grid: { color: "#f3f4f6" } },
-                x: { grid: { display: false } },
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Edit Feedback Modal */}
-      <AnimatePresence>
-        {showModal && editingFeedback && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              className="bg-white p-8 rounded-2xl w-full max-w-md"
-            >
-              <h3 className="text-2xl font-semibold mb-6">Edit Feedback</h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Rating
-                  </label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() =>
-                          setFormData({ ...formData, rating: star })
-                        }
-                        className={`text-2xl ${
-                          star <= formData.rating
-                            ? "text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        <FiStar />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Review
-                  </label>
-                  <textarea
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 h-32"
-                    value={formData.review}
-                    onChange={(e) =>
-                      setFormData({ ...formData, review: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.featured}
-                    onChange={(e) =>
-                      setFormData({ ...formData, featured: e.target.checked })
-                    }
-                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                  />
-                  <label className="text-sm font-medium">
-                    Feature on Homepage
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-8">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={handleSubmit}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl"
-                >
-                  Update Feedback
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl"
-                >
-                  Cancel
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

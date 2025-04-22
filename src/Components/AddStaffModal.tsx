@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 interface AddStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedBranch: { id: string; name: string } | null;
+  selectedBranch: { id: string; branch_name: string } | null;
 }
 
 const AddStaffModal = ({
@@ -195,9 +195,9 @@ const AddStaffModal = ({
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                     Add Team Member In
-                    {selectedBranch?.name && (
+                    {selectedBranch?.branch_name && (
                       <span className="ml-2 bg-emerald-500 text-white px-2 py-1 rounded-full text-sm">
-                        {selectedBranch.name}
+                        {selectedBranch.branch_name}
                       </span>
                     )}
                   </h3>

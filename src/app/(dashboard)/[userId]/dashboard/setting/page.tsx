@@ -1,48 +1,186 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiPhone, FiScissors, FiImage, FiSave } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiScissors,
+  FiImage,
+  FiSave,
+} from "react-icons/fi";
+import axios from "axios";
+import { usePathname } from "next/navigation";
+
+interface UserDetails {
+  id: string;
+  fullname: string;
+  email: string;
+  contact: string;
+  profile_img: string;
+  salonId: string;
+}
+
+interface SalonDetails {
+  id: string;
+  salonName: string;
+  salonTag: string;
+  salonImgUrl: string;
+  contactEmail: string;
+  contactNumber: string;
+}
 
 const GeneralSettingsPage = () => {
-  // Owner Details State
-  const [ownerDetails, setOwnerDetails] = useState({
-    name: 'John Doe',
-    email: 'john@salon.com',
-    contact: '+1 555 123 4567',
-    imgUrl: 'https://example.com/owner.jpg'
+  const pathname = usePathname();
+  const userId = pathname.split("/")[1];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const [userDetails, setUserDetails] = useState<UserDetails>({
+    id: "",
+    fullname: "",
+    email: "",
+    contact: "",
+    profile_img: "",
+    salonId: "",
   });
 
-  // Salon Details State
-  const [salonDetails, setSalonDetails] = useState({
-    salonName: 'Luxury Style Studio',
-    salonTag: 'Premium Beauty Experience',
-    salonImgUrl: 'https://example.com/salon.jpg',
-    contactEmail: 'info@luxurystyles.com',
-    contactNumber: '+1 555 987 6543'
+  const [salonDetails, setSalonDetails] = useState<SalonDetails>({
+    id: "",
+    salonName: "",
+    salonTag: "",
+    salonImgUrl: "",
+    contactEmail: "",
+    contactNumber: "",
   });
 
-  // Handle Input Changes
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userResponse = await axios.get(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`
+        );
+        const userData = userResponse.data.user;
+        setUserDetails(userData);
+
+        if (userData.salonId) {
+          const salonResponse = await axios.post(
+            "https://salon-backend-3.onrender.com/api/salon/getsalonbyid",
+            { id: userData.salonId }
+          );
+
+          const salonData = salonResponse.data.salon;
+          setSalonDetails({
+            id: salonData.id,
+            salonName: salonData.salon_name,
+            salonTag: salonData.salon_tag,
+            salonImgUrl: salonData.salon_img_url,
+            contactEmail: salonData.contact_email,
+            contactNumber: salonData.contact_number,
+          });
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch data");
+        console.log(err);
+        setLoading(false);
+      }
+    };
+
+    if (userId) fetchData();
+  }, [userId]);
+
+  const handleImageUpload = async (file: File, type: "owner" | "salon") => {
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "salon_preset");
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dl1lqotns/image/upload`,
+        { method: "POST", body: formData }
+      );
+
+      if (!response.ok) throw new Error("Image upload failed");
+      const data = await response.json();
+
+      if (type === "owner") {
+        setUserDetails((prev) => ({ ...prev, profile_img: data.secure_url }));
+      } else {
+        setSalonDetails((prev) => ({ ...prev, salonImgUrl: data.secure_url }));
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleOwnerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOwnerDetails({ ...ownerDetails, [e.target.name]: e.target.value });
+    setUserDetails({ ...userDetails, [e.target.name]: e.target.value });
   };
 
   const handleSalonChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSalonDetails({ ...salonDetails, [e.target.name]: e.target.value });
   };
 
-  // Handle Form Submission
-  const handleSubmit = (e: React.FormEvent, type: 'owner' | 'salon') => {
-    e.preventDefault();
-    // Add your save logic here
-    console.log(type === 'owner' ? ownerDetails : salonDetails);
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "owner" | "salon"
+  ) => {
+    if (e.target.files?.[0]) {
+      handleImageUpload(e.target.files[0], type);
+    }
   };
+
+  const handleSubmit = async (e: React.FormEvent, type: "owner" | "salon") => {
+    e.preventDefault();
+    try {
+      if (type === "owner") {
+        await axios.put(
+          `https://salon-backend-3.onrender.com/api/users/${userId}`,
+          userDetails
+        );
+        alert("Owner details updated successfully!");
+      } else {
+        const salonPayload = {
+          id: salonDetails.id,
+          salon_name: salonDetails.salonName,
+          salon_tag: salonDetails.salonTag,
+          salon_img_url: salonDetails.salonImgUrl,
+          contact_email: salonDetails.contactEmail,
+          contact_number: salonDetails.contactNumber,
+        };
+
+        await axios.put(
+          "https://salon-backend-3.onrender.com/api/salon/updatesalon",
+          salonPayload
+        );
+        alert("Salon details updated successfully!");
+      }
+    } catch (err) {
+      console.error("Error saving data:", err);
+      alert("Error saving changes!");
+    }
+  };
+
+  if (loading)
+    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+  if (error)
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 text-red-500">{error}</div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Owner Details Section */}
-        <motion.div 
+        {/* Owner Section */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-sm p-6"
@@ -52,70 +190,84 @@ const GeneralSettingsPage = () => {
             Owner Details
           </h2>
 
-          <form onSubmit={(e) => handleSubmit(e, 'owner')} className="space-y-4">
+          <form
+            onSubmit={(e) => handleSubmit(e, "owner")}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Owner Name</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Full Name
+                </label>
                 <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                  <FiUser className="text-gray-400" />
                   <input
                     type="text"
-                    name="name"
-                    value={ownerDetails.name}
+                    name="fullname"
+                    value={userDetails.fullname}
                     onChange={handleOwnerChange}
                     className="w-full bg-transparent focus:outline-none"
+                    placeholder="Enter full name"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Email</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Email
+                </label>
                 <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
                   <FiMail className="text-gray-400" />
                   <input
                     type="email"
                     name="email"
-                    value={ownerDetails.email}
+                    value={userDetails.email}
                     onChange={handleOwnerChange}
                     className="w-full bg-transparent focus:outline-none"
+                    placeholder="Enter email address"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Contact Number</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Contact
+                </label>
                 <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
                   <FiPhone className="text-gray-400" />
                   <input
                     type="tel"
                     name="contact"
-                    value={ownerDetails.contact}
+                    value={userDetails.contact}
                     onChange={handleOwnerChange}
                     className="w-full bg-transparent focus:outline-none"
+                    placeholder="Enter contact number"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Image URL</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Profile Image
+                </label>
                 <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
                   <FiImage className="text-gray-400" />
                   <input
-                    type="url"
-                    name="imgUrl"
-                    value={ownerDetails.imgUrl}
-                    onChange={handleOwnerChange}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, "owner")}
                     className="w-full bg-transparent focus:outline-none"
+                    disabled={uploading}
                   />
                 </div>
               </div>
             </div>
 
-            {ownerDetails.imgUrl && (
+            {userDetails.profile_img && (
               <div className="mt-4">
-                <p className="text-sm font-medium text-gray-600 mb-2">Image Preview</p>
-                <img 
-                  src={ownerDetails.imgUrl} 
-                  alt="Owner Preview" 
+                <img
+                  src={userDetails.profile_img}
+                  alt="Owner"
                   className="w-32 h-32 rounded-full object-cover border-4 border-purple-100"
                 />
               </div>
@@ -124,121 +276,143 @@ const GeneralSettingsPage = () => {
             <div className="mt-6">
               <motion.button
                 whileHover={{ scale: 1.02 }}
-                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg"
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg disabled:opacity-50"
                 type="submit"
+                disabled={uploading}
               >
                 <FiSave />
-                Save Owner Details
+                {uploading ? "Uploading..." : "Update Owner"}
               </motion.button>
             </div>
           </form>
         </motion.div>
 
-        {/* Salon Details Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-sm p-6"
-        >
-          <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-            <FiScissors className="text-purple-600" />
-            Salon Details
-          </h2>
+        {/* Salon Section */}
+        {salonDetails.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-sm p-6"
+          >
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+              <FiScissors className="text-purple-600" />
+              Salon Details
+            </h2>
 
-          <form onSubmit={(e) => handleSubmit(e, 'salon')} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Salon Name</label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-                  <input
-                    type="text"
-                    name="salonName"
-                    value={salonDetails.salonName}
-                    onChange={handleSalonChange}
-                    className="w-full bg-transparent focus:outline-none"
-                  />
+            <form
+              onSubmit={(e) => handleSubmit(e, "salon")}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-600">
+                    Salon Name
+                  </label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                    <input
+                      type="text"
+                      name="salonName"
+                      value={salonDetails.salonName}
+                      onChange={handleSalonChange}
+                      className="w-full bg-transparent focus:outline-none"
+                      placeholder="Enter salon name"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-600">
+                    Tagline
+                  </label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                    <input
+                      type="text"
+                      name="salonTag"
+                      value={salonDetails.salonTag}
+                      onChange={handleSalonChange}
+                      className="w-full bg-transparent focus:outline-none"
+                      placeholder="Enter salon tagline"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-600">
+                    Contact Email
+                  </label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                    <FiMail className="text-gray-400" />
+                    <input
+                      type="email"
+                      name="contactEmail"
+                      value={salonDetails.contactEmail}
+                      onChange={handleSalonChange}
+                      className="w-full bg-transparent focus:outline-none"
+                      placeholder="Enter salon email"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-600">
+                    Contact Number
+                  </label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                    <FiPhone className="text-gray-400" />
+                    <input
+                      type="tel"
+                      name="contactNumber"
+                      value={salonDetails.contactNumber}
+                      onChange={handleSalonChange}
+                      className="w-full bg-transparent focus:outline-none"
+                      placeholder="Enter salon contact number"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-600">
+                    Salon Image
+                  </label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                    <FiImage className="text-gray-400" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, "salon")}
+                      className="w-full bg-transparent focus:outline-none"
+                      disabled={uploading}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Salon Tagline</label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-                  <input
-                    type="text"
-                    name="salonTag"
-                    value={salonDetails.salonTag}
-                    onChange={handleSalonChange}
-                    className="w-full bg-transparent focus:outline-none"
+              {salonDetails.salonImgUrl && (
+                <div className="mt-4">
+                  <img
+                    src={salonDetails.salonImgUrl}
+                    alt="Salon"
+                    className="w-full max-w-md rounded-xl object-cover h-48 border-4 border-purple-100"
                   />
                 </div>
-              </div>
+              )}
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Contact Email</label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-                  <FiMail className="text-gray-400" />
-                  <input
-                    type="email"
-                    name="contactEmail"
-                    value={salonDetails.contactEmail}
-                    onChange={handleSalonChange}
-                    className="w-full bg-transparent focus:outline-none"
-                  />
-                </div>
+              <div className="mt-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg disabled:opacity-50"
+                  type="submit"
+                  disabled={uploading}
+                >
+                  <FiSave />
+                  {uploading ? "Uploading..." : "Update Salon"}
+                </motion.button>
               </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Contact Number</label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-                  <FiPhone className="text-gray-400" />
-                  <input
-                    type="tel"
-                    name="contactNumber"
-                    value={salonDetails.contactNumber}
-                    onChange={handleSalonChange}
-                    className="w-full bg-transparent focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-600">Salon Image URL</label>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-                  <FiImage className="text-gray-400" />
-                  <input
-                    type="url"
-                    name="salonImgUrl"
-                    value={salonDetails.salonImgUrl}
-                    onChange={handleSalonChange}
-                    className="w-full bg-transparent focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {salonDetails.salonImgUrl && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-600 mb-2">Salon Image Preview</p>
-                <img 
-                  src={salonDetails.salonImgUrl} 
-                  alt="Salon Preview" 
-                  className="w-full max-w-md rounded-xl object-cover h-48 border-4 border-purple-100"
-                />
-              </div>
-            )}
-
-            <div className="mt-6">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg"
-                type="submit"
-              >
-                <FiSave />
-                Save Salon Details
-              </motion.button>
-            </div>
-          </form>
-        </motion.div>
+            </form>
+          </motion.div>
+        )}
       </div>
     </div>
   );

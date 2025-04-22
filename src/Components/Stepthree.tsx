@@ -50,7 +50,7 @@ export default function StepThree({ setStep }: StepThreeProps) {
   const [salonid, setsaloid] = useState("");
   const [selectedBranch, setSelectedBranch] = useState<{
     id: string;
-    name: string;
+    branch_name: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,7 +234,10 @@ export default function StepThree({ setStep }: StepThreeProps) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    setSelectedBranch({ id: branch.id, name: branch.name });
+                    setSelectedBranch({
+                      id: branch.id,
+                      branch_name: branch.name,
+                    });
                     setShowAddStaff(true);
                   }}
                   className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"

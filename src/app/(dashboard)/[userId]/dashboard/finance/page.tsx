@@ -315,6 +315,7 @@ const LineChartComponent = ({
     ],
   };
 
+  // Fixed options with proper Chart.js types
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -325,7 +326,7 @@ const LineChartComponent = ({
           color: "#374151",
           font: {
             size: 14,
-            weight: "600" as const,
+            weight: 600 as number,
           },
         },
       },
@@ -340,7 +341,11 @@ const LineChartComponent = ({
     },
     scales: {
       x: {
-        grid: { display: false },
+        type: "category" as const,
+        grid: {
+          display: false,
+          color: "#E5E7EB",
+        },
         ticks: {
           color: "#6B7280",
           maxRotation: 0,
@@ -349,10 +354,15 @@ const LineChartComponent = ({
         },
       },
       y: {
-        grid: { color: "#E5E7EB" },
+        type: "linear" as const,
+        grid: {
+          color: "#E5E7EB",
+          drawBorder: false,
+        },
         ticks: {
           color: "#6B7280",
-          callback: (value: number) => `$${value.toLocaleString()}`,
+          callback: (value: number | string) =>
+            `$${Number(value).toLocaleString()}`,
         },
         beginAtZero: true,
       },
