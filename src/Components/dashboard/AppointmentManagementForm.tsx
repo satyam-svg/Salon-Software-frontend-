@@ -510,7 +510,7 @@ const AppointmentManagementForm = ({
                     disabled={false}
                   />
                   <motion.a
-                    href="/client-management"
+                    href={`/${userId}/dashboard/Clients`}
                     whileHover={{ x: 5 }}
                     className="absolute right-0 -top-1 flex items-center text-blue-500 text-xs font-medium"
                   >

@@ -23,6 +23,7 @@ interface NavLink {
 
 interface DecodedToken {
   id: string;
+  userId: string;
 }
 
 const StellarNavbar: FC = () => {
@@ -48,6 +49,7 @@ const StellarNavbar: FC = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       const authToken = Cookies.get("authToken");
+      const staffToken = Cookies.get("staffToken");
       if (authToken) {
         try {
           const decoded = jwtDecode<DecodedToken>(authToken);
@@ -58,13 +60,28 @@ const StellarNavbar: FC = () => {
           const { fullname, profile_img } = response.data.user;
           setUserData({ fullname, profile_img });
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.log(error);
+        }
+      }
+      if (staffToken) {
+        try {
+          const decoded = jwtDecode<DecodedToken>(staffToken);
+          console.log("decode is", decoded);
+          const response = await axios.get(
+            `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+          );
+          console.log("response is", response);
+
+          const { fullname, profile_img } = response.data;
+          setUserData({ fullname, profile_img });
+        } catch (error) {
+          console.log(error);
         }
       }
     };
 
     checkAuthStatus();
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     const checkSalonStatus = async () => {
@@ -121,6 +138,7 @@ const StellarNavbar: FC = () => {
 
   const handleLogout = () => {
     Cookies.remove("authToken");
+    Cookies.remove("staffToken");
     setUserData({ fullname: "", profile_img: "" });
     setIsProfileOpen(false);
     router.push("/");
