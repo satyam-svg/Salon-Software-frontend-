@@ -92,7 +92,7 @@ export const StepOne = ({ setStep }: { setStep: (step: number) => void }) => {
 
       // Submit to backend
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/salon/create",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/create`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

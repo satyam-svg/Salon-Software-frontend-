@@ -71,7 +71,7 @@ const StaffDashboard = () => {
 
         // Fetch staff data
         const staffResponse = await axios.get(
-          `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/get/${decoded.userId}`
         );
 
         // Fetch appointments

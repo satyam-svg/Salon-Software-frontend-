@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import LoadingScreen from "@/Components/LoadingSpinner";
+
 
 export default function DashboardLayout({
   children,
@@ -21,7 +21,7 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+ 
   const arrowRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
@@ -45,14 +45,12 @@ export default function DashboardLayout({
 
   const handleNavigation = (href: string) => {
     if (pathname !== href) {
-      setIsLoading(true);
+      
       if (isMobile) setIsSidebarOpen(false);
     }
   };
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, [pathname]);
+ 
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -70,7 +68,7 @@ export default function DashboardLayout({
       `}</style>
 
       {/* Loading Screen */}
-      <AnimatePresence>{isLoading && <LoadingScreen />}</AnimatePresence>
+      
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (

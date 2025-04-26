@@ -72,14 +72,14 @@ const InventoryPage = () => {
     try {
       setLoading(true);
       const userResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/users/${userid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
 
       const userData = userResponse.data;
       if (!userData.user?.salonId) throw new Error("Salon not found");
 
       const branchResponse = await axios.post(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         { salon_id: userData.user.salonId }
       );
 
@@ -148,12 +148,12 @@ const InventoryPage = () => {
     try {
       if (editingProduct) {
         await axios.put(
-          `https://salon-backend-3.onrender.com/api/inventry/updateproduct/${editingProduct.id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/updateproduct/${editingProduct.id}`,
           { ...formData, branch_id: selectedBranch.id }
         );
       } else {
         await axios.post(
-          "https://salon-backend-3.onrender.com/api/inventry/saveproduct",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/saveproduct`,
           { ...formData, branch_id: selectedBranch.id }
         );
       }
@@ -172,7 +172,7 @@ const InventoryPage = () => {
 
     try {
       await axios.delete(
-        `https://salon-backend-3.onrender.com/api/inventry/${id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/${id}`
       );
       fetchBranches();
     } catch (error) {

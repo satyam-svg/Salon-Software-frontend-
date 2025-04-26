@@ -173,7 +173,7 @@ const StaffManagementPage = () => {
       if (!salonid || !mounted) return;
       try {
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/appoiment/${salonid}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/${salonid}`
         );
         if (response.data.appointments) {
           setappointments(response.data.appointments);
@@ -191,7 +191,7 @@ const StaffManagementPage = () => {
     try {
       setLoading(true);
       const userResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
 
       const userData = userResponse.data;
@@ -200,7 +200,7 @@ const StaffManagementPage = () => {
       setsalonid(userData.user.salonId);
 
       const branchResponse = await axios.post(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         { salon_id: userData.user.salonId }
       );
 

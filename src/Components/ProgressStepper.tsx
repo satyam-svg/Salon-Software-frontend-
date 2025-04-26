@@ -59,7 +59,7 @@ export const ProgressStepper = ({
     const checkSalonStatus = async () => {
       try {
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
         const data = response.data;
         setCurrentStep(data.user.step);

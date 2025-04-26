@@ -97,7 +97,7 @@ const StaffDetailsPage = () => {
     const fetchStaffData = async () => {
       try {
         const response = await fetch(
-          `https://salon-backend-3.onrender.com/api/staff/getstaff/${staffid}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/getstaff/${staffid}`
         );
 
         if (!response.ok) {
@@ -118,7 +118,7 @@ const StaffDetailsPage = () => {
 
   const handleaddsalary = async () => {
     const response = await axios.post(
-      `https://salon-backend-3.onrender.com/api/staff/addsallary`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/addsallary`,
       {
         staff_id: staffid,
         amount: salaryamount,

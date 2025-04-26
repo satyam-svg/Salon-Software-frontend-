@@ -75,7 +75,7 @@ export default function ClientManagementPage() {
     const fetchBranches = async () => {
       try {
         const userResponse = await fetch(
-          `https://salon-backend-3.onrender.com/api/users/${userid}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
         );
         if (!userResponse.ok) throw new Error("Failed to fetch user data");
         const userData = await userResponse.json();
@@ -156,7 +156,7 @@ export default function ClientManagementPage() {
       };
 
       const response = await axios.put(
-        `https://salon-backend-3.onrender.com/api/clients/updateclient/${editing.clientId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/updateclient/${editing.clientId}`,
         updatedData
       );
 
@@ -180,7 +180,7 @@ export default function ClientManagementPage() {
   };
   const getclients = async () => {
     const response = await axios.get(
-      `https://salon-backend-3.onrender.com/api/clients/gettotalclient/${salonid}`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/gettotalclient/${salonid}`
     );
     if (!response.data.success) {
       toast.error(response.data.message);
@@ -257,7 +257,7 @@ export default function ClientManagementPage() {
     }
 
     const response = await axios.post(
-      "https://salon-backend-3.onrender.com/api/clients/addclients",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
       { client_name: name, email: email, contact: contact, salon_id: salonid }
     );
 

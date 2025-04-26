@@ -97,7 +97,7 @@ export default function ClientManagementPage() {
     const salonid = staffData?.user.salonId;
     try {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/clients/gettotalclient/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/gettotalclient/${salonid}`
       );
       if (response.data.success) {
         setclient(response.data.clients);
@@ -119,7 +119,7 @@ export default function ClientManagementPage() {
 
       // Fetch staff data
       const staffResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/get/${decoded.userId}`
       );
       setStaffData(staffResponse.data);
     } catch (err) {
@@ -195,7 +195,7 @@ export default function ClientManagementPage() {
       };
 
       const response = await axios.put(
-        `https://salon-backend-3.onrender.com/api/clients/updateclient/${editing.clientId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/updateclient/${editing.clientId}`,
         updatedData
       );
 
@@ -259,7 +259,7 @@ export default function ClientManagementPage() {
     }
 
     const response = await axios.post(
-      "https://salon-backend-3.onrender.com/api/clients/addclients",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
       {
         client_name: name,
         email: email,

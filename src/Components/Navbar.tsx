@@ -54,7 +54,7 @@ const StellarNavbar: FC = () => {
         try {
           const decoded = jwtDecode<DecodedToken>(authToken);
           const response = await axios.get(
-            `https://salon-backend-3.onrender.com/api/users/${decoded.id}`
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${decoded.id}`
           );
           console.log(decoded.id);
           const { fullname, profile_img } = response.data.user;
@@ -68,7 +68,7 @@ const StellarNavbar: FC = () => {
           const decoded = jwtDecode<DecodedToken>(staffToken);
           console.log("decode is", decoded);
           const response = await axios.get(
-            `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/get/${decoded.userId}`
           );
           console.log("response is", response);
 
@@ -91,7 +91,7 @@ const StellarNavbar: FC = () => {
       try {
         const decoded = jwtDecode<DecodedToken>(authToken);
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/users/${decoded.id}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${decoded.id}`
         );
         const data = response.data;
         const userId = decoded.id;

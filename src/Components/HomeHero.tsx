@@ -3,11 +3,13 @@
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useLogin } from '@/context/LoginContext';
 
 const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const [perspective, setPerspective] = useState(420);
   const [mobileview, setMobileview] = useState(false);
+  const { setLoginToggle } = useLogin();
   
 
   const mouseX = useMotionValue(0);
@@ -83,7 +85,7 @@ const HomeHero = () => {
   }, [isHovered]);
 
   if (!mounted) return null;
-
+  
   return (
     <section 
       className="relative h-[100dvh] max-h-[900px] flex items-center justify-center overflow-hidden"
@@ -167,6 +169,9 @@ const HomeHero = () => {
             </motion.p>
 
             <motion.button
+              onClick={()=>{
+                setLoginToggle(true);
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] rounded-full text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] font-semibold transition-all relative overflow-hidden group w-fit mx-auto lg:mx-0"

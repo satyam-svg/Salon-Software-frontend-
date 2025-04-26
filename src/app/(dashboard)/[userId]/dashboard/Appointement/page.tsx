@@ -429,7 +429,7 @@ export default function AppointmentsPage() {
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -446,7 +446,7 @@ export default function AppointmentsPage() {
   useEffect(() => {
     const getappointment = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/appoiment/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/${salonid}`
       );
       if (response.data.appointments) {
         const data = response.data.appointments;

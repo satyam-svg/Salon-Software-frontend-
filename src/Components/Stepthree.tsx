@@ -65,7 +65,7 @@ export default function StepThree({ setStep }: StepThreeProps) {
 
     // Submit to backend
     const response = await fetch(
-      "https://salon-backend-3.onrender.com/api/salon/create",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/create`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +78,7 @@ export default function StepThree({ setStep }: StepThreeProps) {
   const fetchBranches = async () => {
     try {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -86,7 +86,7 @@ export default function StepThree({ setStep }: StepThreeProps) {
       if (!userData.user?.salonId) throw new Error("Salon not found");
       setsaloid(userData.user.salonId);
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

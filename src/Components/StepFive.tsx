@@ -82,7 +82,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -110,7 +110,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
   useEffect(() => {
     const getsalon = async () => {
       const salonresponse = await axios.post(
-        `https://salon-backend-3.onrender.com/api/salon/getsalonbyid`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
         {
           id: salonid,
         }
@@ -139,7 +139,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
 
     // Submit to backend
     const response = await fetch(
-      "https://salon-backend-3.onrender.com/api/salon/create",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/create`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -155,7 +155,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
     const fetchBranches = async () => {
       try {
         const response = await fetch(
-          "https://salon-backend-3.onrender.com/api/branch/isbranch",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

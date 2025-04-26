@@ -50,7 +50,7 @@ const LoginPopup = () => {
       if (activeTab === "owner") {
         // Owner login API call
         const response = await fetch(
-          "https://salon-backend-3.onrender.com/api/users/login",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/login`,
           {
             method: "POST",
             headers: {
@@ -97,7 +97,7 @@ const LoginPopup = () => {
       } else {
         // Staff login
         const response = await fetch(
-          "https://salon-backend-3.onrender.com/api/staff/login",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/login`,
           {
             method: "POST",
             headers: {
@@ -122,7 +122,7 @@ const LoginPopup = () => {
         // Record attendance
         try {
           const attendanceResponse = await axios.post(
-            "https://salon-backend-3.onrender.com/api/attendence/add",
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/attendence/add`,
             {
               staffId: staffId,
             }

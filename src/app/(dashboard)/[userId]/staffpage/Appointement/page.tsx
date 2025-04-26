@@ -84,7 +84,7 @@ const StaffAppointmentsPage = () => {
     const getclients = async () => {
       try {
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/clients/gettotalclient/${salonid}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/gettotalclient/${salonid}`
         );
         if (response.data.success) {
           setClients(response.data.clients);
@@ -104,7 +104,7 @@ const StaffAppointmentsPage = () => {
     try {
       const decoded = jwtDecode<DecodedToken>(staffToken);
       const staffResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/get/${decoded.userId}`
       );
       setStaffData(staffResponse.data);
     } catch (err) {
@@ -124,7 +124,7 @@ const StaffAppointmentsPage = () => {
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
       await axios.put(
-        `https://salon-backend-3.onrender.com/api/appoiment/update/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/update/${id}`,
         { status }
       );
       fetchAllData();
@@ -143,7 +143,7 @@ const StaffAppointmentsPage = () => {
       }
 
       const response = await axios.post(
-        "https://salon-backend-3.onrender.com/api/appoiment/create",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/create`,
         {
           salon_id: staffData?.user.salonId,
           branch_id: staffData?.branch.id,

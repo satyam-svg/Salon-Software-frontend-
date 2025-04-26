@@ -60,14 +60,14 @@ const GeneralSettingsPage = () => {
     const fetchData = async () => {
       try {
         const userResponse = await axios.get(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
         const userData = userResponse.data.user;
         setUserDetails(userData);
 
         if (userData.salonId) {
           const salonResponse = await axios.post(
-            "https://salon-backend-3.onrender.com/api/salon/getsalonbyid",
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
             { id: userData.salonId }
           );
 
@@ -143,7 +143,7 @@ const GeneralSettingsPage = () => {
     try {
       if (type === "owner") {
         await axios.put(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`,
           userDetails
         );
         alert("Owner details updated successfully!");
@@ -158,7 +158,7 @@ const GeneralSettingsPage = () => {
         };
 
         await axios.put(
-          "https://salon-backend-3.onrender.com/api/salon/updatesalon",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/updatesalon`,
           salonPayload
         );
         alert("Salon details updated successfully!");

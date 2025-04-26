@@ -51,14 +51,14 @@ const FeedbackManagementPage = () => {
 
     try {
       const userResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/users/${userid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
 
       const userData = userResponse.data;
       if (!userData.user?.salonId) throw new Error("Salon not found");
 
       const branchResponse = await axios.post(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         { salon_id: userData.user.salonId }
       );
 
@@ -82,7 +82,7 @@ const FeedbackManagementPage = () => {
   ) => {
     try {
       await axios.put(
-        `https://salon-backend-3.onrender.com/api/feedback/updatefeatur/${feedbackId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/feedback/updatefeatur/${feedbackId}`,
         { isFeatured: !currentFeatureStatus }
       );
 
