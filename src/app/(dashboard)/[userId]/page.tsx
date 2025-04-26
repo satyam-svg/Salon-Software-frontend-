@@ -17,7 +17,12 @@ const DashboardPage = () => {
 
   // Extract userId from pathname like /1234 or /5678/anything
   const userId = pathname.split("/")[1];
-
+  useEffect(() => {
+    const l = userId.length;
+    if (userId[l - 1] == "u" && userId[l - 2] == "-") {
+      router.push(`/${userId}/clients`);
+    }
+  }, [userId]);
   useEffect(() => {
     const checkSalonStatus = async () => {
       try {

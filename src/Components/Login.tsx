@@ -16,6 +16,7 @@ import { useSignup } from "@/context/SignupContext";
 import toast, { Toaster } from "react-hot-toast";
 import { useForgetPassword } from "@/context/ForgetpassContext";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 const LoginPopup = () => {
   const router = useRouter();
   const roseGold = "#b76e79";
@@ -94,7 +95,7 @@ const LoginPopup = () => {
         });
         setLoginToggle(false);
       } else {
-        // Staff login mock (replace with actual API call if needed)
+        // Staff login
         const response = await fetch(
           "https://salon-backend-3.onrender.com/api/staff/login",
           {
@@ -115,42 +116,49 @@ const LoginPopup = () => {
           throw new Error(data.message || "Login failed");
         }
 
+        // Extract required data from response
+        const staffId = data.staff.id;
+
+        // Record attendance
+        try {
+          const attendanceResponse = await axios.post(
+            "https://salon-backend-3.onrender.com/api/attendence/add",
+            {
+              staffId: staffId,
+            }
+          );
+          if (attendanceResponse.data.success) {
+            toast.success(attendanceResponse.data.message);
+          } else {
+            toast.error(attendanceResponse.data.messag);
+          }
+        } catch (attendanceError) {
+          console.error("Attendance error:", attendanceError);
+          toast.error("Error recording attendance - contact manager", {
+            style: {
+              background: "#fdf3f4",
+              color: "#c23b3b",
+              border: "1px solid #f5c6cb",
+            },
+          });
+        }
+
+        // Proceed with staff login
         if (data.token && data.expirationTime) {
-          // Calculate remaining time
           const expirationDate = new Date(data.expirationTime);
           const now = new Date();
           const maxAgeSeconds = Math.floor(
             (expirationDate.getTime() - now.getTime()) / 1000
           );
 
-          // Added validation for expiration time
           if (maxAgeSeconds <= 0) {
             throw new Error("Token expiration time is invalid");
           }
 
-          // Fixed cookie string (added backticks and fixed secure flag)
           document.cookie = `staffToken=${data.token}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax; secure;`;
 
-          console.log("Login successful:", data);
-
-          toast.success("Staff access granted!", {
-            style: {
-              background: "#f5f0f0",
-              color: "#b76e79",
-              border: "1px solid #e7d4d6",
-            },
-            iconTheme: {
-              primary: "#b76e79",
-              secondary: "#FFF",
-            },
-          });
-
-          // Fixed template literal for router push
-          const userId = data.staff.id;
-          router.push(`/staff/staffhomepage/${userId}`);
+          router.push(`/${data.staff.id}/staffpage`);
           setLoginToggle(false);
-        } else {
-          throw new Error("Missing token or expiration time in response");
         }
       }
     } catch (error: unknown) {
