@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 
-
 const floatingStars = Array(30).fill(null);
 
 interface Salon {
