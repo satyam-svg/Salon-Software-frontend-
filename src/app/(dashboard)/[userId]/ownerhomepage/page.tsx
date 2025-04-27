@@ -47,7 +47,7 @@ const OwnerHomepage = () => {
     contact_email: "",
     contact_number: "",
     salon_img_url: "",
-    share_link: `https://salon.edubotix.online/${userid}-u`,
+    share_link: `https://salon.movestrongly.com/${userid}-u`,
   });
 
   useEffect(() => {
