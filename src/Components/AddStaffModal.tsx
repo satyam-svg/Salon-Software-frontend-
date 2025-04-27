@@ -115,7 +115,7 @@ const AddStaffModal = ({
       const staffToast = toast.loading("Creating staff account...");
 
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/staff/signup",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/signup`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

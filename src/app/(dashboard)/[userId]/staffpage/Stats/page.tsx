@@ -49,7 +49,7 @@ export default function StatsPage() {
     try {
       const decoded = jwtDecode<DecodedToken>(staffToken);
       const staffResponse = await axios.get(
-        `https://salon-backend-3.onrender.com/api/staff/get/${decoded.userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/get/${decoded.userId}`
       );
       setStaffData(staffResponse.data);
     } catch (err) {

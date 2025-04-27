@@ -52,7 +52,7 @@ const ForgotPassword = () => {
 
   const sendOtpRequest = async (email: string) => {
     try {
-      const response = await fetch('https://salon-backend-3.onrender.com/api/email/forgot', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ const ForgotPassword = () => {
     setIsSubmitting(true)
     try {
       // Password reset request
-      const resetResponse = await fetch('https://salon-backend-3.onrender.com/api/users/forgetpassword', {
+      const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/forgetpassword`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ const ForgotPassword = () => {
       }
 
       // Email confirmation request
-      const emailPromise = fetch('https://salon-backend-3.onrender.com/api/email/reset', {
+      const emailPromise = fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -74,7 +74,7 @@ const FinancialPage = () => {
     const fetchSalonId = async () => {
       try {
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
         setSalonId(response.data.user?.salonId);
       } catch (error) {
@@ -92,7 +92,7 @@ const FinancialPage = () => {
       try {
         setLoading(true);
         const response = await axios.post(
-          "https://salon-backend-3.onrender.com/api/finance/financialreport",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/finance/financialreport`,
           {
             salonId,
             startDate: dateRange[0].startDate,

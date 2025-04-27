@@ -92,7 +92,7 @@ const Signup = () => {
     
     setIsSubmitting(true)
     try {
-      const response = await fetch('https://salon-backend-3.onrender.com/api/email/send-otp', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: email }),
@@ -150,7 +150,7 @@ const Signup = () => {
       if (!cloudinaryResponse.ok) throw new Error('Image upload failed')
 
       // Create user account
-      const userResponse = await fetch('https://salon-backend-3.onrender.com/api/users/signup', {
+      const userResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

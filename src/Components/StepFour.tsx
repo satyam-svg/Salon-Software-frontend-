@@ -93,7 +93,7 @@ export default function StepFour({
   const fetchBranches = async () => {
     try {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -102,7 +102,7 @@ export default function StepFour({
       setSalonId(userData.user.salonId);
 
       const branchResponse = await fetch(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -141,7 +141,7 @@ export default function StepFour({
 
     // Submit to backend
     const response = await fetch(
-      "https://salon-backend-3.onrender.com/api/salon/create",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/create`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -174,7 +174,7 @@ export default function StepFour({
     try {
       // Replace with your actual product API endpoint
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/inventry/saveproduct",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/saveproduct`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ export default function StepFour({
     try {
       // Replace with your actual service API endpoint
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/inventry/saveservice",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/saveservice`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

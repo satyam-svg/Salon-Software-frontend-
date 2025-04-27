@@ -240,7 +240,7 @@ const AppointmentManagementForm = ({
     try {
       setLoading(true);
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -249,7 +249,7 @@ const AppointmentManagementForm = ({
       setsaloid(userData.user.salonId);
 
       const response = await fetch(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -278,7 +278,7 @@ const AppointmentManagementForm = ({
     const getclients = async () => {
       try {
         const response = await axios.get(
-          `https://salon-backend-3.onrender.com/api/clients/gettotalclient/${salonid}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/gettotalclient/${salonid}`
         );
         if (response.data.success) {
           setclient(response.data.clients);
@@ -335,7 +335,7 @@ const AppointmentManagementForm = ({
 
         // API call
         const response = await axios.post(
-          "https://salon-backend-3.onrender.com/api/appoiment/create",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/create`,
           {
             salon_id: salonid,
             branch_id: branch.id,

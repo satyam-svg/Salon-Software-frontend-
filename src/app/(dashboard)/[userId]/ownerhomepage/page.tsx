@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
-import LoadingScreen from "@/Components/LoadingSpinner";
+
 
 const floatingStars = Array(30).fill(null);
 
@@ -53,7 +53,7 @@ const OwnerHomepage = () => {
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -69,19 +69,19 @@ const OwnerHomepage = () => {
   useEffect(() => {
     const gettotalclients = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/number/totalclient/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/number/totalclient/${salonid}`
       );
       settotalclient(response.data.totalClients);
     };
     const gettotalstaff = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/number/totalstaff/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/number/totalstaff/${salonid}`
       );
       settotalstaff(response.data.totalStaff);
     };
     const gettotalservice = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/number/totalservice/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/number/totalservice/${salonid}`
       );
       settotalservice(response.data.totalServices);
     };
@@ -93,7 +93,7 @@ const OwnerHomepage = () => {
   useEffect(() => {
     const getsalon = async () => {
       const salonresponse = await axios.post(
-        `https://salon-backend-3.onrender.com/api/salon/getsalonbyid`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
         {
           id: salonid,
         }
@@ -264,9 +264,7 @@ const OwnerHomepage = () => {
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
             >
-              {isRedirecting ? (
-                <LoadingScreen />
-              ) : (
+              {isRedirecting && (
                 <motion.button
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.98 }}

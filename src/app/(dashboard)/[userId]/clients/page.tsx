@@ -92,7 +92,7 @@ export default function ClientPage() {
       try {
         console.log(userId);
         const userResponse = await axios.get(
-          `https://salon-backend-3.onrender.com/api/users/${userId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
         if (!userResponse.data.user?.salonId)
           throw new Error("Salon not found");
@@ -101,7 +101,7 @@ export default function ClientPage() {
         setUser(userResponse.data.user);
 
         const branchResponse = await axios.post(
-          "https://salon-backend-3.onrender.com/api/branch/isbranch",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
           { salon_id: userResponse.data.user.salonId }
         );
 

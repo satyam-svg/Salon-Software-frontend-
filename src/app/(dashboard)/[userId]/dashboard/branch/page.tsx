@@ -62,7 +62,7 @@ export default function BranchManagementPage() {
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -79,7 +79,7 @@ export default function BranchManagementPage() {
   const fetchBranches = async () => {
     try {
       const response = await axios.post(
-        "https://salon-backend-3.onrender.com/api/branch/isbranch",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         { salon_id: salonid }
       );
       setBranches(response.data.branches);
@@ -133,7 +133,7 @@ export default function BranchManagementPage() {
 
     try {
       const response = await axios.post(
-        "https://salon-backend-3.onrender.com/api/branch/create",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/create`,
         {
           ...newBranch,
           salon_id: salonid,
@@ -158,7 +158,7 @@ export default function BranchManagementPage() {
 
     try {
       const response = await axios.put(
-        `https://salon-backend-3.onrender.com/api/branch/update/${editingBranch.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/update/${editingBranch.id}`,
         {
           ...editedBranch,
           opning_time: editedBranch.opning_time,

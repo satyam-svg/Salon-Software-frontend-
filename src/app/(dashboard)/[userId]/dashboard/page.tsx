@@ -58,7 +58,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const getsalonid = async () => {
       const userResponse = await fetch(
-        `https://salon-backend-3.onrender.com/api/users/${userId}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
@@ -74,13 +74,13 @@ const DashboardPage = () => {
   useEffect(() => {
     const gettotalrevenue = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/appoiment/totalprice/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/totalprice/${salonid}`
       );
       setrevenue(response.data.totalRevenue);
     };
     const gettotalclients = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/clients/totalclients/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/totalclients/${salonid}`
       );
 
       setclients(response.data.totalClients);
@@ -88,13 +88,13 @@ const DashboardPage = () => {
 
     const gettotalappointments = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/appoiment/latestappointment/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/latestappointment/${salonid}`
       );
       setappointments(response.data.totalAppointments);
     };
     const fetchChartData = async () => {
       const response = await axios.get(
-        `https://salon-backend-3.onrender.com/api/chart/three/${salonid}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/chart/three/${salonid}`
       );
 
       setChartData(response.data);

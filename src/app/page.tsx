@@ -24,7 +24,7 @@ export default function Home() {
     // Simulate 3s loading delay
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 3000);
+    }, 1000);
 
     if (typeof document !== "undefined") {
       const cookies = document.cookie;
@@ -52,7 +52,7 @@ export default function Home() {
   if (loading) {
     return <LoadingScreen />;
   }
-
+  
   return (
     <>
       <HomeHero />
