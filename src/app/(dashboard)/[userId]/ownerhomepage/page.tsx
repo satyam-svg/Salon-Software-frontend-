@@ -28,13 +28,13 @@ const OwnerHomepage = () => {
   const [yearsOperating, setYearsOperating] = useState(0);
   const [salonid, setsalonid] = useState("");
   const [imageLoading, setImageLoading] = useState(true);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+ 
   const [totalclients, settotalclient] = useState(0);
   const [totalstaff, settotalstaff] = useState(0);
   const [totalservice, settotalservice] = useState(0);
 
   const handleDashboardClick = () => {
-    setIsRedirecting(true);
+    
     setTimeout(() => {
       router.push(`/${userid}/dashboard`);
     }, 2000); // Small delay to ensure loading state shows
@@ -263,7 +263,7 @@ const OwnerHomepage = () => {
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
             >
-              {isRedirecting && (
+              
                 <motion.button
                   whileHover={{ scale: 1.05, translateY: -2 }}
                   whileTap={{ scale: 0.98 }}
@@ -292,7 +292,7 @@ const OwnerHomepage = () => {
                   {/* Glow effect */}
                   <div className="absolute inset-0 rounded-xl border-2 border-white/20 group-hover:border-white/40 transition-all" />
                 </motion.button>
-              )}
+              
             </motion.div>
           </motion.div>
         </div>
