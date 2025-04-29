@@ -28,16 +28,15 @@ const OwnerHomepage = () => {
   const [yearsOperating, setYearsOperating] = useState(0);
   const [salonid, setsalonid] = useState("");
   const [imageLoading, setImageLoading] = useState(true);
- 
+
   const [totalclients, settotalclient] = useState(0);
   const [totalstaff, settotalstaff] = useState(0);
   const [totalservice, settotalservice] = useState(0);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleDashboardClick = () => {
-    
-    setTimeout(() => {
-      router.push(`/${userid}/dashboard`);
-    }, 2000); // Small delay to ensure loading state shows
+    setIsNavigating(true);
+    router.push(`/${userid}/dashboard`);
   };
   const [salon, setsalon] = useState<Salon>({
     salon_name: "",
@@ -125,13 +124,26 @@ const OwnerHomepage = () => {
     const openedDate = new Date(salon.opening_time);
     const today = new Date();
 
-    const diffTime = Math.abs(today.getTime() - openedDate.getTime());
+    const diffTime = today.getTime() - openedDate.getTime();
+
+    if (diffTime < 0) {
+      setDaysOperating(0);
+      setYearsOperating(0);
+      return;
+    }
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    const diffYears = today.getFullYear() - openedDate.getFullYear();
+    let diffYears = today.getFullYear() - openedDate.getFullYear();
+    const monthDiff = today.getMonth() - openedDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < openedDate.getDate())
+    ) {
+      diffYears--;
+    }
 
     setDaysOperating(diffDays);
-    setYearsOperating(diffYears);
+    setYearsOperating(Math.max(diffYears, 0));
   }, [salon]);
 
   const copyToClipboard = () => {
@@ -263,36 +275,48 @@ const OwnerHomepage = () => {
               initial={{ y: 50, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
             >
-              
-                <motion.button
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-xl hover:shadow-2xl transition-all flex items-center gap-3 group relative overflow-hidden"
-                  onClick={handleDashboardClick}
-                >
-                  {/* Animated background */}
+              <motion.button
+                whileHover={
+                  !isNavigating ? { scale: 1.05, translateY: -2 } : {}
+                }
+                whileTap={!isNavigating ? { scale: 0.98 } : {}}
+                className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 relative overflow-hidden"
+                onClick={handleDashboardClick}
+                disabled={isNavigating}
+              >
+                {/* Loading overlay */}
+                {isNavigating && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"
                     initial={{ opacity: 0 }}
-                  />
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 bg-purple-600/90 flex items-center justify-center"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="text-white"
+                    >
+                      <FiSettings className="w-6 h-6" />
+                    </motion.div>
+                  </motion.div>
+                )}
 
-                  {/* Button content */}
-                  <span className="relative z-10">Manage Salon Dashboard</span>
+                {/* Default content */}
+                <motion.div
+                  animate={{ opacity: isNavigating ? 0 : 1 }}
+                  className="flex items-center gap-2"
+                >
+                  <span>Manage Salon Dashboard</span>
                   <motion.div
-                    className="relative z-10"
-                    initial={{ x: 0 }}
                     animate={{
                       x: ["0%", "20%", "0%"],
                       transition: { repeat: Infinity, duration: 2 },
                     }}
                   >
-                    <FiSettings className="w-5 h-5 group-hover:rotate-180 transition-transform" />
+                    <FiSettings className="w-5 h-5" />
                   </motion.div>
-
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 rounded-xl border-2 border-white/20 group-hover:border-white/40 transition-all" />
-                </motion.button>
-              
+                </motion.div>
+              </motion.button>
             </motion.div>
           </motion.div>
         </div>
