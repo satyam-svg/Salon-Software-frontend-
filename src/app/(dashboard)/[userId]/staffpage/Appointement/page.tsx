@@ -263,7 +263,8 @@ const StaffAppointmentsPage = () => {
               <p className="text-2xl font-bold">
                 $
                 {staffData?.appointments
-                  .reduce((sum, a) => sum + a.service.service_price, 0)
+                  ?.filter((a) => a.status === "confirmed") // First filter confirmed appointments
+                  .reduce((sum, a) => sum + (a.service?.service_price || 0), 0)
                   .toFixed(2)}
               </p>
             </div>
