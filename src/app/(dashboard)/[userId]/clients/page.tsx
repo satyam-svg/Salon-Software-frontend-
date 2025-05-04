@@ -8,6 +8,7 @@ import { FiClock, FiMapPin, FiUsers, FiScissors, FiX } from "react-icons/fi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
+
 interface User {
   salonId: string;
   salon: Salon;
@@ -61,13 +62,6 @@ interface BookingForm {
 export default function ClientPage() {
   const pathname = usePathname();
   const [userId, setUserId] = useState("");
-  useEffect(() => {
-    if (!pathname) return;
-    const segment = pathname.split("/")[1] || "";
-    // agar segment "-u" se end hota hai, remove kar do
-    const id = segment.endsWith("-u") ? segment.slice(0, -2) : segment;
-    setUserId(id);
-  }, [pathname]);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showClientInfoModal, setShowClientInfoModal] = useState(false);
   const [clientInfo, setClientInfo] = useState({
@@ -89,14 +83,22 @@ export default function ClientPage() {
   });
 
   useEffect(() => {
+    if (!pathname) return;
+    const segment = pathname.split("/")[1] || "";
+    const id = segment.endsWith("-u") ? segment.slice(0, -2) : segment;
+    setUserId(id);
+  }, [pathname]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log(userId);
         const userResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
-        if (!userResponse.data.user?.salonId)
+
+        if (!userResponse.data.user?.salonId) {
           throw new Error("Salon not found");
+        }
 
         setSalonid(userResponse.data.user.salonId);
         setUser(userResponse.data.user);
@@ -114,7 +116,7 @@ export default function ClientPage() {
       }
     };
 
-    fetchData();
+    if (userId) fetchData();
   }, [userId]);
 
   const handleBookingStart = (branch: Branch) => {
@@ -130,52 +132,65 @@ export default function ClientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clientEmail = localStorage.getItem("client_email");
-    const id = localStorage.getItem("client_id") || "";
-    if (!clientEmail) {
+    const clientId = localStorage.getItem("client_id");
+
+    if (!clientId) {
       setShowClientInfoModal(true);
       return;
     }
 
-    handleConfirmBooking(id);
+    handleConfirmBooking(clientId);
   };
+
   const handleClientInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (clientInfo.rememberMe) {
-      localStorage.setItem("client_email", clientInfo.email);
-    }
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
-      {
-        client_name: clientInfo.name,
-        email: clientInfo.email,
-        contact: clientInfo.phone,
-        salon_id: salonid,
-      }
-    );
-    console.log(response);
-    localStorage.setItem("client_id", response.data.client.id);
-    handleConfirmBooking(clientInfo.email);
-    setShowClientInfoModal(false);
-  };
-  const handleConfirmBooking = async (id: string) => {
-    const bookingDetails = {
-      ...bookingForm,
-      clientEmail: id,
-      clientName: clientInfo.name || "Anonymous",
-    };
-    console.log("Booking Confirmed:", bookingDetails);
     try {
-      // API call
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
+        {
+          client_name: clientInfo.name,
+          email: clientInfo.email,
+          contact: clientInfo.phone,
+          salon_id: salonid,
+        }
+      );
+
+      if (clientInfo.rememberMe) {
+        localStorage.setItem("client_email", clientInfo.email);
+      }
+
+      const clientId = response.data.client.id;
+      localStorage.setItem("client_id", clientId);
+      handleConfirmBooking(clientId);
+      setShowClientInfoModal(false);
+    } catch (error) {
+      toast.error("Failed to save client information");
+      console.error(error);
+    }
+  };
+
+  const handleConfirmBooking = async (clientId: string) => {
+    try {
+      if (
+        !bookingForm.branch?.id ||
+        !bookingForm.staff?.id ||
+        !bookingForm.service?.id ||
+        !bookingForm.date ||
+        !bookingForm.time
+      ) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/create`,
         {
           salon_id: salonid,
-          branch_id: bookingForm.branch?.id,
-          staff_id: bookingForm.staff?.id,
-          service_id: bookingForm.service?.id,
-          client_id: id,
-          date: bookingForm.date,
+          branch_id: bookingForm.branch.id,
+          staff_id: bookingForm.staff.id,
+          service_id: bookingForm.service.id,
+          client_id: clientId,
+          date: bookingForm.date.toISOString(),
           time: bookingForm.time,
           status: "pending",
         }
@@ -184,12 +199,18 @@ export default function ClientPage() {
       if (response.data.message === "Appointment created successfully") {
         toast.success("Appointment created!");
         setShowBookingModal(false);
+        setBookingForm({
+          branch: null,
+          staff: null,
+          service: null,
+          date: null,
+          time: "",
+        });
       }
     } catch (error) {
       toast.error("Failed to create appointment");
-      console.log(error);
+      console.error(error);
     }
-    setShowBookingModal(false);
   };
 
   if (isLoading) {
@@ -409,6 +430,7 @@ export default function ClientPage() {
         )}
       </AnimatePresence>
 
+      {/* Client Info Modal */}
       <AnimatePresence>
         {showClientInfoModal && (
           <motion.div
