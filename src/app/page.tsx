@@ -52,14 +52,24 @@ export default function Home() {
   if (loading) {
     return <LoadingScreen />;
   }
-  
+
   return (
     <>
-      <HomeHero />
-      <ProductsSection />
-      <StaffManagement />
-      <ResourceManagement />
-      <FinancialManagement />
+      <section id="home">
+        <HomeHero />
+      </section>
+      <section id="products">
+        <ProductsSection />
+      </section>
+      <section id="staff">
+        <StaffManagement />
+      </section>
+      <section id="resources">
+        <ResourceManagement />
+      </section>
+      <section id="finance">
+        <FinancialManagement />
+      </section>
     </>
   );
 }

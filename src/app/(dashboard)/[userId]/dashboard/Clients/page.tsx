@@ -64,6 +64,7 @@ export default function ClientManagementPage() {
   // Filters
   const [minAppointments, setMinAppointments] = useState("");
   const [registrationDate, setRegistrationDate] = useState("");
+  const [isSubmiitingClient, setIsSubmittingClient] = useState(false);
 
   // Fetch dummy data
   useEffect(() => {
@@ -256,14 +257,20 @@ export default function ClientManagementPage() {
       return;
     }
 
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
-      { client_name: name, email: email, contact: contact, salon_id: salonid }
-    );
-
-    console.log(response);
-    resetform();
-    getclients();
+    try {
+      setIsSubmittingClient(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
+        { client_name: name, email: email, contact: contact, salon_id: salonid }
+      );
+      console.log(response);
+      resetform();
+      getclients();
+    } catch (error) {
+      console.error("Error adding client:", error);
+    } finally {
+      setIsSubmittingClient(false);
+    }
   };
 
   const resetform = () => {
@@ -431,15 +438,35 @@ export default function ClientManagementPage() {
                     </button>
                     <button
                       onClick={handleAddClient}
-                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium relative overflow-hidden"
+                      disabled={isSubmiitingClient}
+                      className={`px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 ${
+                        isSubmiitingClient
+                          ? "opacity-75 cursor-not-allowed"
+                          : "hover:scale-[1.02] active:scale-95"
+                      } font-medium relative overflow-hidden`}
                     >
-                      <span className="relative z-10">Add Client</span>
-                      <motion.div
-                        className="absolute inset-0 bg-white/10"
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "0%" }}
-                        transition={{ duration: 0.3 }}
-                      />
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        {isSubmiitingClient ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ repeat: Infinity, duration: 1 }}
+                              className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
+                            />
+                            Adding...
+                          </>
+                        ) : (
+                          "Add Client"
+                        )}
+                      </span>
+                      {!isSubmiitingClient && (
+                        <motion.div
+                          className="absolute inset-0 bg-white/10"
+                          initial={{ x: "-100%" }}
+                          whileHover={{ x: "0%" }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      )}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -577,7 +604,7 @@ export default function ClientManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Avg Appointments</p>
-              <p className="text-2xl font-bold">{avgappointments}</p>
+              <p className="text-2xl font-bold">{avgappointments.toFixed(2)}</p>
             </div>
             <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
               <FiCalendar className="text-xl" />
@@ -607,7 +634,7 @@ export default function ClientManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500">Average Revenue</p>
-              <p className="text-2xl font-bold">${avgrevenue}</p>
+              <p className="text-2xl font-bold">${avgrevenue.toFixed(2)}</p>
             </div>
             <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
               <FiDollarSign className="text-xl" />

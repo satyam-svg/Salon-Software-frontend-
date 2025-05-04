@@ -234,6 +234,7 @@ const AppointmentManagementForm = ({
 
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Memoize branch data fetching
   const fetchBranches = useCallback(async () => {
@@ -317,6 +318,7 @@ const AppointmentManagementForm = ({
 
       try {
         // Find all required IDs
+        setIsSubmitting(true); // Start loading
         const branch = branchresponse.find(
           (b) => b.branch_name === selectedBranch
         );
@@ -355,6 +357,8 @@ const AppointmentManagementForm = ({
       } catch (error) {
         toast.error("Failed to create appointment");
         console.log(error);
+      } finally {
+        setIsSubmitting(false);
       }
     },
     [
@@ -562,7 +566,18 @@ const AppointmentManagementForm = ({
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
               >
-                Confirm Appointment
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Processing...
+                  </div>
+                ) : (
+                  "Confirm Appointment"
+                )}
               </motion.button>
             </motion.div>
           </form>

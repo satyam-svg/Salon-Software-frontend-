@@ -38,6 +38,7 @@ const StellarNavbar: FC = () => {
   const [hasSalon, setHasSalon] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [currentHash, setCurrentHash] = useState("");
 
   const { signupToggle } = useSignup();
   const roseGold = "#b76e79";
@@ -84,6 +85,14 @@ const StellarNavbar: FC = () => {
   }, [pathname]);
 
   useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
     const checkSalonStatus = async () => {
       const authToken = Cookies.get("authToken");
       if (!authToken) return;
@@ -99,13 +108,11 @@ const StellarNavbar: FC = () => {
         if (data.user.step == 0) {
           router.push(`/${userId}/salon/not_created`);
         } else if (data.user.step == 6) {
-          // router.push(`/${userId}/ownerhomepage`)
           setHasSalon(true);
           const timer = setInterval(() => {
             setCountdown((prev) => {
               if (prev === 1) {
                 clearInterval(timer);
-                // router.push(`/${userId}/ownerhomepage`);
               }
               return prev - 1;
             });
@@ -115,7 +122,6 @@ const StellarNavbar: FC = () => {
         }
       } catch (error) {
         console.error("Error checking salon status:", error);
-        // router.push('/error');
       }
     };
 
@@ -147,23 +153,27 @@ const StellarNavbar: FC = () => {
   const navLinks: NavLink[] = [
     {
       name: "Home",
-      path: "/",
+      path: "/#home",
       icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
     },
     {
       name: "Products",
-      path: "/products",
+      path: "/#products",
       icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10",
     },
-    { name: "Staff", path: "/services", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+    {
+      name: "Staff",
+      path: "/#staff",
+      icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    },
     {
       name: "Resource",
-      path: "/about",
+      path: "/#resources",
       icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
     },
     {
       name: "Finance",
-      path: "/contact",
+      path: "/#finance",
       icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
     },
   ];
@@ -230,10 +240,25 @@ const StellarNavbar: FC = () => {
     open: { rotate: -45, y: -8 },
   };
 
+  const handleNavClick = (path: string) => {
+    if (pathname === "/") {
+      const hash = path.split("#")[1];
+      const element = document.getElementById(hash);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+        window.history.pushState(null, "", `/#${hash}`);
+      }
+    }
+  };
+
   return (
     <>
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+        html {
+          scroll-behavior: smooth;
+          scroll-padding-top: 80px;
+        }
       `}</style>
 
       <motion.nav
@@ -314,36 +339,48 @@ const StellarNavbar: FC = () => {
             </Link>
 
             <div className="hidden lg:flex items-center space-x-8">
-              {navLinks.map((link) => (
-                <motion.div key={link.name} variants={linkVariants}>
-                  <Link href={link.path} passHref>
-                    <motion.div
-                      className="relative group"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+              {navLinks.map((link) => {
+                const [basePath, hash] = link.path.split("#");
+                const isActive =
+                  pathname === basePath &&
+                  (hash ? currentHash === `#${hash}` : true);
+
+                return (
+                  <motion.div key={link.name} variants={linkVariants}>
+                    <Link
+                      href={link.path}
+                      passHref
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavClick(link.path);
+                      }}
                     >
-                      <p
-                        className={`transition-colors duration-300 ${
-                          pathname === link.path
-                            ? "text-[#b76e79]"
-                            : "text-gray-500 hover:text-[#b76e79]"
-                        }`}
-                        style={{ fontFamily: "IBM Plex Mono" }}
+                      <motion.div
+                        className="relative group"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {link.name}
-                        <motion.span
-                          className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                            pathname === link.path
-                              ? "w-full"
-                              : "w-0 group-hover:w-full"
+                        <p
+                          className={`transition-colors duration-300 ${
+                            isActive
+                              ? "text-[#b76e79]"
+                              : "text-gray-500 hover:text-[#b76e79]"
                           }`}
-                          style={{ backgroundColor: roseGold }}
-                        />
-                      </p>
-                    </motion.div>
-                  </Link>
-                </motion.div>
-              ))}
+                          style={{ fontFamily: "IBM Plex Mono" }}
+                        >
+                          {link.name}
+                          <motion.span
+                            className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                              isActive ? "w-full" : "w-0 group-hover:w-full"
+                            }`}
+                            style={{ backgroundColor: roseGold }}
+                          />
+                        </p>
+                      </motion.div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
 
               {userData.fullname ? (
                 <motion.div className="relative" whileHover={{ scale: 1.05 }}>
