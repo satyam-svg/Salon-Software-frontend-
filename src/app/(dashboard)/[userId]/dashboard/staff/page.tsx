@@ -147,10 +147,7 @@ const StaffManagementPage = () => {
           a.status === "confirmed" && // Check status first
           a.staff?.id === id // Safe staff ID check
       )
-      .reduce(
-        (sum, a) => sum + (a.service?.service_price || 0), // Safe price access
-        0
-      );
+      .reduce((sum, a) => sum + (a.service?.service_price || 0), 0);
   };
 
   const salaryrecieve = (id: string) => {
