@@ -21,6 +21,7 @@ interface Appointment {
   id: string;
   date: string;
   service: Service;
+  status: string;
 }
 
 interface Service {
@@ -232,19 +233,28 @@ export default function ClientManagementPage() {
     console.log(client);
 
     if (client && client.length > 0) {
-      let sum = 0;
-      let revenue = 0;
+      let totalConfirmedAppointments = 0;
+      let totalRevenue = 0;
+
       client.forEach((c) => {
-        sum += c.appointments?.length || 0; // safely handle undefined appointments
-        c.appointments.forEach((a) => {
-          revenue += a.service.service_price;
+        // Filter confirmed appointments first
+        const confirmedAppointments =
+          c.appointments?.filter((a) => a.status === "confirmed") || [];
+
+        // Count confirmed appointments
+        totalConfirmedAppointments += confirmedAppointments.length;
+
+        // Sum revenue only for confirmed appointments
+        confirmedAppointments.forEach((a) => {
+          totalRevenue += a.service?.service_price || 0; // Safely handle missing service/price
         });
       });
-      setrevenue(revenue);
 
       const totalClients = client.length;
-      setavgappointments(sum / totalClients);
-      setavgrevenue(revenue / totalClients);
+
+      setrevenue(totalRevenue);
+      setavgappointments(totalConfirmedAppointments / totalClients);
+      setavgrevenue(totalRevenue / totalClients);
     } else {
       setavgappointments(0);
     }

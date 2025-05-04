@@ -140,9 +140,17 @@ const StaffManagementPage = () => {
 
   const getrevenuegenrated = (id: string) => {
     if (!mounted || !appointment.length) return 0;
+
     return appointment
-      .filter((a) => a.staff.id === id)
-      .reduce((sum, a) => sum + a.service.service_price, 0);
+      .filter(
+        (a) =>
+          a.status === "confirmed" && // Check status first
+          a.staff?.id === id // Safe staff ID check
+      )
+      .reduce(
+        (sum, a) => sum + (a.service?.service_price || 0), // Safe price access
+        0
+      );
   };
 
   const salaryrecieve = (id: string) => {
@@ -234,10 +242,13 @@ const StaffManagementPage = () => {
 
   useEffect(() => {
     if (mounted && appointment.length > 0 && selectedBranch?.staff) {
-      const sum = appointment.reduce(
-        (acc, a) => acc + a.service.service_price,
-        0
-      );
+      const sum = appointment
+        .filter((a) => a.status === "confirmed") // First filter confirmed appointments
+        .reduce(
+          (acc, a) => acc + (a.service?.service_price || 0), // Safe price access
+          0
+        );
+
       setrevnue(sum);
       setavgrevenue(
         selectedBranch.staff.length > 0 ? sum / selectedBranch.staff.length : 0
