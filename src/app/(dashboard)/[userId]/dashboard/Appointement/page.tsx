@@ -755,7 +755,11 @@ export default function AppointmentsPage() {
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold">
-                ${appointment.reduce((sum, a) => sum + a.price, 0).toFixed(2)}
+                $
+                {appointment
+                  .filter((a) => a.status === "confirmed")
+                  .reduce((sum, a) => sum + a.price, 0)
+                  .toFixed(2)}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
