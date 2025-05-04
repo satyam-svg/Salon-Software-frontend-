@@ -46,6 +46,8 @@ const StellarNavbar: FC = () => {
   const dimRoseGold = "#f8e9eb";
   const { loginToggle, setLoginToggle } = useLogin();
   const { forgetPasswordToggle } = useForgetPassword();
+  const isStaffPage = pathname.includes("/staffpage");
+  const isClientPage = pathname.includes("/clients");
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -250,7 +252,7 @@ const StellarNavbar: FC = () => {
       }
     }
   };
-
+  if (isClientPage) return null;
   return (
     <>
       <style jsx global>{`
@@ -339,48 +341,49 @@ const StellarNavbar: FC = () => {
             </Link>
 
             <div className="hidden lg:flex items-center space-x-8">
-              {navLinks.map((link) => {
-                const [basePath, hash] = link.path.split("#");
-                const isActive =
-                  pathname === basePath &&
-                  (hash ? currentHash === `#${hash}` : true);
+              {!isStaffPage &&
+                navLinks.map((link) => {
+                  const [basePath, hash] = link.path.split("#");
+                  const isActive =
+                    pathname === basePath &&
+                    (hash ? currentHash === `#${hash}` : true);
 
-                return (
-                  <motion.div key={link.name} variants={linkVariants}>
-                    <Link
-                      href={link.path}
-                      passHref
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavClick(link.path);
-                      }}
-                    >
-                      <motion.div
-                        className="relative group"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                  return (
+                    <motion.div key={link.name} variants={linkVariants}>
+                      <Link
+                        href={link.path}
+                        passHref
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(link.path);
+                        }}
                       >
-                        <p
-                          className={`transition-colors duration-300 ${
-                            isActive
-                              ? "text-[#b76e79]"
-                              : "text-gray-500 hover:text-[#b76e79]"
-                          }`}
-                          style={{ fontFamily: "IBM Plex Mono" }}
+                        <motion.div
+                          className="relative group"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          {link.name}
-                          <motion.span
-                            className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
-                              isActive ? "w-full" : "w-0 group-hover:w-full"
+                          <p
+                            className={`transition-colors duration-300 ${
+                              isActive
+                                ? "text-[#b76e79]"
+                                : "text-gray-500 hover:text-[#b76e79]"
                             }`}
-                            style={{ backgroundColor: roseGold }}
-                          />
-                        </p>
-                      </motion.div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
+                            style={{ fontFamily: "IBM Plex Mono" }}
+                          >
+                            {link.name}
+                            <motion.span
+                              className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-300 ${
+                                isActive ? "w-full" : "w-0 group-hover:w-full"
+                              }`}
+                              style={{ backgroundColor: roseGold }}
+                            />
+                          </p>
+                        </motion.div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
 
               {userData.fullname ? (
                 <motion.div className="relative" whileHover={{ scale: 1.05 }}>
