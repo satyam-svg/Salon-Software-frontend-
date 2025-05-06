@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-
 export default function DashboardLayout({
   children,
 }: {
@@ -24,7 +23,7 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
- 
+
   const arrowRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
@@ -48,11 +47,9 @@ export default function DashboardLayout({
 
   const handleNavigation = (href: string) => {
     if (pathname !== href) {
-     
       if (isMobile) setIsSidebarOpen(false);
     }
   };
-
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -68,8 +65,6 @@ export default function DashboardLayout({
           scrollbar-width: none;
         }
       `}</style>
-
-  
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (
@@ -110,7 +105,7 @@ export default function DashboardLayout({
             <div className="p-6 space-y-6">
               <div className="space-y-4 mt-10">
                 {[
-                 {
+                  {
                     icon: <FiBarChart2 />,
                     label: "Business Overview",
                     href: `/${userid}/adashboard/`,
@@ -123,7 +118,7 @@ export default function DashboardLayout({
                   {
                     icon: <FiBriefcase />, // Changed from FiDollarSign
                     label: "Staff & Sales",
-                    href: `/${userid}/adashboard/staff`,
+                    href: `/${userid}/adashboard/Sales`,
                   },
                   {
                     icon: <FiPackage />, // Changed from FiUsers
@@ -133,7 +128,7 @@ export default function DashboardLayout({
                   {
                     icon: <FiCreditCard />, // Changed from FiBox
                     label: "Accounting & Billing",
-                    href: `/${userid}/adashboard/Accounting`,
+                    href: `/${userid}/adashboard/Billing`,
                   },
                   {
                     icon: <FiFlag />, // Changed from FiGitBranch
@@ -143,8 +138,8 @@ export default function DashboardLayout({
                   {
                     icon: <FiSettings />,
                     label: "Settings",
-                    href: `/${userid}/adashboard/setting`,
-                  }
+                    href: `/${userid}/adashboard/Settings`,
+                  },
                 ].map((item) => (
                   <motion.div
                     key={item.label}
