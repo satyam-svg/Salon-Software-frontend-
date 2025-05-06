@@ -14,37 +14,20 @@ import {
 } from "recharts";
 import { FiDollarSign, FiUserPlus, FiBriefcase, FiUsers } from "react-icons/fi";
 import axios from "axios";
-
+interface staff {
+    name: string;
+    clientsAdded: number;
+    totalRevenue: number;
+}
+interface revenueData {
+  month: string;
+  revenue:number;
+}
 const OverviewPage = () => {
-  const [stats, setStats] = useState({
-    appointments: { today: 12, week: 68, month: 240 },
-    revenue: { today: 125000, week: 680000, month: 2400000 },
-    clients: { new: 23, growth: 15 },
-    staff: [
-      { name: "Sarah", clients: 18, revenue: 420000 },
-      { name: "Mike", clients: 12, revenue: 320000 },
-      { name: "Emma", clients: 15, revenue: 380000 },
-    ],
-  });
+  const [staff , setstaff] = useState<staff[]>([]);
+  const [revenueData , setrevenueData] = useState<revenueData[]>([]);
 
-  const appointmentData = [
-    { day: "Mon", appointments: 12 },
-    { day: "Tue", appointments: 18 },
-    { day: "Wed", appointments: 15 },
-    { day: "Thu", appointments: 22 },
-    { day: "Fri", appointments: 19 },
-    { day: "Sat", appointments: 24 },
-    { day: "Sun", appointments: 14 },
-  ];
 
-  const revenueData = [
-    { month: "Jan", revenue: 65 },
-    { month: "Feb", revenue: 78 },
-    { month: "Mar", revenue: 92 },
-    { month: "Apr", revenue: 81 },
-    { month: "May", revenue: 89 },
-    { month: "Jun", revenue: 96 },
-  ];
 
   const [dailyusercount, setdailyusercount] = useState(0);
   const [weeklyusercount, setweeklyusercount] = useState(0);
@@ -52,7 +35,7 @@ const OverviewPage = () => {
   const [dailyuserrevenue, setdailyuserrevenue] = useState(0);
   const [weeklyuserrevenue, setweeklyuserrevenue] = useState(0);
   const [monthuserrevenue, setmonthuserrevenue] = useState(0);
-
+  
   useEffect(() => {
     const getuserbyperiod = async () => {
       const response = await axios.get(
@@ -73,8 +56,22 @@ const OverviewPage = () => {
       setweeklyuserrevenue(response.data.data.weekly_revenue);
       setmonthuserrevenue(response.data.data.monthly_revenue);
     };
+    const gettopsallers = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/purchasedplan/gettopseller`
+      );
+      setstaff(response.data.data);
+    };
+    const getrevenuedata = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/purchasedplan/revenuedata`
+      );
+      setrevenueData(response.data.data);
+    };
     getuserbyperiod();
     getrevenue();
+    gettopsallers();
+    getrevenuedata();
   }, []);
 
   return (
@@ -154,7 +151,7 @@ const OverviewPage = () => {
                 <h3 className="font-medium">Staff Performance</h3>
               </div>
               <div className="space-y-3">
-                {stats.staff.map((member) => (
+                {staff.map((member) => (
                   <div
                     key={member.name}
                     className="flex items-center justify-between"
@@ -165,10 +162,10 @@ const OverviewPage = () => {
                     </div>
                     <div className="text-right">
                       <div className="font-medium">
-                        ₹{member.revenue.toLocaleString()}
+                        ₹{member.totalRevenue.toLocaleString()}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {member.clients} clients
+                        {member.clientsAdded} clients
                       </div>
                     </div>
                   </div>
@@ -208,7 +205,7 @@ const OverviewPage = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={stats.staff}
+                  data={staff}
                   dataKey="revenue"
                   nameKey="name"
                   cx="50%"
@@ -216,7 +213,7 @@ const OverviewPage = () => {
                   outerRadius={100}
                   label
                 >
-                  {stats.staff.map((_, index) => (
+                  {staff.map((_, index) => (
                     <Cell
                       key={index}
                       fill={["#4f46e5", "#10b981", "#8b5cf6"][index]}

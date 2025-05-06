@@ -2,10 +2,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {
-  FiUser,
-  FiEdit,
   FiSearch,
-  FiMessageSquare,
   FiAward,
   FiCalendar,
   FiDollarSign,
@@ -21,22 +18,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-interface Feedback {
-  date: string;
-  message: string;
-}
-
-interface Customer {
-  id: number;
+interface Activeplan {
   name: string;
-  email: string;
-  phone: string;
-  plan: string;
-  planType: string;
-  joinDate: string;
-  renewals: number;
-  loyaltyPoints: number;
-  feedbacks: Feedback[];
+  price: number;
+  description: string;
+  branchLimit: number;
+}
+interface Feedback {
+  feedback: string;
+  date: string;
 }
 
 interface User {
@@ -47,61 +37,20 @@ interface User {
   profile_image: string;
   created_at: string;
   salon: string;
+  activePlan: Activeplan;
+  purchasedPlans: [];
+  ownerFeedback: Feedback[];
 }
 
 const CustomersPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
+
   const [activeTab, setActiveTab] = useState<
     "profile" | "feedback" | "loyalty"
   >("profile");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [customers] = useState<Customer[]>([
-    {
-      id: 1,
-      name: "Aarav Sharma",
-      email: "aarav@example.com",
-      phone: "+91 98765 43210",
-      plan: "Premium",
-      planType: "Monthly",
-      joinDate: "2023-01-15",
-      renewals: 5,
-      loyaltyPoints: 1200,
-      feedbacks: [
-        { date: "2023-03-15", message: "Excellent service quality!" },
-        { date: "2023-06-01", message: "Loved the new features added" },
-      ],
-    },
-    {
-      id: 2,
-      name: "Priya Patel",
-      email: "priya@example.com",
-      phone: "+91 98765 43211",
-      plan: "Standard",
-      planType: "Yearly",
-      joinDate: "2023-03-10",
-      renewals: 2,
-      loyaltyPoints: 800,
-      feedbacks: [{ date: "2023-05-20", message: "Good value for money" }],
-    },
-    {
-      id: 3,
-      name: "Rohan Singh",
-      email: "rohan@example.com",
-      phone: "+91 98765 43212",
-      plan: "Basic",
-      planType: "Monthly",
-      joinDate: "2023-06-01",
-      renewals: 3,
-      loyaltyPoints: 600,
-      feedbacks: [],
-    },
-  ]);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -126,13 +75,13 @@ const CustomersPage = () => {
     getcontactinfo();
   }, []);
 
-  const calculateLoyaltyPoints = (customer: Customer) => {
+  const calculateLoyaltyPoints = (customer: User) => {
     const daysEnrolled = Math.floor(
-      (new Date().getTime() - new Date(customer.joinDate).getTime()) /
+      (new Date().getTime() - new Date(customer.created_at).getTime()) /
         (1000 * 60 * 60 * 24)
     );
     const basePoints = daysEnrolled * 2;
-    const renewalPoints = customer.renewals * 100;
+    const renewalPoints = customer.purchasedPlans.length * 100;
     return basePoints + renewalPoints;
   };
 
@@ -246,7 +195,9 @@ const CustomersPage = () => {
                       <span>Plan Type</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {/* {selectedCustomer.plan} ({selectedCustomer.planType}) */}
+                      {selectedUser.activePlan.name +
+                        "-" +
+                        selectedUser.activePlan.price}
                     </div>
                   </div>
 
@@ -256,7 +207,7 @@ const CustomersPage = () => {
                       <span>Renewals</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      0 Successful Renewals
+                      {selectedUser.purchasedPlans.length} Successful Renewals
                     </div>
                   </div>
                 </div>
@@ -281,11 +232,11 @@ const CustomersPage = () => {
 
             {activeTab === "feedback" && (
               <div className="space-y-4">
-                {selectedUser.feedbacks.length > 0 ? (
-                  selectedUser.feedbacks.map((feedback, index) => (
+                {selectedUser.ownerFeedback.length > 0 ? (
+                  selectedUser.ownerFeedback.map((feedback, index) => (
                     <div key={index} className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-gray-600">{feedback.message}</p>
+                        <p className="text-gray-600">{feedback.feedback}</p>
                         <span className="text-sm text-gray-500">
                           {new Date(feedback.date).toLocaleDateString()}
                         </span>
@@ -352,7 +303,7 @@ const CustomersPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Renewal Bonus Points</span>
-                      <span>{selectedUser.renewals * 100}</span>
+                      <span>{selectedUser.purchasedPlans.length * 100}</span>
                     </div>
                   </div>
                 </div>
