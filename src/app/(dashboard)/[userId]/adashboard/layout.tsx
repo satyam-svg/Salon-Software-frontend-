@@ -6,11 +6,11 @@ import {
   FiX,
   FiSettings,
   FiUsers,
-  FiDollarSign,
-  FiCalendar,
-  FiBox,
   FiBarChart2,
-  FiGitBranch,
+  FiBriefcase,
+  FiPackage,
+  FiCreditCard,
+  FiFlag,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -32,7 +32,7 @@ export default function DashboardLayout({
   const isActiveLink = (href: string) => {
     // Handle dashboard root path specifically
     if (href === `/${userid}/dashboard/`) {
-      return pathname === href || pathname === `/${userid}/dashboard`;
+      return pathname === href || pathname === `/${userid}/adashboard`;
     }
     return pathname === href;
   };
@@ -110,35 +110,35 @@ export default function DashboardLayout({
             <div className="p-6 space-y-6">
               <div className="space-y-4 mt-10">
                 {[
-                  {
+                 {
                     icon: <FiBarChart2 />,
                     label: "Business Overview",
                     href: `/${userid}/adashboard/`,
                   },
                   {
-                    icon: <FiCalendar />,
+                    icon: <FiUsers />, // Changed from FiCalendar
                     label: "Customer Management",
-                    href: `/${userid}/adashboard/Appointement`,
+                    href: `/${userid}/adashboard/customer`,
                   },
                   {
-                    icon: <FiDollarSign />,
+                    icon: <FiBriefcase />, // Changed from FiDollarSign
                     label: "Staff & Sales",
-                    href: `/${userid}/adashboard/finance`,
+                    href: `/${userid}/adashboard/staff`,
                   },
                   {
-                    icon: <FiUsers />,
+                    icon: <FiPackage />, // Changed from FiUsers
                     label: "Package Management",
-                    href: `/${userid}/dashboard/Clients`,
+                    href: `/${userid}/adashboard/pakage`,
                   },
                   {
-                    icon: <FiBox />,
+                    icon: <FiCreditCard />, // Changed from FiBox
                     label: "Accounting & Billing",
-                    href: `/${userid}/dashboard/inventory`,
+                    href: `/${userid}/adashboard/Accounting`,
                   },
                   {
-                    icon: <FiGitBranch />,
+                    icon: <FiFlag />, // Changed from FiGitBranch
                     label: "Marketing & Campaigns",
-                    href: `/${userid}/dashboard/branch`,
+                    href: `/${userid}/dashboard/Marketing`,
                   },
                   {
                     icon: <FiSettings />,
