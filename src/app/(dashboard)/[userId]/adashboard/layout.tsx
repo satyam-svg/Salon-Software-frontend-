@@ -6,11 +6,11 @@ import {
   FiX,
   FiSettings,
   FiUsers,
-  FiDollarSign,
-  FiCalendar,
-  FiBox,
   FiBarChart2,
-  FiGitBranch,
+  FiBriefcase,
+  FiPackage,
+  FiCreditCard,
+  FiFlag,
 } from "react-icons/fi";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
@@ -31,7 +31,7 @@ export default function DashboardLayout({
   const isActiveLink = (href: string) => {
     // Handle dashboard root path specifically
     if (href === `/${userid}/dashboard/`) {
-      return pathname === href || pathname === `/${userid}/dashboard`;
+      return pathname === href || pathname === `/${userid}/adashboard`;
     }
     return pathname === href;
   };
@@ -111,27 +111,27 @@ export default function DashboardLayout({
                     href: `/${userid}/adashboard/`,
                   },
                   {
-                    icon: <FiCalendar />,
+                    icon: <FiUsers />, // Changed from FiCalendar
                     label: "Customer Management",
-                    href: `/${userid}/adashboard/Appointement`,
+                    href: `/${userid}/adashboard/customer`,
                   },
                   {
-                    icon: <FiDollarSign />,
+                    icon: <FiBriefcase />, // Changed from FiDollarSign
                     label: "Staff & Sales",
                     href: `/${userid}/adashboard/Sales`,
                   },
                   {
-                    icon: <FiUsers />,
+                    icon: <FiPackage />, // Changed from FiUsers
                     label: "Package Management",
-                    href: `/${userid}/dashboard/Clients`,
+                    href: `/${userid}/adashboard/pakage`,
                   },
                   {
-                    icon: <FiBox />,
+                    icon: <FiCreditCard />, // Changed from FiBox
                     label: "Accounting & Billing",
                     href: `/${userid}/adashboard/Billing`,
                   },
                   {
-                    icon: <FiGitBranch />,
+                    icon: <FiFlag />, // Changed from FiGitBranch
                     label: "Marketing & Campaigns",
                     href: `/${userid}/adashboard/Marketing`,
                   },
