@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiMail,
   FiLock,
@@ -24,6 +24,7 @@ const LoginPopup = () => {
   const [activeTab, setActiveTab] = useState<"owner" | "staff">("owner");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [iscross, setiscross] = useState(true);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -182,6 +183,14 @@ const LoginPopup = () => {
     }
   };
 
+  useEffect(() => {
+    const currentDomain = window.location.hostname;
+    const isLocal =
+      currentDomain === "evankiunisexsalon.in" ||
+      currentDomain === "evankiunisexsalon.in";
+    setiscross(!isLocal);
+  }, []);
+
   if (!loginToggle) return null;
 
   return (
@@ -200,17 +209,19 @@ const LoginPopup = () => {
         transition={{ type: "spring", damping: 20 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden relative"
       >
-        <button
-          onClick={() => setLoginToggle(false)}
-          className="absolute top-4 right-4 z-50 p-2 hover:bg-rose-50/50 rounded-full transition-colors"
-        >
-          <motion.div
-            whileHover={{ rotate: 90, scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+        {iscross && (
+          <button
+            onClick={() => setLoginToggle(false)}
+            className="absolute top-4 right-4 z-50 p-2 hover:bg-rose-50/50 rounded-full transition-colors"
           >
-            <FiX className="text-2xl text-rose-700/90 hover:text-rose-800" />
-          </motion.div>
-        </button>
+            <motion.div
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <FiX className="text-2xl text-rose-700/90 hover:text-rose-800" />
+            </motion.div>
+          </button>
+        )}
 
         <div
           className="relative h-40 flex flex-col items-center justify-end pb-6 px-8"

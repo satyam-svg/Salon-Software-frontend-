@@ -16,7 +16,6 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-
 export default function DashboardLayout({
   children,
 }: {
@@ -24,7 +23,7 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
- 
+
   const arrowRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
@@ -48,11 +47,9 @@ export default function DashboardLayout({
 
   const handleNavigation = (href: string) => {
     if (pathname !== href) {
-     
       if (isMobile) setIsSidebarOpen(false);
     }
   };
-
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -68,8 +65,6 @@ export default function DashboardLayout({
           scrollbar-width: none;
         }
       `}</style>
-
-  
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (
@@ -123,7 +118,7 @@ export default function DashboardLayout({
                   {
                     icon: <FiDollarSign />,
                     label: "Staff & Sales",
-                    href: `/${userid}/adashboard/finance`,
+                    href: `/${userid}/adashboard/Sales`,
                   },
                   {
                     icon: <FiUsers />,
@@ -133,18 +128,18 @@ export default function DashboardLayout({
                   {
                     icon: <FiBox />,
                     label: "Accounting & Billing",
-                    href: `/${userid}/dashboard/inventory`,
+                    href: `/${userid}/adashboard/Billing`,
                   },
                   {
                     icon: <FiGitBranch />,
                     label: "Marketing & Campaigns",
-                    href: `/${userid}/dashboard/branch`,
+                    href: `/${userid}/adashboard/Marketing`,
                   },
                   {
                     icon: <FiSettings />,
                     label: "Settings",
-                    href: `/${userid}/dashboard/setting`,
-                  }
+                    href: `/${userid}/adashboard/Settings`,
+                  },
                 ].map((item) => (
                   <motion.div
                     key={item.label}
