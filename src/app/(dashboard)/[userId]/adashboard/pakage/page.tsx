@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   FiPlus, FiEdit, FiTrash, FiCheck, FiX,
   FiCalendar, FiDollarSign, FiUsers, FiBox,
@@ -12,20 +13,23 @@ interface Feature {
   icon: JSX.Element;
 }
 
-interface Package {
-  id: number;
+interface SubscriptionPackage {
+  id: string;
   name: string;
   description: string;
-  price: string;
-  branchLimit: number | string;
+  price: number;
+  branchLimit: number;
   features: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const PackageManagement = () => {
-  const [packages, setPackages] = useState<Package[]>([]);
+  const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [editingPackage, setEditingPackage] = useState<Package | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [editingPackage, setEditingPackage] = useState<SubscriptionPackage | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const allFeatures: Feature[] = [
     { id: 'appointments', name: 'Appointments', icon: <FiCalendar /> },
@@ -41,8 +45,8 @@ const PackageManagement = () => {
   const initialFormState = {
     name: '',
     description: '',
-    price: '',
-    branchLimit: '1',
+    price: 0,
+    branchLimit: 1,
     features: [] as string[],
     isUnlimitedBranches: false,
   };
@@ -50,33 +54,21 @@ const PackageManagement = () => {
   const [formData, setFormData] = useState<typeof initialFormState>(initialFormState);
 
   useEffect(() => {
-    setPackages([
-      {
-        id: 1,
-        name: 'Basic',
-        price: '₹999/month',
-        branchLimit: 1,
-        features: ['appointments', 'finance', 'clients'],
-        description: 'Essential features for small businesses'
-      },
-      {
-        id: 2,
-        name: 'Standard',
-        price: '₹1999/month',
-        branchLimit: 5,
-        features: ['appointments', 'finance', 'clients', 'inventory', 'feedback'],
-        description: 'Advanced features for growing businesses'
-      },
-      {
-        id: 3,
-        name: 'Premium',
-        price: '₹2999/month',
-        branchLimit: 'Unlimited',
-        features: allFeatures.map(f => f.id),
-        description: 'Complete solution for large enterprises'
-      }
-    ]);
+    fetchPackages();
   }, []);
+
+  const fetchPackages = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/getall`);
+      setPackages(response.data);
+    } catch (err) {
+      setError('Failed to fetch packages');
+      console.log(err)
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFeatureToggle = (featureId: string) => {
     setFormData(prev => ({
@@ -87,37 +79,70 @@ const PackageManagement = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newPackage: Package = {
-      id: editingPackage?.id || Date.now(),
-      ...formData,
-      branchLimit: formData.isUnlimitedBranches ? 'Unlimited' : parseInt(formData.branchLimit)
-    };
+    try {
+      setLoading(true);
+      const payload = {
+        ...formData,
+        branchLimit: formData.isUnlimitedBranches ? 9999 : formData.branchLimit
+      };
 
-    setPackages(prev =>
-      editingPackage
-        ? prev.map(p => p.id === editingPackage.id ? newPackage : p)
-        : [...prev, newPackage]
-    );
+      if (editingPackage) {
+        await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/update/${editingPackage.id}`, payload);
+      } else {
+        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/add`, payload);
+      }
 
-    setShowModal(false);
-    setFormData(initialFormState);
-    setEditingPackage(null);
+      await fetchPackages();
+      setShowModal(false);
+      setFormData(initialFormState);
+      setEditingPackage(null);
+    } catch (err) {
+      setError(editingPackage ? 'Failed to update package' : 'Failed to create package');
+      console.log(err)
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEdit = (pkg: Package) => {
+  const handleEdit = (pkg: SubscriptionPackage) => {
     setFormData({
-      ...pkg,
-      isUnlimitedBranches: pkg.branchLimit === 'Unlimited',
-      branchLimit: pkg.branchLimit === 'Unlimited' ? '' : pkg.branchLimit.toString(),
+      name: pkg.name,
+      description: pkg.description,
+      price: pkg.price,
+      branchLimit: pkg.branchLimit === 9999 ? 1 : pkg.branchLimit,
+      features: pkg.features,
+      isUnlimitedBranches: pkg.branchLimit === 9999,
     });
     setEditingPackage(pkg);
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setPackages(prev => prev.filter(p => p.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true);
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/delete/${id}`);
+      await fetchPackages();
+    } catch (err) {
+      setError('Failed to delete package');
+      console.log(err)
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
+
+  const formatBranchLimit = (limit: number) => {
+    return limit === 9999 ? 'Unlimited' : limit;
   };
 
   return (
@@ -126,60 +151,75 @@ const PackageManagement = () => {
         <h1 className="text-2xl font-bold text-gray-800">Package Management</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700"
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 disabled:bg-gray-400"
+          disabled={loading}
         >
           <FiPlus /> Create Package
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packages.map(pkg => (
-          <div key={pkg.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800">{pkg.name}</h3>
-                <p className="text-purple-600 text-lg font-medium">{pkg.price}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(pkg)}
-                  className="text-gray-500 hover:text-purple-600 p-2"
-                >
-                  <FiEdit />
-                </button>
-                <button
-                  onClick={() => handleDelete(pkg.id)}
-                  className="text-gray-500 hover:text-red-600 p-2"
-                >
-                  <FiTrash />
-                </button>
-              </div>
-            </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
 
-            <div className="mb-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                <FiGitBranch />
-                <span>Branch Limit: {pkg.branchLimit}</span>
+      {loading ? (
+        <div className="text-center text-gray-600">Loading packages...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {packages.map(pkg => (
+            <div key={pkg.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800">{pkg.name}</h3>
+                  <p className="text-purple-600 text-lg font-medium">
+                    {formatPrice(pkg.price)}/month
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(pkg)}
+                    className="text-gray-500 hover:text-purple-600 p-2"
+                    disabled={loading}
+                  >
+                    <FiEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(pkg.id)}
+                    className="text-gray-500 hover:text-red-600 p-2"
+                    disabled={loading}
+                  >
+                    <FiTrash />
+                  </button>
+                </div>
               </div>
-              <p className="text-gray-600 text-sm">{pkg.description}</p>
-            </div>
 
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Included Features</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {allFeatures.map(feature => (
-                  pkg.features.includes(feature.id) && (
-                    <div key={feature.id} className="flex items-center gap-2 text-sm text-gray-600">
-                      {feature.icon}
-                      <span>{feature.name}</span>
-                    </div>
-                  )
-                ))}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <FiGitBranch />
+                  <span>Branch Limit: {formatBranchLimit(pkg.branchLimit)}</span>
+                </div>
+                <p className="text-gray-600 text-sm">{pkg.description}</p>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Included Features</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {allFeatures.map(feature => (
+                    pkg.features.includes(feature.id) && (
+                      <div key={feature.id} className="flex items-center gap-2 text-sm text-gray-600">
+                        {feature.icon}
+                        <span>{feature.name}</span>
+                      </div>
+                    )
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -195,6 +235,7 @@ const PackageManagement = () => {
                   setEditingPackage(null);
                 }}
                 className="text-gray-500 hover:text-gray-700"
+                disabled={loading}
               >
                 <FiX className="text-2xl" />
               </button>
@@ -210,17 +251,20 @@ const PackageManagement = () => {
                     className="w-full p-2 border rounded-lg"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Price</label>
+                  <label className="block text-sm font-medium mb-2">Monthly Price (₹)</label>
                   <input
-                    type="text"
+                    type="number"
                     required
+                    min="0"
                     className="w-full p-2 border rounded-lg"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -232,6 +276,7 @@ const PackageManagement = () => {
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  disabled={loading}
                 />
               </div>
 
@@ -245,8 +290,9 @@ const PackageManagement = () => {
                       onChange={(e) => setFormData({
                         ...formData,
                         isUnlimitedBranches: e.target.value === 'unlimited',
-                        branchLimit: e.target.value === 'unlimited' ? '' : '1'
+                        branchLimit: e.target.value === 'unlimited' ? 1 : formData.branchLimit
                       })}
+                      disabled={loading}
                     >
                       <option value="limited">Limited</option>
                       <option value="unlimited">Unlimited</option>
@@ -258,7 +304,11 @@ const PackageManagement = () => {
                         required
                         className="w-24 p-2 border rounded-lg"
                         value={formData.branchLimit}
-                        onChange={(e) => setFormData({ ...formData, branchLimit: e.target.value })}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          branchLimit: Number(e.target.value) 
+                        })}
+                        disabled={loading}
                       />
                     )}
                   </div>
@@ -275,13 +325,14 @@ const PackageManagement = () => {
                         formData.features.includes(feature.id)
                           ? 'border-purple-600 bg-purple-50'
                           : 'border-gray-200 hover:border-purple-400'
-                      }`}
+                      } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <input
                         type="checkbox"
                         className="hidden"
                         checked={formData.features.includes(feature.id)}
                         onChange={() => handleFeatureToggle(feature.id)}
+                        disabled={loading}
                       />
                       {feature.icon}
                       <span className="text-sm">{feature.name}</span>
@@ -301,15 +352,17 @@ const PackageManagement = () => {
                     setFormData(initialFormState);
                     setEditingPackage(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                  disabled={loading}
                 >
-                  {editingPackage ? 'Update Package' : 'Create Package'}
+                  {loading ? 'Processing...' : editingPackage ? 'Update Package' : 'Create Package'}
                 </button>
               </div>
             </form>
