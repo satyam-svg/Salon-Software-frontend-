@@ -138,12 +138,12 @@ export default function DashboardLayout({
                   {
                     icon: <FiFlag />, // Changed from FiGitBranch
                     label: "Marketing & Campaigns",
-                    href: `/${userid}/dashboard/Marketing`,
+                    href: `/${userid}/adashboard/Marketing`,
                   },
                   {
                     icon: <FiSettings />,
                     label: "Settings",
-                    href: `/${userid}/dashboard/setting`,
+                    href: `/${userid}/adashboard/setting`,
                   }
                 ].map((item) => (
                   <motion.div
