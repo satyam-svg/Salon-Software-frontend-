@@ -1,15 +1,14 @@
-'use client';
-import { useState } from 'react';
+"use client";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import {
-  FiUser,
-  FiEdit,
   FiSearch,
-  FiMessageSquare,
   FiAward,
   FiCalendar,
   FiDollarSign,
   FiX,
-} from 'react-icons/fi';
+  FiLoader,
+} from "react-icons/fi";
 import {
   BarChart,
   Bar,
@@ -17,88 +16,72 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
+interface Activeplan {
+  name: string;
+  price: number;
+  description: string;
+  branchLimit: number;
+}
 interface Feedback {
+  feedback: string;
   date: string;
-  message: string;
 }
 
-interface Customer {
-  id: number;
+interface User {
+  id: string;
   name: string;
   email: string;
   phone: string;
-  plan: string;
-  planType: string;
-  joinDate: string;
-  renewals: number;
-  loyaltyPoints: number;
-  feedbacks: Feedback[];
+  profile_image: string;
+  created_at: string;
+  salon: string;
+  activePlan: Activeplan;
+  purchasedPlans: [];
+  ownerFeedback: Feedback[];
 }
 
 const CustomersPage = () => {
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
-  const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'loyalty'>('profile');
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const [customers] = useState<Customer[]>([
-    {
-      id: 1,
-      name: 'Aarav Sharma',
-      email: 'aarav@example.com',
-      phone: '+91 98765 43210',
-      plan: 'Premium',
-      planType: 'Monthly',
-      joinDate: '2023-01-15',
-      renewals: 5,
-      loyaltyPoints: 1200,
-      feedbacks: [
-        { date: '2023-03-15', message: 'Excellent service quality!' },
-        { date: '2023-06-01', message: 'Loved the new features added' },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Priya Patel',
-      email: 'priya@example.com',
-      phone: '+91 98765 43211',
-      plan: 'Standard',
-      planType: 'Yearly',
-      joinDate: '2023-03-10',
-      renewals: 2,
-      loyaltyPoints: 800,
-      feedbacks: [{ date: '2023-05-20', message: 'Good value for money' }],
-    },
-    {
-      id: 3,
-      name: 'Rohan Singh',
-      email: 'rohan@example.com',
-      phone: '+91 98765 43212',
-      plan: 'Basic',
-      planType: 'Monthly',
-      joinDate: '2023-06-01',
-      renewals: 3,
-      loyaltyPoints: 600,
-      feedbacks: [],
-    },
-  ]);
+  const [activeTab, setActiveTab] = useState<
+    "profile" | "feedback" | "loyalty"
+  >("profile");
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone.includes(searchQuery)
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.phone.includes(searchQuery)
   );
 
-  const calculateLoyaltyPoints = (customer: Customer) => {
+  useEffect(() => {
+    const getcontactinfo = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/getallusercontactinfo`
+        );
+        setUsers(response.data.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    getcontactinfo();
+  }, []);
+
+  const calculateLoyaltyPoints = (customer: User) => {
     const daysEnrolled = Math.floor(
-      (new Date().getTime() - new Date(customer.joinDate).getTime()) /
+      (new Date().getTime() - new Date(customer.created_at).getTime()) /
         (1000 * 60 * 60 * 24)
     );
     const basePoints = daysEnrolled * 2;
-    const renewalPoints = customer.renewals * 100;
+    const renewalPoints = customer.purchasedPlans.length * 100;
     return basePoints + renewalPoints;
   };
 
@@ -120,45 +103,50 @@ const CustomersPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {filteredCustomers.map((customer) => (
-          <div
-            key={customer.id}
-            className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedCustomer(customer)}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-gray-800">{customer.name}</h3>
-                <p className="text-sm text-gray-500">{customer.email}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                  {customer.plan} Plan
-                </span>
-                <FiAward className="text-green-500" />
-                <span className="text-sm text-gray-600">
-                  {calculateLoyaltyPoints(customer)} Points
-                </span>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <FiLoader className="animate-spin text-4xl text-purple-600" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredUsers.map((user) => (
+            <div
+              key={user.id}
+              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setSelectedUser(user)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-800">{user.name}</h3>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                    {user.salon || "No Salon"}
+                  </span>
+                  <FiAward className="text-green-500" />
+                  <span className="text-sm text-gray-600">
+                    {calculateLoyaltyPoints(user)} Points
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {selectedCustomer && (
+      {selectedUser && (
         <div className="fixed inset-0 bg-slate-400/30 backdrop-blur-md flex items-center justify-center p-4 z-50">
-
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {selectedCustomer.name}
+                  {selectedUser.name}
                 </h2>
-                <p className="text-gray-500">{selectedCustomer.email}</p>
+                <p className="text-gray-500">{selectedUser.email}</p>
               </div>
               <button
-                onClick={() => setSelectedCustomer(null)}
+                onClick={() => setSelectedUser(null)}
                 className="text-gray-500 hover:text-gray-700 p-2"
               >
                 <FiX className="text-2xl" />
@@ -168,37 +156,37 @@ const CustomersPage = () => {
             <div className="flex gap-4 border-b mb-6">
               <button
                 className={`pb-2 px-4 ${
-                  activeTab === 'profile'
-                    ? 'border-b-2 border-purple-600'
-                    : 'text-gray-500'
+                  activeTab === "profile"
+                    ? "border-b-2 border-purple-600"
+                    : "text-gray-500"
                 }`}
-                onClick={() => setActiveTab('profile')}
+                onClick={() => setActiveTab("profile")}
               >
                 Profile
               </button>
               <button
                 className={`pb-2 px-4 ${
-                  activeTab === 'feedback'
-                    ? 'border-b-2 border-purple-600'
-                    : 'text-gray-500'
+                  activeTab === "feedback"
+                    ? "border-b-2 border-purple-600"
+                    : "text-gray-500"
                 }`}
-                onClick={() => setActiveTab('feedback')}
+                onClick={() => setActiveTab("feedback")}
               >
-                Feedback ({selectedCustomer.feedbacks.length})
+                Feedback 0
               </button>
               <button
                 className={`pb-2 px-4 ${
-                  activeTab === 'loyalty'
-                    ? 'border-b-2 border-purple-600'
-                    : 'text-gray-500'
+                  activeTab === "loyalty"
+                    ? "border-b-2 border-purple-600"
+                    : "text-gray-500"
                 }`}
-                onClick={() => setActiveTab('loyalty')}
+                onClick={() => setActiveTab("loyalty")}
               >
                 Loyalty Points
               </button>
             </div>
 
-            {activeTab === 'profile' && (
+            {activeTab === "profile" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 border rounded-lg">
@@ -207,7 +195,9 @@ const CustomersPage = () => {
                       <span>Plan Type</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {selectedCustomer.plan} ({selectedCustomer.planType})
+                      {selectedUser.activePlan.name +
+                        "-" +
+                        selectedUser.activePlan.price}
                     </div>
                   </div>
 
@@ -217,7 +207,7 @@ const CustomersPage = () => {
                       <span>Renewals</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {selectedCustomer.renewals} Successful Renewals
+                      {selectedUser.purchasedPlans.length} Successful Renewals
                     </div>
                   </div>
                 </div>
@@ -227,12 +217,12 @@ const CustomersPage = () => {
                   <div className="flex gap-4">
                     <div className="flex-1 p-4 border rounded-lg">
                       <p className="font-medium">Phone Number</p>
-                      <p className="text-gray-600">{selectedCustomer.phone}</p>
+                      <p className="text-gray-600">{selectedUser.phone}</p>
                     </div>
                     <div className="flex-1 p-4 border rounded-lg">
                       <p className="font-medium">Join Date</p>
                       <p className="text-gray-600">
-                        {new Date(selectedCustomer.joinDate).toLocaleDateString()}
+                        {new Date(selectedUser.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -240,13 +230,13 @@ const CustomersPage = () => {
               </div>
             )}
 
-            {activeTab === 'feedback' && (
+            {activeTab === "feedback" && (
               <div className="space-y-4">
-                {selectedCustomer.feedbacks.length > 0 ? (
-                  selectedCustomer.feedbacks.map((feedback, index) => (
+                {selectedUser.ownerFeedback.length > 0 ? (
+                  selectedUser.ownerFeedback.map((feedback, index) => (
                     <div key={index} className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-gray-600">{feedback.message}</p>
+                        <p className="text-gray-600">{feedback.feedback}</p>
                         <span className="text-sm text-gray-500">
                           {new Date(feedback.date).toLocaleDateString()}
                         </span>
@@ -261,13 +251,13 @@ const CustomersPage = () => {
               </div>
             )}
 
-            {activeTab === 'loyalty' && (
+            {activeTab === "loyalty" && (
               <div className="space-y-6">
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <div className="text-2xl font-bold text-purple-600">
-                        {calculateLoyaltyPoints(selectedCustomer)} Points
+                        {calculateLoyaltyPoints(selectedUser)} Points
                       </div>
                       <div className="text-gray-600">Total Earned Points</div>
                     </div>
@@ -278,15 +268,19 @@ const CustomersPage = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={[
-                          { month: 'Jan', points: 200 },
-                          { month: 'Feb', points: 350 },
-                          { month: 'Mar', points: 500 },
+                          { month: "Jan", points: 200 },
+                          { month: "Feb", points: 350 },
+                          { month: "Mar", points: 500 },
                         ]}
                       >
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="points" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="points"
+                          fill="#4f46e5"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -301,7 +295,7 @@ const CustomersPage = () => {
                         {(
                           Math.floor(
                             (new Date().getTime() -
-                              new Date(selectedCustomer.joinDate).getTime()) /
+                              new Date(selectedUser.created_at).getTime()) /
                               (1000 * 60 * 60 * 24)
                           ) * 2
                         ).toFixed(0)}
@@ -309,7 +303,7 @@ const CustomersPage = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Renewal Bonus Points</span>
-                      <span>{selectedCustomer.renewals * 100}</span>
+                      <span>{selectedUser.purchasedPlans.length * 100}</span>
                     </div>
                   </div>
                 </div>
