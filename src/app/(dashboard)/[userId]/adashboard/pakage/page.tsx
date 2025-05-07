@@ -64,7 +64,7 @@ const PackageManagement = () => {
       setPackages(response.data);
     } catch (err) {
       setError('Failed to fetch packages');
-      console.log(err)
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ const PackageManagement = () => {
       setEditingPackage(null);
     } catch (err) {
       setError(editingPackage ? 'Failed to update package' : 'Failed to create package');
-      console.log(err)
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -126,8 +126,7 @@ const PackageManagement = () => {
       await fetchPackages();
     } catch (err) {
       setError('Failed to delete package');
-      console.log(err)
-
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -166,6 +165,8 @@ const PackageManagement = () => {
 
       {loading ? (
         <div className="text-center text-gray-600">Loading packages...</div>
+      ) : packages.length === 0 ? (
+        <div className="text-center text-gray-600">No packages found</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packages.map(pkg => (
