@@ -52,16 +52,11 @@ const PackageManagement = () => {
   };
 
   const [formData, setFormData] = useState<typeof initialFormState>(initialFormState);
-
-  useEffect(() => {
-    fetchPackages();
-  }, []);
-
   const fetchPackages = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/getall`);
-      setPackages(response.data);
+      setPackages(response.data.data);
     } catch (err) {
       setError('Failed to fetch packages');
       console.error(err);
@@ -69,6 +64,12 @@ const PackageManagement = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    
+    fetchPackages();
+  }, []);
+
+  
 
   const handleFeatureToggle = (featureId: string) => {
     setFormData(prev => ({
@@ -87,13 +88,22 @@ const PackageManagement = () => {
         ...formData,
         branchLimit: formData.isUnlimitedBranches ? 9999 : formData.branchLimit
       };
-
+      
+      // Remove the non-database field from payload
+      const { isUnlimitedBranches, ...cleanPayload } = payload;
+  
       if (editingPackage) {
-        await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/update/${editingPackage.id}`, payload);
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/update/${editingPackage.id}`,
+          cleanPayload
+        );
       } else {
-        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/add`, payload);
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/add`,
+          cleanPayload
+        );
       }
-
+  
       await fetchPackages();
       setShowModal(false);
       setFormData(initialFormState);
