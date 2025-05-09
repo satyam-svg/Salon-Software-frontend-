@@ -62,6 +62,11 @@ interface CommissionData {
   };
 }
 
+interface salaries {
+  amount: number;
+  date: string;
+}
+
 export default function SalespersonProfile() {
   const pathname = usePathname();
   const salesId = pathname.split("/").pop();
@@ -76,6 +81,7 @@ export default function SalespersonProfile() {
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [salaryhistory, setsalaryhistory] = useState<salaries[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,7 +102,7 @@ export default function SalespersonProfile() {
 
         const salesData = await salesRes.json();
         const commissionData = await commissionRes.json();
-
+        setsalaryhistory(salesData.data.salaries);
         setSalesperson(salesData.data);
         setCommissionData(commissionData.data);
       } catch (err) {
@@ -140,7 +146,6 @@ export default function SalespersonProfile() {
 
       if (!response.ok) throw new Error("Salary addition failed");
 
-      // Refresh data
       const [salesRes, commissionRes] = await Promise.all([
         fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/getsalesbyid/${salesId}`
@@ -251,7 +256,7 @@ export default function SalespersonProfile() {
                 </div>
                 <button
                   onClick={() => setShowAddSalary(true)}
-                  className="hidden md:flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700 transition-colors"
+                  className="hidden md:flex items-center gap-2 bg-green-600 text-white px-6 py-3.5 rounded-xl hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
                 >
                   <FiPlus className="w-5 h-5" />
                   Add Salary
@@ -259,7 +264,7 @@ export default function SalespersonProfile() {
               </div>
               <button
                 onClick={() => setShowAddSalary(true)}
-                className="md:hidden mt-4 w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                className="md:hidden mt-4 w-full bg-green-600 text-white py-3.5 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
                 <FiPlus className="w-5 h-5" />
                 Add Salary
@@ -387,6 +392,53 @@ export default function SalespersonProfile() {
           </motion.div>
         </div>
 
+        {/* Salary History Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl p-6 mb-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Salary History</h2>
+            <FiDollarSign className="w-8 h-8 text-green-500" />
+          </div>
+
+          {salaryhistory.length === 0 ? (
+            <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-xl">
+              <FiAlertTriangle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg">No salary records found</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {salaryhistory.map((salary, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <FiCreditCard className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {formatDate(salary.date)}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Salary Disbursement
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-green-600">
+                      ₹{salary.amount.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
         {/* Managed Users Section */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -508,10 +560,10 @@ export default function SalespersonProfile() {
                     </button>
                     <button
                       onClick={handleSalarySubmit}
-                      className="w-full bg-blue-600 text-white py-3.5 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                      className="w-full md:max-w-[200px] bg-blue-600 text-white py-2.5 px-4 rounded-md font-semibold text-base hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 mx-auto"
                     >
-                      <FiCheckCircle className="w-5 h-5" />
-                      Add Salary
+                      <FiCheckCircle className="w-4 h-4 flex-shrink-0" />
+                      <span className="whitespace-nowrap">Add Salary</span>
                     </button>
                   </div>
                 </div>
