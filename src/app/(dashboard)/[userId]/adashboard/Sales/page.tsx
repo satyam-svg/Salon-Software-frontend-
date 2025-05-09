@@ -10,7 +10,9 @@ import {
   FiEdit,
   FiX,
   FiLoader,
+  FiSettings,
 } from "react-icons/fi";
+import { useRouter } from "next/navigation";
 
 const backdropVariants = {
   visible: { opacity: 1 },
@@ -18,7 +20,7 @@ const backdropVariants = {
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
     scale: 1,
@@ -26,26 +28,34 @@ const modalVariants = {
   },
 };
 
+interface User {
+  id: string;
+  // Add more user fields as needed
+  // name?: string;
+  // email?: string;
+  // etc.
+}
+
+interface SalesmanSalary {
+  id: string;
+  amount: number;
+  // Add more salary fields if necessary
+}
+
 interface SalesPerson {
   id: string;
   name: string;
   email: string;
   contact: string;
   commission: number;
-  referralCode: string;
+  referralCode?: string;
   createdAt: string;
-  users: {
-    id: string;
-    PurchasedPlan: {
-      id: string;
-      package: {
-        price: number;
-      };
-    }[];
-  }[];
+  users: User[];
+  salaries: SalesmanSalary[];
 }
 
 export default function MarketingTeam() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("sales");
   const [showAddForm, setShowAddForm] = useState(false);
   const [salesTeam, setSalesTeam] = useState<SalesPerson[]>([]);
@@ -57,6 +67,12 @@ export default function MarketingTeam() {
     contact: "",
     commission: 15,
   });
+  const [formSubmitting, setFormSubmitting] = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchSalesTeam = async () => {
@@ -64,7 +80,9 @@ export default function MarketingTeam() {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/getsalesperson`
         );
+        // console.log(response.data.data);
         setSalesTeam(response.data.data);
+        console.log(salesTeam);
       } catch (err) {
         setError("Failed to fetch sales team data");
       } finally {
@@ -74,14 +92,22 @@ export default function MarketingTeam() {
     fetchSalesTeam();
   }, []);
 
+  useEffect(() => {
+    if (salesTeam.length > 0) {
+      console.log("Fetched Sales Team:", salesTeam);
+    }
+  }, [salesTeam]);
+
   const handleAddSalesperson = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormSubmitting(true);
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/addsales`,
         newSalesperson
       );
       setSalesTeam([...salesTeam, response.data.data]);
+      console.log(salesTeam);
       setShowAddForm(false);
       setNewSalesperson({
         name: "",
@@ -91,23 +117,14 @@ export default function MarketingTeam() {
       });
     } catch (err) {
       setError("Failed to add salesperson");
-    }
-  };
-
-  const handleDeleteSalesperson = async (id: string) => {
-    try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/deletesalesperson/${id}`
-      );
-      setSalesTeam(salesTeam.filter((member) => member.id !== id));
-    } catch (err) {
-      setError("Failed to delete salesperson");
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
   const calculateCommission = (salesPerson: SalesPerson) => {
-    return salesPerson.users.reduce((total, user) => {
-      const userTotal = user.PurchasedPlan.reduce(
+    return (salesPerson.users || []).reduce((total, user) => {
+      const userTotal = user.PurchasedPlan?.reduce(
         (sum, plan) => sum + plan.package.price,
         0
       );
@@ -118,6 +135,8 @@ export default function MarketingTeam() {
   const getConversionRate = (clients: number, leads: number) => {
     return leads === 0 ? 0 : ((clients / leads) * 100).toFixed(1);
   };
+
+  if (!mounted) return null;
 
   if (loading) {
     return (
@@ -152,7 +171,11 @@ export default function MarketingTeam() {
         </div>
 
         {salesTeam.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16 bg-white rounded-2xl shadow-xl"
+          >
             <div className="text-gray-500 mb-4">No salespeople found</div>
             <button
               onClick={() => setShowAddForm(true)}
@@ -160,7 +183,7 @@ export default function MarketingTeam() {
             >
               Add First Salesperson
             </button>
-          </div>
+          </motion.div>
         ) : (
           <>
             <div className="flex gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm">
@@ -188,6 +211,7 @@ export default function MarketingTeam() {
 
             {activeTab === "sales" ? (
               <motion.div
+                key="sales-tab"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-xl overflow-hidden"
@@ -230,11 +254,12 @@ export default function MarketingTeam() {
                               {member.email}
                             </div>
                           </td>
+
                           <td className="px-6 py-4">
                             <div className="flex gap-4 items-center">
                               <div className="text-center">
                                 <div className="font-medium text-blue-600">
-                                  {member.users.length}
+                                  {member.users?.length ?? 0}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Clients
@@ -242,6 +267,7 @@ export default function MarketingTeam() {
                               </div>
                             </div>
                           </td>
+
                           <td className="px-6 py-4">
                             <div className="font-medium text-green-600">
                               ₹{calculateCommission(member).toLocaleString()}
@@ -250,45 +276,45 @@ export default function MarketingTeam() {
                               {member.commission}% Rate
                             </div>
                           </td>
+
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-to-r from-blue-400 to-purple-400"
+                                  className="h-full bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-500"
                                   style={{
                                     width: `${getConversionRate(
-                                      member.users.length,
-                                      member.users.length
+                                      member.users?.length ?? 0,
+                                      member.users?.length ?? 0
                                     )}%`,
                                   }}
                                 />
                               </div>
                               <span className="text-sm font-medium text-gray-700">
                                 {getConversionRate(
-                                  member.users.length,
-                                  member.users.length
+                                  member.users?.length ?? 0,
+                                  member.users?.length ?? 0
                                 )}
                                 %
                               </span>
                             </div>
                           </td>
+
                           <td className="px-6 py-4">
                             <span className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
                               {member.referralCode}
                             </span>
                           </td>
+
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
-                              <button className="p-2 hover:bg-blue-100 rounded-lg text-blue-600 transition-colors">
-                                <FiEdit className="w-5 h-5" />
-                              </button>
                               <button
                                 onClick={() =>
-                                  handleDeleteSalesperson(member.id)
+                                  router.push(`Sales/${member.id}`)
                                 }
-                                className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
+                                className="p-2 hover:bg-blue-100 rounded-lg text-blue-600 transition-colors"
                               >
-                                <FiTrash2 className="w-5 h-5" />
+                                <FiSettings className="w-5 h-5" />
                               </button>
                             </div>
                           </td>
@@ -300,6 +326,7 @@ export default function MarketingTeam() {
               </motion.div>
             ) : (
               <motion.div
+                key="referrals-tab"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-xl overflow-hidden"
@@ -320,20 +347,20 @@ export default function MarketingTeam() {
         <AnimatePresence>
           {showAddForm && (
             <motion.div
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4"
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6"
               initial="hidden"
               animate="visible"
               exit="hidden"
               variants={backdropVariants}
             >
               <motion.div
-                className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+                className="bg-white rounded-2xl shadow-xl w-full max-w-md h-[90vh] flex flex-col"
                 variants={modalVariants}
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-6">
+                <div className="p-6 flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold text-gray-800">
-                      New Salesperson
+                      Add New Salesperson
                     </h2>
                     <button
                       onClick={() => setShowAddForm(false)}
@@ -343,13 +370,24 @@ export default function MarketingTeam() {
                     </button>
                   </div>
 
-                  <form onSubmit={handleAddSalesperson} className="space-y-5">
-                    <div className="space-y-4">
-                      <div className="relative">
+                  <form
+                    onSubmit={handleAddSalesperson}
+                    className="flex-1 flex flex-col overflow-hidden"
+                  >
+                    <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                      {/* Full Name Field */}
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Full Name
+                        </label>
                         <input
                           type="text"
+                          id="name"
                           required
-                          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                           value={newSalesperson.name}
                           onChange={(e) =>
                             setNewSalesperson({
@@ -357,18 +395,22 @@ export default function MarketingTeam() {
                               name: e.target.value,
                             })
                           }
-                          placeholder=" "
                         />
-                        <label className="absolute left-4 top-3 px-1 text-gray-500 transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-sm peer-focus:text-blue-600 -top-2 text-sm bg-white">
-                          Full Name
-                        </label>
                       </div>
 
-                      <div className="relative">
+                      {/* Email Field */}
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Email Address
+                        </label>
                         <input
                           type="email"
+                          id="email"
                           required
-                          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                           value={newSalesperson.email}
                           onChange={(e) =>
                             setNewSalesperson({
@@ -376,18 +418,22 @@ export default function MarketingTeam() {
                               email: e.target.value,
                             })
                           }
-                          placeholder=" "
                         />
-                        <label className="absolute left-4 top-3 px-1 text-gray-500 transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-sm peer-focus:text-blue-600 -top-2 text-sm bg-white">
-                          Email Address
-                        </label>
                       </div>
 
-                      <div className="relative">
+                      {/* Contact Field */}
+                      <div>
+                        <label
+                          htmlFor="contact"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Contact Number
+                        </label>
                         <input
                           type="tel"
+                          id="contact"
                           required
-                          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                           value={newSalesperson.contact}
                           onChange={(e) =>
                             setNewSalesperson({
@@ -395,20 +441,24 @@ export default function MarketingTeam() {
                               contact: e.target.value,
                             })
                           }
-                          placeholder=" "
                         />
-                        <label className="absolute left-4 top-3 px-1 text-gray-500 transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-sm peer-focus:text-blue-600 -top-2 text-sm bg-white">
-                          Contact Number
-                        </label>
                       </div>
 
-                      <div className="relative">
+                      {/* Commission Field */}
+                      <div>
+                        <label
+                          htmlFor="commission"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Commission Rate (%)
+                        </label>
                         <input
                           type="number"
+                          id="commission"
                           min="1"
                           max="50"
                           required
-                          className="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent peer"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                           value={newSalesperson.commission}
                           onChange={(e) =>
                             setNewSalesperson({
@@ -416,21 +466,29 @@ export default function MarketingTeam() {
                               commission: Number(e.target.value),
                             })
                           }
-                          placeholder=" "
                         />
-                        <label className="absolute left-4 top-3 px-1 text-gray-500 transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-3 peer-focus:-top-2 peer-focus:text-sm peer-focus:text-blue-600 -top-2 text-sm bg-white">
-                          Commission Rate (%)
-                        </label>
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3.5 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-sm"
-                    >
-                      <FiUserPlus className="w-5 h-5" />
-                      Create Salesperson
-                    </button>
+                    <div className="pt-4 pb-2 bg-white">
+                      <button
+                        type="submit"
+                        disabled={formSubmitting}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 px-6 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                      >
+                        {formSubmitting ? (
+                          <>
+                            <FiLoader className="animate-spin w-5 h-5" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <FiUserPlus className="w-5 h-5" />
+                            Create Salesperson
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </form>
                 </div>
               </motion.div>
