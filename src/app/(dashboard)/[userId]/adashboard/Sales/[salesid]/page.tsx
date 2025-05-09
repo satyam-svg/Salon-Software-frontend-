@@ -10,10 +10,15 @@ import {
   FiPercent,
   FiUser,
   FiAlertTriangle,
+  FiPlus,
+  FiActivity,
+  FiCreditCard,
+  FiArrowUp,
+  FiArrowDown,
 } from "react-icons/fi";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Loader from "@/Components/LoadingSpinner"; // Assume you have a Loader component
+import Loader from "@/Components/LoadingSpinner";
 
 interface User {
   id: string;
@@ -41,6 +46,20 @@ interface Salesperson {
   }[];
   totalUsers: number;
   totalRevenue: number;
+  profileImage?: string;
+}
+
+interface CommissionData {
+  commissionPercentage: number;
+  totalSales: number;
+  totalCommission: number;
+  totalPaid: number;
+  leftCommission: number;
+  formatted: {
+    totalCommission: string;
+    totalPaid: string;
+    leftCommission: string;
+  };
 }
 
 export default function SalespersonProfile() {
@@ -49,22 +68,37 @@ export default function SalespersonProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [salesperson, setSalesperson] = useState<Salesperson | null>(null);
+  const [commissionData, setCommissionData] = useState<CommissionData | null>(
+    null
+  );
   const [showAddSalary, setShowAddSalary] = useState(false);
   const [newSalary, setNewSalary] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Get initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/sales/getsalesbyid/${salesId}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
-        setSalesperson(data.data);
+        setLoading(true);
+        const [salesRes, commissionRes] = await Promise.all([
+          fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/getsalesbyid/${salesId}`
+          ),
+          fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/commision/${salesId}`
+          ),
+        ]);
+
+        if (!salesRes.ok || !commissionRes.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const salesData = await salesRes.json();
+        const commissionData = await commissionRes.json();
+
+        setSalesperson(salesData.data);
+        setCommissionData(commissionData.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
@@ -80,7 +114,12 @@ export default function SalespersonProfile() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Here you would typically upload to your backend
+        if (salesperson) {
+          setSalesperson({
+            ...salesperson,
+            profileImage: reader.result as string,
+          });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -91,7 +130,7 @@ export default function SalespersonProfile() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/sales/${salesId}/salary`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/addsalry/${salesId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -99,19 +138,27 @@ export default function SalespersonProfile() {
         }
       );
 
-      if (!response.ok) throw new Error("Salary update failed");
+      if (!response.ok) throw new Error("Salary addition failed");
 
-      // Refresh data after successful update
-      const updatedData = await fetch(
-        `http://localhost:5000/api/sales/${salesId}`
-      ).then((res) => res.json());
+      // Refresh data
+      const [salesRes, commissionRes] = await Promise.all([
+        fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/getsalesbyid/${salesId}`
+        ),
+        fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/sales/commision/${salesId}`
+        ),
+      ]);
 
-      setSalesperson(updatedData.data);
+      setSalesperson(await salesRes.json().then((res) => res.data));
+      setCommissionData(await commissionRes.json().then((res) => res.data));
+
       setShowSuccess(true);
       setShowAddSalary(false);
       setTimeout(() => setShowSuccess(false), 3000);
+      setNewSalary("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Salary update failed");
+      setError(err instanceof Error ? err.message : "Salary addition failed");
     }
   };
 
@@ -132,7 +179,7 @@ export default function SalespersonProfile() {
     );
   }
 
-  if (error || !salesperson) {
+  if (error || !salesperson || !commissionData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-xl flex items-center gap-4">
@@ -186,25 +233,44 @@ export default function SalespersonProfile() {
             </div>
 
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {salesperson.name}
-              </h1>
-              <div className="flex flex-wrap gap-4 text-gray-600">
-                <p>{salesperson.email}</p>
-                <p>{salesperson.contact}</p>
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-                  Referral Code: {salesperson.referralCode}
-                </span>
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  Joined: {formatDate(salesperson.createdAt)}
-                </span>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    {salesperson.name}
+                  </h1>
+                  <div className="flex flex-wrap gap-4 text-gray-600">
+                    <p>{salesperson.email}</p>
+                    <p>{salesperson.contact}</p>
+                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                      Referral Code: {salesperson.referralCode}
+                    </span>
+                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                      Joined: {formatDate(salesperson.createdAt)}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddSalary(true)}
+                  className="hidden md:flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  <FiPlus className="w-5 h-5" />
+                  Add Salary
+                </button>
               </div>
+              <button
+                onClick={() => setShowAddSalary(true)}
+                className="md:hidden mt-4 w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <FiPlus className="w-5 h-5" />
+                Add Salary
+              </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Commission Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {/* Total Users */}
           <motion.div
             className="bg-white p-6 rounded-2xl shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -216,13 +282,12 @@ export default function SalespersonProfile() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Users</p>
-                <p className="text-2xl font-bold">
-                  {salesperson.totalUsers || 0}
-                </p>
+                <p className="text-2xl font-bold">{salesperson.totalUsers}</p>
               </div>
             </div>
           </motion.div>
 
+          {/* Commission Rate */}
           <motion.div
             className="bg-white p-6 rounded-2xl shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -239,6 +304,7 @@ export default function SalespersonProfile() {
             </div>
           </motion.div>
 
+          {/* Total Sales */}
           <motion.div
             className="bg-white p-6 rounded-2xl shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -246,17 +312,18 @@ export default function SalespersonProfile() {
           >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-green-100 rounded-lg">
-                <FiDollarSign className="w-6 h-6 text-green-600" />
+                <FiActivity className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Revenue</p>
+                <p className="text-sm text-gray-500">Total Sales</p>
                 <p className="text-2xl font-bold">
-                  ₹{salesperson.totalRevenue?.toLocaleString() || 0}
+                  ₹{commissionData.totalSales.toLocaleString()}
                 </p>
               </div>
             </div>
           </motion.div>
 
+          {/* Total Commission */}
           <motion.div
             className="bg-white p-6 rounded-2xl shadow-xl"
             initial={{ opacity: 0, y: 20 }}
@@ -264,21 +331,63 @@ export default function SalespersonProfile() {
           >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-orange-100 rounded-lg">
-                <FiDollarSign className="w-6 h-6 text-orange-600" />
+                <FiCreditCard className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Latest Salary</p>
+                <p className="text-sm text-gray-500">Total Commission</p>
                 <p className="text-2xl font-bold">
-                  ₹
-                  {salesperson.salaries[0]?.amount.toLocaleString() ||
-                    "Not set"}
+                  {commissionData.formatted.totalCommission}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Paid Commission */}
+          <motion.div
+            className="bg-white p-6 rounded-2xl shadow-xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FiArrowUp className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Paid Commission</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {commissionData.formatted.totalPaid}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Due Commission */}
+          <motion.div
+            className="bg-white p-6 rounded-2xl shadow-xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 rounded-lg">
+                <FiArrowDown className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Due Commission</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    commissionData.leftCommission >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {commissionData.formatted.leftCommission}
                 </p>
               </div>
             </div>
           </motion.div>
         </div>
 
-        {/* Users Section */}
+        {/* Managed Users Section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -303,7 +412,7 @@ export default function SalespersonProfile() {
             </div>
           </div>
 
-          {!salesperson.users.length ? (
+          {salesperson.users.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               <FiUser className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <p className="text-lg">No users found</p>
@@ -348,7 +457,7 @@ export default function SalespersonProfile() {
           )}
         </motion.div>
 
-        {/* Salary Update Modal */}
+        {/* Add Salary Modal */}
         <AnimatePresence>
           {showAddSalary && (
             <motion.div
@@ -365,7 +474,7 @@ export default function SalespersonProfile() {
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    Update Salary
+                    Add New Salary
                   </h2>
                   <button
                     onClick={() => setShowAddSalary(false)}
@@ -378,24 +487,33 @@ export default function SalespersonProfile() {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Monthly Salary (₹)
+                      Salary Amount (₹)
                     </label>
                     <input
                       type="number"
                       value={newSalary}
                       onChange={(e) => setNewSalary(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-lg font-medium"
-                      placeholder="Enter new salary amount"
+                      placeholder="Enter salary amount"
+                      autoFocus
                     />
                   </div>
 
-                  <button
-                    onClick={handleSalarySubmit}
-                    className="w-full bg-blue-600 text-white py-3.5 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <FiCheckCircle className="w-5 h-5" />
-                    Update Salary
-                  </button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setShowAddSalary(false)}
+                      className="w-full bg-gray-100 text-gray-700 py-3.5 px-6 rounded-lg font-semibold text-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSalarySubmit}
+                      className="w-full bg-blue-600 text-white py-3.5 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <FiCheckCircle className="w-5 h-5" />
+                      Add Salary
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -412,7 +530,7 @@ export default function SalespersonProfile() {
               className="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-xl flex items-center gap-3 shadow-lg"
             >
               <FiCheckCircle className="w-6 h-6" />
-              Salary updated successfully!
+              Salary added successfully!
             </motion.div>
           )}
         </AnimatePresence>

@@ -19,26 +19,36 @@ interface SalesmanSalary {
   date: string;
 }
 
+interface FinancialSummary {
+  totalRevenue: number;
+  totalPlans: number;
+  totalSalaries: number;
+}
+
 export default function AccountingBilling() {
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState<{
     purchasedPlans: PurchasedPlan[];
     salesmanSalaries: SalesmanSalary[];
-    totalRevenue: number;
-    totalPlans: number;
+    financialSummary: FinancialSummary;
   }>({
     purchasedPlans: [],
     salesmanSalaries: [],
-    totalRevenue: 0,
-    totalPlans: 0
+    financialSummary: {
+      totalRevenue: 0,
+      totalPlans: 0,
+      totalSalaries: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("/api/accounting");
-        setData(response.data);
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/adminfinance/getadminfinance`
+        );
+        setData(response.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -52,11 +62,26 @@ export default function AccountingBilling() {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
-  if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="animate-pulse text-gray-600">
+          Loading financial data...
+        </div>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -69,27 +94,57 @@ export default function AccountingBilling() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <motion.div whileHover={{ scale: 1.02 }} className="bg-white p-4 rounded-xl shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FiTrendingUp className="text-green-600 text-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Total Revenue Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <FiTrendingUp className="text-green-600 text-2xl" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{formatCurrency(data.totalRevenue)}</div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(data.financialSummary.totalRevenue)}
+                </div>
                 <div className="text-sm text-gray-500">Total Revenue</div>
               </div>
             </div>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.02 }} className="bg-white p-4 rounded-xl shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FiUsers className="text-blue-600 text-xl" />
+          {/* Total Plans Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <FiUsers className="text-blue-600 text-2xl" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{data.totalPlans}</div>
-                <div className="text-sm text-gray-500">Total Plans Bought</div>
+                <div className="text-2xl font-bold">
+                  {data.financialSummary.totalPlans}
+                </div>
+                <div className="text-sm text-gray-500">Total Plans Sold</div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Total Salaries Card */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <FiDollarSign className="text-purple-600 text-2xl" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(data.financialSummary.totalSalaries)}
+                </div>
+                <div className="text-sm text-gray-500">Total Salaries Paid</div>
               </div>
             </div>
           </motion.div>
@@ -99,19 +154,19 @@ export default function AccountingBilling() {
         <Tabs selectedIndex={activeTab} onSelect={setActiveTab}>
           <TabList className="flex gap-4 border-b border-gray-200 mb-6">
             <Tab
-              className={`py-2 px-4 cursor-pointer ${
+              className={`py-2 px-4 cursor-pointer transition-colors ${
                 activeTab === 0
-                  ? "border-b-2 border-green-500 text-green-600"
-                  : "text-gray-500"
+                  ? "border-b-2 border-green-500 text-green-600 font-semibold"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <FiUsers className="inline mr-2" /> Plans Bought
             </Tab>
             <Tab
-              className={`py-2 px-4 cursor-pointer ${
+              className={`py-2 px-4 cursor-pointer transition-colors ${
                 activeTab === 1
-                  ? "border-b-2 border-green-500 text-green-600"
-                  : "text-gray-500"
+                  ? "border-b-2 border-green-500 text-green-600 font-semibold"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <FiDollarSign className="inline mr-2" /> Salesman Salaries
@@ -120,56 +175,104 @@ export default function AccountingBilling() {
 
           {/* Plans Bought Tab */}
           <TabPanel>
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            >
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">User</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Plan</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Price</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Date</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      User
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Plan
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Price
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Purchase Date
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {data.purchasedPlans.map((plan, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">{plan.userName}</td>
                       <td className="px-6 py-4">{plan.planName}</td>
-                      <td className="px-6 py-4">{formatCurrency(plan.planPrice)}</td>
                       <td className="px-6 py-4">
-                        {new Date(plan.buyDate).toLocaleDateString()}
+                        {formatCurrency(plan.planPrice)}
                       </td>
+                      <td className="px-6 py-4">{formatDate(plan.buyDate)}</td>
                     </tr>
                   ))}
+                  {data.purchasedPlans.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        No purchased plans found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
-            </div>
+            </motion.div>
           </TabPanel>
 
           {/* Salesman Salaries Tab */}
           <TabPanel>
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+            >
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Salesman</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Amount</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Date</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Salesman
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Payment Date
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-100">
                   {data.salesmanSalaries.map((salary, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4">{salary.salesmanName}</td>
-                      <td className="px-6 py-4">{formatCurrency(salary.amount)}</td>
                       <td className="px-6 py-4">
-                        {new Date(salary.date).toLocaleDateString()}
+                        {formatCurrency(salary.amount)}
                       </td>
+                      <td className="px-6 py-4">{formatDate(salary.date)}</td>
                     </tr>
                   ))}
+                  {data.salesmanSalaries.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        No salary records found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
-            </div>
+            </motion.div>
           </TabPanel>
         </Tabs>
       </div>
