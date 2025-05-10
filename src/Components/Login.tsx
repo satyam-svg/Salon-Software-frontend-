@@ -10,6 +10,7 @@ import {
   FiBriefcase,
   FiUsers,
   FiX,
+  FiDollarSign,
 } from "react-icons/fi";
 import { useLogin } from "@/context/LoginContext";
 import { useSignup } from "@/context/SignupContext";
@@ -17,11 +18,14 @@ import toast, { Toaster } from "react-hot-toast";
 import { useForgetPassword } from "@/context/ForgetpassContext";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+
 const LoginPopup = () => {
   const router = useRouter();
   const roseGold = "#b76e79";
   const lightRoseGold = "#d4a373";
-  const [activeTab, setActiveTab] = useState<"owner" | "staff">("owner");
+  const [activeTab, setActiveTab] = useState<"owner" | "staff" | "salesman">(
+    "owner"
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [iscross, setiscross] = useState(true);
@@ -36,6 +40,7 @@ const LoginPopup = () => {
   const { loginToggle, setLoginToggle } = useLogin();
   const { setSignupToggle } = useSignup();
   const { setForgetPasswordToggle } = useForgetPassword();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -49,7 +54,6 @@ const LoginPopup = () => {
 
     try {
       if (activeTab === "owner") {
-        // Owner login API call
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/login`,
           {
@@ -65,24 +69,21 @@ const LoginPopup = () => {
         );
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Login failed");
 
-        if (!response.ok) {
-          throw new Error(data.message || "Login failed");
-        }
-
-        // CHANGES START - Token handling for owner
         if (data.token) {
           document.cookie = `authToken=${data.token}; path=/; max-age=${
             60 * 60 * 24 * 7
           }; SameSite=Lax; secure`;
-          // Alternatively using js-cookie:
-          // Cookies.set('authToken', data.token, { expires: 7, path: '/', secure: true, sameSite: 'lax' });
         }
-        // CHANGES END
 
-        console.log("Login successful:", data);
         const userId = data.user.id;
-        router.push(`/${userId}`);
+        if (data.user.email == "Veddikasiingh@gmail.com") {
+          router.push(`/admin/adashboard`);
+        } else {
+          router.push(`/${userId}`);
+        }
+
         toast.success("Welcome back, Luxury Owner!", {
           style: {
             background: "#f5f0f0",
@@ -95,8 +96,7 @@ const LoginPopup = () => {
           },
         });
         setLoginToggle(false);
-      } else {
-        // Staff login
+      } else if (activeTab === "staff") {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/login`,
           {
@@ -112,21 +112,13 @@ const LoginPopup = () => {
         );
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Login failed");
 
-        if (!response.ok) {
-          throw new Error(data.message || "Login failed");
-        }
-
-        // Extract required data from response
         const staffId = data.staff.id;
-
-        // Record attendance
         try {
           const attendanceResponse = await axios.post(
             `${process.env.NEXT_PUBLIC_BACKEND_URL}api/attendence/add`,
-            {
-              staffId: staffId,
-            }
+            { staffId: staffId }
           );
           if (attendanceResponse.data.success) {
             toast.success(attendanceResponse.data.message);
@@ -135,16 +127,9 @@ const LoginPopup = () => {
           }
         } catch (attendanceError) {
           console.error("Attendance error:", attendanceError);
-          toast.error("Error recording attendance - contact manager", {
-            style: {
-              background: "#fdf3f4",
-              color: "#c23b3b",
-              border: "1px solid #f5c6cb",
-            },
-          });
+          toast.error("Error recording attendance - contact manager");
         }
 
-        // Proceed with staff login
         if (data.token && data.expirationTime) {
           const expirationDate = new Date(data.expirationTime);
           const now = new Date();
@@ -152,24 +137,58 @@ const LoginPopup = () => {
             (expirationDate.getTime() - now.getTime()) / 1000
           );
 
-          if (maxAgeSeconds <= 0) {
+          if (maxAgeSeconds <= 0)
             throw new Error("Token expiration time is invalid");
-          }
-
           document.cookie = `staffToken=${data.token}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax; secure;`;
 
           router.push(`/${data.staff.id}/staffpage`);
           setLoginToggle(false);
         }
+      } else if (activeTab === "salesman") {
+        // Salesman Login Logic
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/salesman`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.message || "Salesman login failed");
+
+        if (data.token) {
+          document.cookie = `salesmanToken=${data.token}; path=/; max-age=${
+            60 * 60 * 24 * 7
+          }; SameSite=Lax; secure`;
+        }
+
+        const salesmanId = data.salesman.id;
+        router.push(`/${salesmanId}/salasemen`);
+
+        toast.success("Welcome, Sales Representative!", {
+          style: {
+            background: "#f5f0f0",
+            color: "#b76e79",
+            border: "1px solid #e7d4d6",
+          },
+          iconTheme: {
+            primary: "#b76e79",
+            secondary: "#FFF",
+          },
+        });
+        setLoginToggle(false);
       }
     } catch (error: unknown) {
       console.error("Login error:", error);
-
       let errorMessage = "An error occurred during Login";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      if (error instanceof Error) errorMessage = error.message;
 
       toast.error(errorMessage, {
         style: {
@@ -281,6 +300,21 @@ const LoginPopup = () => {
               />
               Staff
             </button>
+            <button
+              onClick={() => setActiveTab("salesman")}
+              className={`relative px-6 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all z-10 ${
+                activeTab === "salesman"
+                  ? "text-rose-800 bg-white/90 shadow-sm"
+                  : "text-white hover:text-white/90"
+              }`}
+            >
+              <FiDollarSign
+                className={
+                  activeTab === "salesman" ? "text-rose-600" : "text-white"
+                }
+              />
+              Salesman
+            </button>
           </motion.div>
         </div>
 
@@ -325,7 +359,7 @@ const LoginPopup = () => {
                     />
                   </div>
                 </motion.div>
-              ) : (
+              ) : activeTab === "staff" ? (
                 <motion.div
                   key="staff-form"
                   initial={{ opacity: 0, x: -10 }}
@@ -363,6 +397,29 @@ const LoginPopup = () => {
                     />
                   </div>
                 </motion.div>
+              ) : (
+                <motion.div
+                  key="salesman-form"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="space-y-4"
+                >
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-rose-500 transition-colors">
+                      <FiMail className="text-lg" />
+                    </div>
+                    <input
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Salesman Email"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-300 focus:bg-white transition-all border border-gray-200 text-gray-800 placeholder-gray-400"
+                      required
+                    />
+                  </div>
+                </motion.div>
               )}
             </AnimatePresence>
 
@@ -373,15 +430,17 @@ const LoginPopup = () => {
             )}
 
             <div className="flex items-center justify-between pt-1">
-              <a
-                onClick={() => {
-                  setLoginToggle(false);
-                  setForgetPasswordToggle(true);
-                }}
-                className="text-rose-600 hover:text-rose-700 text-sm font-medium cursor-pointer"
-              >
-                Forgot {activeTab === "owner" ? "Password?" : "Code?"}
-              </a>
+              {activeTab !== "salesman" && (
+                <a
+                  onClick={() => {
+                    setLoginToggle(false);
+                    setForgetPasswordToggle(true);
+                  }}
+                  className="text-rose-600 hover:text-rose-700 text-sm font-medium cursor-pointer"
+                >
+                  Forgot {activeTab === "owner" ? "Password?" : "Code?"}
+                </a>
+              )}
             </div>
 
             <motion.button
@@ -405,7 +464,9 @@ const LoginPopup = () => {
                   ? "Authenticating..."
                   : activeTab === "owner"
                   ? "Owner Access"
-                  : "Staff Portal"}
+                  : activeTab === "staff"
+                  ? "Staff Portal"
+                  : "Salesman Login"}
               </span>
               {!isSubmitting && <FiChevronRight className="text-white" />}
             </motion.button>
@@ -429,7 +490,7 @@ const LoginPopup = () => {
                   Join our elite circle
                 </button>
               </p>
-            ) : (
+            ) : activeTab === "staff" ? (
               <p>
                 Need staff credentials?{" "}
                 <a
@@ -437,6 +498,16 @@ const LoginPopup = () => {
                   className="text-rose-600 hover:text-rose-700 font-medium"
                 >
                   Contact management
+                </a>
+              </p>
+            ) : (
+              <p>
+                Need salesman account?{" "}
+                <a
+                  href="#"
+                  className="text-rose-600 hover:text-rose-700 font-medium"
+                >
+                  Contact administration
                 </a>
               </p>
             )}

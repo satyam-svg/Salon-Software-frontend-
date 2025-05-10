@@ -33,7 +33,7 @@ interface Feedback {
 
 interface Branch {
   branch_name: string;
-  feedback: Feedback[];
+  feedbacks: Feedback[];
 }
 
 const FeedbackManagementPage = () => {
@@ -89,7 +89,7 @@ const FeedbackManagementPage = () => {
       setBranches((prev) =>
         prev.map((branch) => ({
           ...branch,
-          feedback: branch.feedback.map((feedback) =>
+          feedback: branch.feedbacks.map((feedback) =>
             feedback.id === feedbackId
               ? { ...feedback, feature: !currentFeatureStatus }
               : feedback
@@ -105,7 +105,7 @@ const FeedbackManagementPage = () => {
   const selectedBranchData = branches.find(
     (b) => b.branch_name === selectedBranch
   );
-  const branchFeedbacks = selectedBranchData?.feedback || [];
+  const branchFeedbacks = selectedBranchData?.feedbacks || [];
 
   // Apply filters
   const filteredFeedbacks = branchFeedbacks.filter(
@@ -199,7 +199,7 @@ const FeedbackManagementPage = () => {
       </AnimatePresence>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"
           whileHover={{ y: -2 }}
@@ -230,7 +230,7 @@ const FeedbackManagementPage = () => {
           </div>
         </motion.div>
 
-        <motion.div
+        {/* <motion.div
           className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"
           whileHover={{ y: -2 }}
         >
@@ -243,7 +243,7 @@ const FeedbackManagementPage = () => {
               <p className="text-2xl font-bold">{featuredCount}</p>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       {/* Feedback Table */}
@@ -261,9 +261,9 @@ const FeedbackManagementPage = () => {
                 <th className="p-4 text-left">Date</th>
                 <th className="p-4 text-left">Rating</th>
                 <th className="p-4 text-left">Review</th>
-                <th className="p-4 text-left">Service</th>
+
                 <th className="p-4 text-left">Staff</th>
-                <th className="p-4 text-left">Featured</th>
+                {/* <th className="p-4 text-left">Featured</th> */}
               </tr>
             </thead>
             <tbody>
@@ -323,13 +323,9 @@ const FeedbackManagementPage = () => {
                       </AnimatePresence>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                      {feedback.service}
-                    </span>
-                  </td>
+
                   <td className="p-4">{feedback.staff.fullname}</td>
-                  <td className="p-4">
+                  {/* <td className="p-4">
                     <input
                       type="checkbox"
                       checked={feedback.feature}
@@ -338,7 +334,7 @@ const FeedbackManagementPage = () => {
                       }
                       className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
                     />
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>

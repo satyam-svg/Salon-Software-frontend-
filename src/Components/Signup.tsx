@@ -223,7 +223,11 @@ const Signup = () => {
       });
       setSignupToggle(false);
       const userId = responseData.user.id;
-      router.push(`/${userId}`);
+      if (responseData.user.email == "Veddikasiingh@gmail.com") {
+        router.push(`/admin/adashboard`);
+      } else {
+        router.push(`/${userId}`);
+      }
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
