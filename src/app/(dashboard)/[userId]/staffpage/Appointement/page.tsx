@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -53,6 +54,8 @@ interface Appointment {
 interface Service {
   id: string;
   service_name: string;
+  service_price: number;
+  time: string;
 }
 
 interface Client {
@@ -126,7 +129,6 @@ const StaffAppointmentsPage = () => {
   }, [hasMounted]);
 
   const handleStatusUpdate = async (a: Appointment, status: string) => {
-    alert(`${window.location.origin}/${a.id}-a`)
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/update/${a.id}`,
@@ -134,30 +136,32 @@ const StaffAppointmentsPage = () => {
       );
       fetchAllData();
       toast.success(`Appointment ${status}`);
-      if(status == "confirmed"){
-           await axios.post(
+      
+      if (status === "confirmed") {
+        await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/feedbackemail`,
           {
-            to:a.client.email,
-        userName:a.client.client_name,
-        salonName:staffData?.branch.salon_name,
-        feedbackLink:`${window.location.origin}/${a.id}-a`
-          })
-      }
-      else {
-          await axios.post(
+            to: a.client.email,
+            userName: a.client.client_name,
+            salonName: "your salon",
+            feedbackLink: `${window.location.origin}/${a.id}-a`
+          }
+        );
+      } else if (status === "cancelled") {
+        await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/cancelappointment`,
           {
-            to:a.client.email,
-        customerName:a.client.client_name,
-        appointmentDate:a.date,
-        salonName:staffData?.branch.salon_name,
-        branchName:staffData?.branch.branch_name,
-        staffName:staffData?.fullname,
-        serviceName:a.service.service_name,
-        servicePrice:a.service.service_price,
-        totalAmount:a.service.service_price
-          })
+            to: a.client.email,
+            customerName: a.client.client_name,
+            appointmentDate: a.date,
+            salonName: "your Salon",
+            branchName: staffData?.branch.branch_name,
+            staffName: staffData?.fullname,
+            serviceName: a.service.service_name,
+            servicePrice: a.service.service_price,
+            totalAmount: a.service.service_price
+          }
+        );
       }
     } catch (error) {
       toast.error("Update failed");
@@ -167,17 +171,34 @@ const StaffAppointmentsPage = () => {
 
   const handleCreateAppointment = async () => {
     try {
-      if (!newAppointment?.client?.id || !newAppointment?.service?.id) {
-        toast.error("Please select client and service");
+      if(!staffData){
+        toast.error("required staff data");
+        return;
+      }
+
+      if (
+        !newAppointment?.client?.id ||
+        !newAppointment?.service?.id ||
+        !newAppointment.date ||
+        !newAppointment.time
+      ) {
+        alert("Please fill all required fields");
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      // Validate date format
+      if (isNaN(Date.parse(newAppointment.date))) {
+        toast.error("Invalid date format");
         return;
       }
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/create`,
         {
-          salon_id: staffData?.user.salonId,
-          branch_id: staffData?.branch.id,
-          staff_id: staffData?.id,
+          salon_id: staffData.user.salonId,
+          branch_id: staffData.branch.id,
+          staff_id: staffData.id,
           service_id: newAppointment.service.id,
           client_id: newAppointment.client.id,
           date: newAppointment.date,
@@ -193,9 +214,9 @@ const StaffAppointmentsPage = () => {
             to: newAppointment.client.email,
             customerName: newAppointment.client.client_name,
             appointmentDate: newAppointment.date,
-            salonName: staffData?.branch.salon_name,
-            branchName: staffData?.branch.branch_name,
-            staffName: staffData?.fullname,
+            salonName: "Your salon",
+            branchName: staffData.branch.branch_name,
+            staffName: staffData.fullname,
             services: [
               {
                 name: newAppointment.service.service_name,
@@ -223,7 +244,7 @@ const StaffAppointmentsPage = () => {
     }
   };
 
-  const pendingAppointments =
+   const pendingAppointments =
     staffData?.appointments.filter((a) => a.status === "pending") || [];
   const confirmedAppointments =
     staffData?.appointments.filter((a) => a.status === "confirmed") || [];
@@ -252,7 +273,7 @@ const StaffAppointmentsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8">
-      <div className="flex justify-between items-center">
+           <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
             Appointment Management
@@ -484,6 +505,7 @@ const StaffAppointmentsPage = () => {
                 Schedule New Appointment
               </h2>
               <div className="space-y-4">
+                {/* Client Select */}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">
                     Select Client
@@ -515,6 +537,7 @@ const StaffAppointmentsPage = () => {
                   </select>
                 </div>
 
+                {/* Service Select */}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">
                     Select Service
@@ -528,18 +551,12 @@ const StaffAppointmentsPage = () => {
                       );
                       setNewAppointment((prev) => ({
                         ...prev,
-                        service: selectedService
-                          ? {
-                              ...selectedService,
-                              time: "",
-                              service_price: 0,
-                            }
-                          : {
-                              id: "",
-                              service_name: "",
-                              time: "",
-                              service_price: 0,
-                            },
+                        service: selectedService || {
+                          id: "",
+                          service_name: "",
+                          time: "",
+                          service_price: 0,
+                        },
                       }));
                     }}
                     required
@@ -547,12 +564,13 @@ const StaffAppointmentsPage = () => {
                     <option value="">Choose Service</option>
                     {staffData?.branch.service.map((service) => (
                       <option key={service.id} value={service.id}>
-                        {service.service_name}
+                        {service.service_name} (₹{service.service_price})
                       </option>
                     ))}
                   </select>
                 </div>
 
+                {/* Date Input */}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">
                     Select Date
@@ -571,6 +589,7 @@ const StaffAppointmentsPage = () => {
                   />
                 </div>
 
+                {/* Time Input */}
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">
                     Select Time
@@ -589,6 +608,7 @@ const StaffAppointmentsPage = () => {
                   />
                 </div>
 
+                {/* Action Buttons */}
                 <div className="flex gap-2 justify-end pt-4">
                   <button
                     onClick={() => setShowModal(false)}
@@ -598,7 +618,12 @@ const StaffAppointmentsPage = () => {
                   </button>
                   <button
                     onClick={handleCreateAppointment}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    disabled={!staffData?.branch}
+                    className={`px-4 py-2 text-white rounded-lg ${
+                      staffData?.branch
+                        ? "bg-indigo-600 hover:bg-indigo-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
                   >
                     Schedule Appointment
                   </button>

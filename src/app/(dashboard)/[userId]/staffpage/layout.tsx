@@ -128,8 +128,6 @@ export default function DashboardLayout({
                     icon: <FiUsers className="text-2xl" />,
                     label: "Clients Management",
                     href: `/${userid}/staffpage/Clients`,
-                    description:
-                      "View client profiles and manage relationships",
                   },
                 ].map((item) => (
                   <motion.div
