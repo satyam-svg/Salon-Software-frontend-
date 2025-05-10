@@ -7,7 +7,6 @@ import {
   FiUser,
   FiMail,
   FiPhone,
-  FiCheckSquare,
   FiFilter,
   FiChevronDown,
 } from "react-icons/fi";
@@ -76,31 +75,6 @@ const FeedbackManagementPage = () => {
     fetchBranches();
   }, [fetchBranches]);
 
-  const toggleFeature = async (
-    feedbackId: string,
-    currentFeatureStatus: boolean
-  ) => {
-    try {
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/feedback/updatefeatur/${feedbackId}`,
-        { isFeatured: !currentFeatureStatus }
-      );
-
-      setBranches((prev) =>
-        prev.map((branch) => ({
-          ...branch,
-          feedback: branch.feedbacks.map((feedback) =>
-            feedback.id === feedbackId
-              ? { ...feedback, feature: !currentFeatureStatus }
-              : feedback
-          ),
-        }))
-      );
-    } catch (error) {
-      console.error("Error updating feature status:", error);
-    }
-  };
-
   // Get selected branch data
   const selectedBranchData = branches.find(
     (b) => b.branch_name === selectedBranch
@@ -119,7 +93,6 @@ const FeedbackManagementPage = () => {
     totalFeedbacks > 0
       ? filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks
       : 0;
-  const featuredCount = filteredFeedbacks.filter((f) => f.feature).length;
 
   // Rating Distribution
   const ratingDistribution = [0, 0, 0, 0, 0];

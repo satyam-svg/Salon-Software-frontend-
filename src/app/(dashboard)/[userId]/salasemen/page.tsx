@@ -10,7 +10,6 @@ import {
   FiPercent,
   FiUser,
   FiAlertTriangle,
-  FiPlus,
   FiActivity,
   FiCreditCard,
   FiArrowUp,

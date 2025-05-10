@@ -16,7 +16,7 @@ import "react-tabs/style/react-tabs.css";
 export default function MarketingCampaigns() {
   const [activeTab, setActiveTab] = useState(0);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [, setShowReferralModal] = useState(false);
 
   // Dummy Data
   const campaigns = [
@@ -67,23 +67,6 @@ export default function MarketingCampaigns() {
       referred: "david@example.com",
       date: "2024-04-10",
       reward: "eligible",
-    },
-  ];
-
-  const customers = [
-    {
-      id: 1,
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      phone: "+1 234 567 890",
-      birthday: "1990-04-20",
-    },
-    {
-      id: 2,
-      name: "Sarah Miller",
-      email: "sarah@example.com",
-      phone: "+1 345 678 901",
-      birthday: "1992-08-15",
     },
   ];
 
@@ -413,7 +396,7 @@ export default function MarketingCampaigns() {
                       <h3 className="font-medium">Flash Sale Alert!</h3>
                       <p className="text-gray-600">Sent to 1,234 customers</p>
                       <p className="text-sm text-gray-500 mt-2">
-                        "Get 30% off this weekend only! Use code FLASH30"
+                        Get 30% off this weekend only! Use code FLASH30
                       </p>
                     </div>
                     <div className="text-sm text-gray-500">2024-04-15</div>
