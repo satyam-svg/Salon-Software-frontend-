@@ -229,13 +229,7 @@ const StaffAppointmentsPage = () => {
 
         toast.success("Appointment created!");
         setShowModal(false);
-        setNewAppointment({
-          client: { id: "", client_name: "", email: "" },
-          service: { id: "", service_name: "", time: "", service_price: 0 },
-          time: "",
-          status: "",
-          date: "",
-        });
+
         fetchAllData();
       }
     } catch (error) {
