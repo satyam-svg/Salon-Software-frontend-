@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 import { parse } from 'cookie'
 
-const SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET!)
+const SECRET_KEY = new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET!)
 
 
 
