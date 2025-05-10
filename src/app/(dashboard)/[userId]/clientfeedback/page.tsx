@@ -1,17 +1,13 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion} from "framer-motion";
 import { useState, useEffect } from "react";
 import { FiStar, FiUser, FiMapPin, FiScissors, FiSend } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-interface Feedback {
-  id: number;
-  clientName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
+
 
 interface AppointmentData {
   appointmentDetails: {
@@ -60,7 +56,7 @@ interface AppointmentData {
     };
     image: string;
   };
-  usedProducts: any[];
+
 }
 
 export default function FeedbackPage() {
@@ -69,7 +65,6 @@ export default function FeedbackPage() {
     useState<AppointmentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [newFeedback, setNewFeedback] = useState({
     rating: 0,
     comment: "",
@@ -84,7 +79,7 @@ export default function FeedbackPage() {
     const fetchAppointmentData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/feedback/getappointment/${appointmentId}`
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/feedback/getappointment/${appointmentId}`
         );
         if (!response.ok)
           throw new Error("Failed to fetch appointment details");
@@ -100,24 +95,23 @@ export default function FeedbackPage() {
     fetchAppointmentData();
   }, [appointmentId]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (newFeedback.rating === 0 || !newFeedback.comment.trim()) {
       alert("Please add rating and comment");
       return;
     }
 
+
     if (!appointmentData) return;
 
-    const newEntry: Feedback = {
-      id: feedbackList.length + 1,
-      clientName: appointmentData.clientDetails.name,
-      rating: newFeedback.rating,
-      comment: newFeedback.comment,
-      date: new Date().toISOString().split("T")[0],
-    };
-
-    setFeedbackList([newEntry, ...feedbackList]);
-    setNewFeedback({ rating: 0, comment: "" });
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/feedback/addfeedback`,{
+        client_id:appointmentData.clientDetails.id,
+        branch_id:appointmentData.branchDetails.id,
+        staff_id:appointmentData.staffDetails.id,
+        rating:newFeedback.rating,
+        review:newFeedback.comment
+    })
+    toast.success(response.data.message || "feedback added")
   };
 
   if (loading) {
@@ -299,39 +293,6 @@ export default function FeedbackPage() {
               </motion.button>
             </div>
           </motion.div>
-
-          {/* Feedback List */}
-          <div className="space-y-6">
-            <AnimatePresence>
-              {feedbackList.map((feedback) => (
-                <motion.div
-                  key={feedback.id}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  className="bg-white p-6 rounded-2xl shadow-lg"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-purple-100 rounded-xl">
-                      <FiUser className="text-2xl text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">{feedback.clientName}</h3>
-                        <div className="flex items-center gap-1 text-yellow-400">
-                          {[...Array(feedback.rating)].map((_, i) => (
-                            <FiStar key={i} />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mb-2">{feedback.comment}</p>
-                      <p className="text-sm text-gray-400">{feedback.date}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
         </div>
       </motion.div>
     </div>
