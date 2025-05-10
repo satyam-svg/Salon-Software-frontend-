@@ -24,6 +24,7 @@ interface StaffData {
     id: string;
     branch_name: string;
     service: Service[];
+    salon_name: string;
   };
   appointments: Appointment[];
   user: {
@@ -36,6 +37,7 @@ interface Appointment {
   client: {
     id: string;
     client_name: string;
+    email: string;
   };
   service: {
     id: string;
@@ -56,6 +58,7 @@ interface Service {
 interface Client {
   id: string;
   client_name: string;
+  email: string;
 }
 
 interface DecodedToken {
@@ -64,11 +67,12 @@ interface DecodedToken {
 
 const StaffAppointmentsPage = () => {
   const [showModal, setShowModal] = useState(false);
-  const [newAppointment, setNewAppointment] = useState({
-    client_id: "",
-    service_id: "",
-    date: "",
+  const [newAppointment, setNewAppointment] = useState<Partial<Appointment>>({
+    client: { id: "", client_name: "", email: "" },
+    service: { id: "", service_name: "", time: "", service_price: 0 },
     time: "",
+    status: "",
+    date: "",
   });
   const [loading, setLoading] = useState(true);
   const [staffData, setStaffData] = useState<StaffData | null>(null);
@@ -137,7 +141,7 @@ const StaffAppointmentsPage = () => {
 
   const handleCreateAppointment = async () => {
     try {
-      if (!newAppointment.client_id || !newAppointment.service_id) {
+      if (!newAppointment?.client?.id || !newAppointment?.service?.id) {
         toast.error("Please select client and service");
         return;
       }
@@ -148,8 +152,8 @@ const StaffAppointmentsPage = () => {
           salon_id: staffData?.user.salonId,
           branch_id: staffData?.branch.id,
           staff_id: staffData?.id,
-          service_id: newAppointment.service_id,
-          client_id: newAppointment.client_id,
+          service_id: newAppointment.service.id,
+          client_id: newAppointment.client.id,
           date: newAppointment.date,
           time: newAppointment.time,
           status: "pending",
@@ -157,13 +161,33 @@ const StaffAppointmentsPage = () => {
       );
 
       if (response.status === 201) {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/appointmentemail`,
+          {
+            to: newAppointment.client.email,
+            customerName: newAppointment.client.client_name,
+            appointmentDate: newAppointment.date,
+            salonName: staffData?.branch.salon_name,
+            branchName: staffData?.branch.branch_name,
+            staffName: staffData?.fullname,
+            services: [
+              {
+                name: newAppointment.service.service_name,
+                price: 400,
+              },
+            ],
+            totalAmount: 400,
+          }
+        );
+
         toast.success("Appointment created!");
         setShowModal(false);
         setNewAppointment({
-          client_id: "",
-          service_id: "",
-          date: "",
+          client: { id: "", client_name: "", email: "" },
+          service: { id: "", service_name: "", time: "", service_price: 0 },
           time: "",
+          status: "",
+          date: "",
         });
         fetchAllData();
       }
@@ -263,7 +287,7 @@ const StaffAppointmentsPage = () => {
               <p className="text-2xl font-bold">
                 $
                 {staffData?.appointments
-                  ?.filter((a) => a.status === "confirmed") // First filter confirmed appointments
+                  ?.filter((a) => a.status === "confirmed")
                   .reduce((sum, a) => sum + (a.service?.service_price || 0), 0)
                   .toFixed(2)}
               </p>
@@ -440,13 +464,20 @@ const StaffAppointmentsPage = () => {
                   </label>
                   <select
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={newAppointment.client_id}
-                    onChange={(e) =>
+                    value={newAppointment.client?.id}
+                    onChange={(e) => {
+                      const selectedClient = clients.find(
+                        (c) => c.id === e.target.value
+                      );
                       setNewAppointment((prev) => ({
                         ...prev,
-                        client_id: e.target.value,
-                      }))
-                    }
+                        client: selectedClient || {
+                          id: "",
+                          client_name: "",
+                          email: "",
+                        },
+                      }));
+                    }}
                     required
                   >
                     <option value="">Choose Client</option>
@@ -464,13 +495,27 @@ const StaffAppointmentsPage = () => {
                   </label>
                   <select
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={newAppointment.service_id}
-                    onChange={(e) =>
+                    value={newAppointment.service?.id}
+                    onChange={(e) => {
+                      const selectedService = staffData?.branch.service.find(
+                        (s) => s.id === e.target.value
+                      );
                       setNewAppointment((prev) => ({
                         ...prev,
-                        service_id: e.target.value,
-                      }))
-                    }
+                        service: selectedService
+                          ? {
+                              ...selectedService,
+                              time: "",
+                              service_price: 0,
+                            }
+                          : {
+                              id: "",
+                              service_name: "",
+                              time: "",
+                              service_price: 0,
+                            },
+                      }));
+                    }}
                     required
                   >
                     <option value="">Choose Service</option>
