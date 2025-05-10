@@ -125,14 +125,40 @@ const StaffAppointmentsPage = () => {
     }
   }, [hasMounted]);
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = async (a: Appointment, status: string) => {
+    alert(`${window.location.origin}/${a.id}-a`)
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/update/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/update/${a.id}`,
         { status }
       );
       fetchAllData();
       toast.success(`Appointment ${status}`);
+      if(status == "confirmed"){
+           await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/feedbackemail`,
+          {
+            to:a.client.email,
+        userName:a.client.client_name,
+        salonName:staffData?.branch.salon_name,
+        feedbackLink:`${window.location.origin}/${a.id}-a`
+          })
+      }
+      else {
+          await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/cancelappointment`,
+          {
+            to:a.client.email,
+        customerName:a.client.client_name,
+        appointmentDate:a.date,
+        salonName:staffData?.branch.salon_name,
+        branchName:staffData?.branch.branch_name,
+        staffName:staffData?.fullname,
+        serviceName:a.service.service_name,
+        servicePrice:a.service.service_price,
+        totalAmount:a.service.service_price
+          })
+      }
     } catch (error) {
       toast.error("Update failed");
       console.error(error);
@@ -173,10 +199,10 @@ const StaffAppointmentsPage = () => {
             services: [
               {
                 name: newAppointment.service.service_name,
-                price: 400,
+                price: newAppointment.service.service_price,
               },
             ],
-            totalAmount: 400,
+            totalAmount: newAppointment.service.service_price,
           }
         );
 
@@ -351,7 +377,7 @@ const StaffAppointmentsPage = () => {
                     <div className="flex gap-2">
                       <button
                         onClick={() =>
-                          handleStatusUpdate(appointment.id, "confirmed")
+                          handleStatusUpdate(appointment, "confirmed")
                         }
                         className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors"
                       >
@@ -360,7 +386,7 @@ const StaffAppointmentsPage = () => {
                       </button>
                       <button
                         onClick={() =>
-                          handleStatusUpdate(appointment.id, "cancelled")
+                          handleStatusUpdate(appointment, "cancelled")
                         }
                         className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors"
                       >
