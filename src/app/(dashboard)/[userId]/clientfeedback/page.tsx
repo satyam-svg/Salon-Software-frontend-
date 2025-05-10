@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiStar, FiUser, FiMapPin, FiScissors, FiSend } from "react-icons/fi";
+import { usePathname } from "next/navigation";
 
 interface Feedback {
   id: number;
@@ -12,44 +13,92 @@ interface Feedback {
   date: string;
 }
 
-interface SalonDetails {
-  salonName: string;
-  branchName: string;
-  staffName: string;
-  address: string;
-  image: string;
+interface AppointmentData {
+  appointmentDetails: {
+    id: string;
+    date: string;
+    time: string;
+    status: string;
+  };
+  clientDetails: {
+    id: string;
+    name: string;
+    email: string;
+    contact: string;
+    createdAt: string;
+  };
+  staffDetails: {
+    id: string;
+    name: string;
+    email: string;
+    contact: string;
+    branch: string;
+    profileImage: string;
+  };
+  serviceDetails: {
+    id: string;
+    name: string;
+    price: number;
+    duration: number;
+  };
+  branchDetails: {
+    id: string;
+    name: string;
+    location: string;
+    openingHours: string;
+    contact: {
+      email: string;
+      phone: string;
+    };
+  };
+  salonDetails: {
+    id: string;
+    name: string;
+    contact: {
+      email: string;
+      phone: string;
+    };
+    image: string;
+  };
+  usedProducts: any[];
 }
 
 export default function FeedbackPage() {
-  const [feedbackList, setFeedbackList] = useState<Feedback[]>([
-    {
-      id: 1,
-      clientName: "Rahul Sharma",
-      rating: 5,
-      comment: "Best salon experience ever! The stylists are true artists.",
-      date: "2023-08-15",
-    },
-    {
-      id: 2,
-      clientName: "Priya Singh",
-      rating: 4,
-      comment: "Loved the ambiance and professional service.",
-      date: "2023-08-14",
-    },
-  ]);
-
+  const pathname = usePathname();
+  const [appointmentData, setAppointmentData] =
+    useState<AppointmentData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
   const [newFeedback, setNewFeedback] = useState({
     rating: 0,
     comment: "",
   });
 
-  const salonDetails: SalonDetails = {
-    salonName: "Glamour Studio",
-    branchName: "South Delhi Branch",
-    staffName: "Anjali Kapoor",
-    address: "12th Floor, GK Tower, Greater Kailash, New Delhi",
-    image: "https://picsum.photos/600/400?random=1",
-  };
+  // Extract appointment ID from URL path
+  const appointmentId = pathname?.split("/")[1]?.split("-a")[0];
+
+  useEffect(() => {
+    if (!appointmentId) return;
+
+    const fetchAppointmentData = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/feedback/getappointment/${appointmentId}`
+        );
+        if (!response.ok)
+          throw new Error("Failed to fetch appointment details");
+        const data = await response.json();
+        setAppointmentData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointmentData();
+  }, [appointmentId]);
 
   const handleSubmit = () => {
     if (newFeedback.rating === 0 || !newFeedback.comment.trim()) {
@@ -57,9 +106,11 @@ export default function FeedbackPage() {
       return;
     }
 
+    if (!appointmentData) return;
+
     const newEntry: Feedback = {
       id: feedbackList.length + 1,
-      clientName: "Current User", // Replace with actual user name
+      clientName: appointmentData.clientDetails.name,
       rating: newFeedback.rating,
       comment: newFeedback.comment,
       date: new Date().toISOString().split("T")[0],
@@ -69,6 +120,30 @@ export default function FeedbackPage() {
     setNewFeedback({ rating: 0, comment: "" });
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-red-500 text-lg">{error}</div>
+      </div>
+    );
+  }
+
+  if (!appointmentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">No appointment data found</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
@@ -76,22 +151,24 @@ export default function FeedbackPage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto"
       >
-        {/* Salon Details Card */}
+        {/* Appointment Details Card */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="relative h-64 lg:h-full rounded-2xl overflow-hidden"
           >
             <img
-              src={salonDetails.image}
+              src={appointmentData.salonDetails.image}
               alt="Salon"
               className="w-full h-full object-cover"
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black p-4">
               <h1 className="text-2xl font-bold text-white">
-                {salonDetails.salonName}
+                {appointmentData.salonDetails.name}
               </h1>
-              <p className="text-purple-200">{salonDetails.branchName}</p>
+              <p className="text-purple-200">
+                {appointmentData.branchDetails.name}
+              </p>
             </div>
           </motion.div>
 
@@ -102,7 +179,9 @@ export default function FeedbackPage() {
               </div>
               <div>
                 <h3 className="text-sm text-gray-500">Address</h3>
-                <p className="font-medium">{salonDetails.address}</p>
+                <p className="font-medium">
+                  {appointmentData.branchDetails.location}
+                </p>
               </div>
             </div>
 
@@ -112,7 +191,12 @@ export default function FeedbackPage() {
               </div>
               <div>
                 <h3 className="text-sm text-gray-500">Your Stylist</h3>
-                <p className="font-medium">{salonDetails.staffName}</p>
+                <p className="font-medium">
+                  {appointmentData.staffDetails.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {appointmentData.staffDetails.contact}
+                </p>
               </div>
             </div>
 
@@ -121,15 +205,43 @@ export default function FeedbackPage() {
                 <FiScissors className="text-2xl text-purple-600" />
               </div>
               <div>
-                <h3 className="text-sm text-gray-500">Recent Service</h3>
-                <p className="font-medium">Hair Spa & Styling</p>
+                <h3 className="text-sm text-gray-500">Service Details</h3>
+                <p className="font-medium">
+                  {appointmentData.serviceDetails.name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {appointmentData.serviceDetails.duration} mins • ₹
+                  {appointmentData.serviceDetails.price}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <FiUser className="text-2xl text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-sm text-gray-500">Appointment Date</h3>
+                <p className="font-medium">
+                  {new Date(
+                    appointmentData.appointmentDetails.date
+                  ).toLocaleDateString("en-IN", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {appointmentData.appointmentDetails.time}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Feedback Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
           {/* Feedback Form */}
           <motion.div
             whileHover={{ scale: 1.02 }}

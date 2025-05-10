@@ -21,6 +21,8 @@ const DashboardPage = () => {
     const l = userId.length;
     if (userId[l - 1] == "u" && userId[l - 2] == "-") {
       router.push(`/${userId}/clients`);
+    } else if (userId[l - 1] == "a" && userId[l - 2] == "-") {
+      router.push(`/${userId}/clientfeedback`);
     }
   }, [userId]);
   useEffect(() => {

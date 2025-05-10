@@ -46,8 +46,9 @@ const StellarNavbar: FC = () => {
   const dimRoseGold = "#f8e9eb";
   const { loginToggle, setLoginToggle } = useLogin();
   const { forgetPasswordToggle } = useForgetPassword();
-  const isStaffPage = pathname.includes("/staffpage");
+
   const isClientPage = pathname.includes("/clients");
+  const isFeedbackpage = pathname.includes("/clientfeedback");
 
   const length = pathname.length;
 
@@ -254,7 +255,8 @@ const StellarNavbar: FC = () => {
       }
     }
   };
-  if (isClientPage) return null;
+  if (isClientPage || isFeedbackpage) return null;
+
   return (
     <>
       <style jsx global>{`
