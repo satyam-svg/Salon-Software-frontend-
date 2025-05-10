@@ -126,7 +126,7 @@ const StaffAppointmentsPage = () => {
   }, [hasMounted]);
 
   const handleStatusUpdate = async (a: Appointment, status: string) => {
-    alert(`${window.location.origin}/${a.id}-a`)
+    alert(`${window.location.origin}/${a.id}-a`);
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/update/${a.id}`,
@@ -134,30 +134,31 @@ const StaffAppointmentsPage = () => {
       );
       fetchAllData();
       toast.success(`Appointment ${status}`);
-      if(status == "confirmed"){
-           await axios.post(
+      if (status == "confirmed") {
+        await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/feedbackemail`,
           {
-            to:a.client.email,
-        userName:a.client.client_name,
-        salonName:staffData?.branch.salon_name,
-        feedbackLink:`${window.location.origin}/${a.id}-a`
-          })
-      }
-      else {
-          await axios.post(
+            to: a.client.email,
+            userName: a.client.client_name,
+            salonName: staffData?.branch.salon_name,
+            feedbackLink: `${window.location.origin}/${a.id}-a`,
+          }
+        );
+      } else {
+        await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/cancelappointment`,
           {
-            to:a.client.email,
-        customerName:a.client.client_name,
-        appointmentDate:a.date,
-        salonName:staffData?.branch.salon_name,
-        branchName:staffData?.branch.branch_name,
-        staffName:staffData?.fullname,
-        serviceName:a.service.service_name,
-        servicePrice:a.service.service_price,
-        totalAmount:a.service.service_price
-          })
+            to: a.client.email,
+            customerName: a.client.client_name,
+            appointmentDate: a.date,
+            salonName: staffData?.branch.salon_name,
+            branchName: staffData?.branch.branch_name,
+            staffName: staffData?.fullname,
+            serviceName: a.service.service_name,
+            servicePrice: a.service.service_price,
+            totalAmount: a.service.service_price,
+          }
+        );
       }
     } catch (error) {
       toast.error("Update failed");
@@ -208,13 +209,7 @@ const StaffAppointmentsPage = () => {
 
         toast.success("Appointment created!");
         setShowModal(false);
-        setNewAppointment({
-          client: { id: "", client_name: "", email: "" },
-          service: { id: "", service_name: "", time: "", service_price: 0 },
-          time: "",
-          status: "",
-          date: "",
-        });
+
         fetchAllData();
       }
     } catch (error) {
