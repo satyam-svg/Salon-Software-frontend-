@@ -6,8 +6,6 @@ import {
   FiUserPlus,
   FiUsers,
   FiStar,
-  FiTrash2,
-  FiEdit,
   FiX,
   FiLoader,
   FiSettings,
@@ -30,10 +28,15 @@ const modalVariants = {
 
 interface User {
   id: string;
-  // Add more user fields as needed
-  // name?: string;
-  // email?: string;
-  // etc.
+  fullname: string;
+  email: string;
+  createdAt: string;
+  PurchasedPlan: {
+    pacakge: {
+      name: string;
+      price: number;
+    };
+  }[];
 }
 
 interface SalesmanSalary {
@@ -52,6 +55,7 @@ interface SalesPerson {
   createdAt: string;
   users: User[];
   salaries: SalesmanSalary[];
+  totalUsers: number;
 }
 
 export default function MarketingTeam() {
@@ -82,9 +86,9 @@ export default function MarketingTeam() {
         );
         // console.log(response.data.data);
         setSalesTeam(response.data.data);
-        console.log(salesTeam);
       } catch (err) {
         setError("Failed to fetch sales team data");
+        console.log(err);
       } finally {
         setLoading(false);
       }
@@ -117,6 +121,7 @@ export default function MarketingTeam() {
       });
     } catch (err) {
       setError("Failed to add salesperson");
+      console.log(err);
     } finally {
       setFormSubmitting(false);
     }
@@ -125,7 +130,7 @@ export default function MarketingTeam() {
   const calculateCommission = (salesPerson: SalesPerson) => {
     return (salesPerson.users || []).reduce((total, user) => {
       const userTotal = user.PurchasedPlan?.reduce(
-        (sum, plan) => sum + plan.package.price,
+        (sum, plan) => sum + plan.pacakge.price,
         0
       );
       return total + (userTotal * salesPerson.commission) / 100;
@@ -259,7 +264,7 @@ export default function MarketingTeam() {
                             <div className="flex gap-4 items-center">
                               <div className="text-center">
                                 <div className="font-medium text-blue-600">
-                                  {member.users?.length ?? 0}
+                                  {member.totalUsers}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Clients

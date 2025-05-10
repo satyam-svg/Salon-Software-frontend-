@@ -49,6 +49,8 @@ const StellarNavbar: FC = () => {
   const isStaffPage = pathname.includes("/staffpage");
   const isClientPage = pathname.includes("/clients");
 
+  const length = pathname.length;
+
   useEffect(() => {
     const checkAuthStatus = async () => {
       const authToken = Cookies.get("authToken");
@@ -341,7 +343,7 @@ const StellarNavbar: FC = () => {
             </Link>
 
             <div className="hidden lg:flex items-center space-x-8">
-              {!isStaffPage &&
+              {length < 3 &&
                 navLinks.map((link) => {
                   const [basePath, hash] = link.path.split("#");
                   const isActive =

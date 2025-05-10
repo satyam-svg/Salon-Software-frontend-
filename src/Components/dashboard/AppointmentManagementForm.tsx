@@ -68,6 +68,15 @@ interface ServiceResponse {
   time: number;
 }
 
+interface SalonDetails {
+  id: string;
+  salonName: string;
+  salonTag: string;
+  salonImgUrl: string;
+  contactEmail: string;
+  contactNumber: string;
+}
+
 interface Branchapiresponse {
   id: string;
   branch_name: string;
@@ -224,6 +233,8 @@ const AppointmentManagementForm = ({
   const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [selectedClient, setSelectedClient] = useState("");
+  const [clentemail, setclientemail] = useState("");
+  const [clentname, setclientname] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [salonid, setsaloid] = useState("");
 
@@ -235,6 +246,14 @@ const AppointmentManagementForm = ({
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [salonDetails, setSalonDetails] = useState<SalonDetails>({
+    id: "",
+    salonName: "",
+    salonTag: "",
+    salonImgUrl: "",
+    contactEmail: "",
+    contactNumber: "",
+  });
 
   // Memoize branch data fetching
   const fetchBranches = useCallback(async () => {
@@ -248,6 +267,7 @@ const AppointmentManagementForm = ({
 
       if (!userData.user?.salonId) throw new Error("Salon not found");
       setsaloid(userData.user.salonId);
+      console.log(salonid);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
@@ -261,6 +281,23 @@ const AppointmentManagementForm = ({
       if (!response.ok) throw new Error("Failed to fetch branches");
       const data = await response.json();
       setbranchresponse(data.branches || []);
+
+      const salonResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
+        { id: salonid }
+      );
+      console.log(salonResponse, "salon response");
+
+      const salonData = salonResponse.data.salon;
+      console.log(salonData.salon_name, "salondata");
+      setSalonDetails({
+        id: salonData.id,
+        salonName: salonData.salon_name,
+        salonTag: salonData.salon_tag,
+        salonImgUrl: salonData.salon_img_url,
+        contactEmail: salonData.contact_email,
+        contactNumber: salonData.contact_number,
+      });
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -351,6 +388,28 @@ const AppointmentManagementForm = ({
         );
 
         if (response.data.message === "Appointment created successfully") {
+          // Changed variable name to avoid conflict
+          const emailResponse = await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/appointmentemail`, // Added missing slash
+            {
+              to: clentemail, // Should be clientEmail (typo fix recommended)
+              customerName: clentname, // Should be clientName (typo fix recommended)
+              appointmentDate: date,
+              salonName: salonDetails.salonName,
+              branchName: branch.branch_name,
+              staffName: staff.fullname,
+              // Fixed service data format
+              services: [
+                {
+                  name: service.service_name,
+                  price: service.service_price,
+                },
+              ],
+              totalAmount: service.service_price,
+            }
+          );
+
+          console.log(emailResponse);
           toast.success("Appointment created!");
           setformbtn(false);
         }
@@ -383,6 +442,8 @@ const AppointmentManagementForm = ({
       client.map((c) => ({
         label: `${c.client_name} (${c.email})`,
         id: c.id,
+        email: c.email,
+        name: c.client_name,
       })),
     [client]
   );
@@ -391,6 +452,8 @@ const AppointmentManagementForm = ({
     (val: string) => {
       const selected = clientOptions.find((opt) => opt.label === val);
       setSelectedClient(selected?.id || "");
+      setclientemail(selected?.email || "");
+      setclientname(selected?.name || "");
     },
     [clientOptions]
   );

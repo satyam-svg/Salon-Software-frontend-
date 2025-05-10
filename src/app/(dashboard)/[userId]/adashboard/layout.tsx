@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronRight,
   FiX,
-  FiSettings,
   FiUsers,
   FiBarChart2,
   FiBriefcase,
@@ -134,11 +133,6 @@ export default function DashboardLayout({
                     icon: <FiFlag />, // Changed from FiGitBranch
                     label: "Marketing & Campaigns",
                     href: `/${userid}/adashboard/Marketing`,
-                  },
-                  {
-                    icon: <FiSettings />,
-                    label: "Settings",
-                    href: `/${userid}/adashboard/Settings`,
                   },
                 ].map((item) => (
                   <motion.div

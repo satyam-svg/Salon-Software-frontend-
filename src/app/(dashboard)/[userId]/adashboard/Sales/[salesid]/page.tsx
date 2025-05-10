@@ -22,10 +22,10 @@ import Loader from "@/Components/LoadingSpinner";
 
 interface User {
   id: string;
-  name: string;
+  fullname: string;
   email: string;
-  signupDate: string;
-  purchasedPlans: {
+  createdAt: string;
+  PurchasedPlan: {
     name: string;
     price: number;
   }[];
@@ -102,6 +102,8 @@ export default function SalespersonProfile() {
 
         const salesData = await salesRes.json();
         const commissionData = await commissionRes.json();
+        console.log(salesData, "Salesdata");
+        console.log(commissionData, "commisiondata");
         setsalaryhistory(salesData.data.salaries);
         setSalesperson(salesData.data);
         setCommissionData(commissionData.data);
@@ -179,7 +181,7 @@ export default function SalespersonProfile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader size="lg" />
+        <Loader />
       </div>
     );
   }
@@ -475,7 +477,7 @@ export default function SalespersonProfile() {
                 .filter((user) => {
                   const searchTerm = searchQuery.toLowerCase();
                   return (
-                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.fullname.toLowerCase().includes(searchTerm) ||
                     user.email.toLowerCase().includes(searchTerm)
                   );
                 })
@@ -487,19 +489,20 @@ export default function SalespersonProfile() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold text-gray-900">
-                          {user.name}
+                          {user.fullname}
                         </h3>
                         <p className="text-gray-600 text-sm">{user.email}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-500">
-                          Joined: {formatDate(user.signupDate)}
+                          Joined: {formatDate(user.createdAt)}
                         </p>
                         <p className="text-blue-600 font-medium">
                           ₹
-                          {user.purchasedPlans
-                            .reduce((sum, plan) => sum + plan.price, 0)
-                            .toLocaleString()}
+                          {user.PurchasedPlan.reduce(
+                            (sum, plan) => sum + plan.price,
+                            0
+                          ).toLocaleString()}
                         </p>
                       </div>
                     </div>

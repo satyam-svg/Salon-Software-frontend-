@@ -16,6 +16,7 @@ import {
   FiXCircle,
   FiCheckCircle,
   FiRotateCw,
+  FiGift,
 } from "react-icons/fi";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
@@ -155,6 +156,7 @@ const Signup = () => {
     try {
       const formData = new FormData(e.currentTarget as HTMLFormElement);
       const fullname = formData.get("fullname") as string;
+      const referralCode = formData.get("referralCode") as string;
       const contact = formData.get("contact") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -193,6 +195,7 @@ const Signup = () => {
             contact,
             password,
             profile_img: (await cloudinaryResponse.json()).secure_url,
+            referralCode,
           }),
         }
       );
@@ -478,6 +481,16 @@ const Signup = () => {
                     )}
                   </motion.div>
                 )}
+              </div>
+              <div className="relative group">
+                <FiGift className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  name="referralCode"
+                  type="text"
+                  placeholder="Referral Code"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
+                  required
+                />
               </div>
             </div>
 

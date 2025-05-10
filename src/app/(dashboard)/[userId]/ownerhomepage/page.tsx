@@ -21,6 +21,7 @@ interface Salon {
 const OwnerHomepage = () => {
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
+
   const router = useRouter();
 
   const [copySuccess, setCopySuccess] = useState(false);
@@ -33,7 +34,9 @@ const OwnerHomepage = () => {
   const [totalstaff, settotalstaff] = useState(0);
   const [totalservice, settotalservice] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
+  const url = window.location.origin;
 
+  console.log(url);
   const handleDashboardClick = () => {
     setIsNavigating(true);
     router.push(`/${userid}/dashboard`);
@@ -45,7 +48,7 @@ const OwnerHomepage = () => {
     contact_email: "",
     contact_number: "",
     salon_img_url: "",
-    share_link: `https://salon.movestrongly.com/${userid}-u`,
+    share_link: `${url}/${userid}-u`,
   });
 
   useEffect(() => {
