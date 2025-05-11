@@ -26,6 +26,8 @@ import { saveAs } from "file-saver";
 import AppointmentManagementForm from "@/Components/dashboard/AppointmentManagementForm";
 import { usePathname } from "next/navigation";
 import axios from "axios";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 
 interface Appointment {
   id: string;
@@ -412,6 +414,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
 };
 
 export default function AppointmentsPage() {
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const pathname = usePathname();
@@ -423,64 +426,65 @@ export default function AppointmentsPage() {
   const [serviceName, setServiceName] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [appointment, setappointments] = useState<Appointment[]>([]);
-  const [salonid, setsalonid] = useState("");
+  const [appointment, setAppointments] = useState<Appointment[]>([]);
   const [originalAppointments, setOriginalAppointments] = useState<
     Appointment[]
   >([]);
-
-  useEffect(() => {
-    const getsalonid = async () => {
-      const userResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
-      );
-      if (!userResponse.ok) throw new Error("Failed to fetch user data");
-      const userData = await userResponse.json();
-      console.log(userData);
-
-      if (!userData.user?.salonId) throw new Error("Salon not found");
-      setsalonid(userData.user.salonId);
-      console.log(userResponse);
-    };
-    getsalonid();
-  }, [userid]);
   const [formbtn, setformbtn] = useState(false);
 
   useEffect(() => {
-    const getappointment = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/${salonid}`
-      );
-      if (response.data.appointments) {
-        const data = response.data.appointments;
-        const mappedData = data.map((appoiment: AppointmentResponse) => ({
-          id: appoiment.id,
-          client_name: appoiment.client.client_name,
-          client_email: appoiment.client.email,
-          client_contact: appoiment.client.contact,
-          service_name: appoiment.service.service_name,
-          service_time: appoiment.service.time,
-          staff_name: appoiment.staff.fullname,
-          location: appoiment.branch.branch_location,
-          date: appoiment.date,
-          time: appoiment.time,
-          price: appoiment.service.service_price,
-          status: appoiment.status,
-          salon_name: appoiment.salon.salon_name,
-        }));
+    const fetchAppointmentData = async () => {
+      try {
+        setScreenLoaderToggle(true);
 
-        setOriginalAppointments(mappedData); // Store original data
-        setappointments(mappedData); // Initialize filtered data
+        // Fetch salon ID
+        const userResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
+        );
+        if (!userResponse.ok) throw new Error("Failed to fetch user data");
+        const userData = await userResponse.json();
+        const salonId = userData.user?.salonId;
+        if (!salonId) throw new Error("Salon not found");
+
+        // Fetch appointments
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/${salonId}`
+        );
+
+        if (response.data.appointments) {
+          const mappedData = response.data.appointments.map(
+            (appointment: AppointmentResponse) => ({
+              id: appointment.id,
+              client_name: appointment.client.client_name,
+              client_email: appointment.client.email,
+              client_contact: appointment.client.contact,
+              service_name: appointment.service.service_name,
+              service_time: appointment.service.time,
+              staff_name: appointment.staff.fullname,
+              location: appointment.branch.branch_location,
+              date: appointment.date,
+              time: appointment.time,
+              price: appointment.service.service_price,
+              status: appointment.status,
+              salon_name: appointment.salon.salon_name,
+            })
+          );
+          setOriginalAppointments(mappedData);
+          setAppointments(mappedData);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setScreenLoaderToggle(false);
       }
     };
-    getappointment();
-  }, [salonid, formbtn]);
 
-  // Filter appointments with debounce
+    fetchAppointmentData();
+  }, [userid]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       const filtered = originalAppointments.filter((appointment) => {
-        // Use originalAppointments here
         const matchesSearch = [
           appointment.client_name.toLowerCase(),
           appointment.client_contact.toLowerCase(),
@@ -508,7 +512,7 @@ export default function AppointmentsPage() {
         return matchesSearch && matchesAdvanced;
       });
 
-      setappointments(filtered);
+      setAppointments(filtered);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -528,7 +532,6 @@ export default function AppointmentsPage() {
     saveAs(blob, `invoice-${appointment.id}.pdf`);
   };
 
-  // Handle scroll progress
   useEffect(() => {
     const table = tableRef.current;
     if (!table) return;
@@ -551,6 +554,10 @@ export default function AppointmentsPage() {
     completed: "bg-blue-100 text-blue-800",
     cancelled: "bg-red-100 text-red-800",
   };
+
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">

@@ -15,6 +15,10 @@ import {
   FiBox,
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
+import { useButtonLoader } from "@/context/buttonloader";
+import toast from "react-hot-toast";
 
 interface Product {
   id: string;
@@ -60,9 +64,9 @@ const InventoryPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [mounted, setMounted] = useState(false);
-
+  const { ButtonLoaderToggle, setButtonLoaderToggle } = useButtonLoader();
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
 
@@ -70,7 +74,7 @@ const InventoryPage = () => {
     if (!userid || !mounted) return;
 
     try {
-      setLoading(true);
+      setScreenLoaderToggle(true);
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
@@ -91,7 +95,7 @@ const InventoryPage = () => {
     } catch (err) {
       console.error("Error fetching branches:", err);
     } finally {
-      setLoading(false);
+      setScreenLoaderToggle(false);
     }
   }, [userid, mounted]);
 
@@ -143,46 +147,77 @@ const InventoryPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedBranch) return;
+    if (!selectedBranch) {
+      toast.error("Please select a branch.");
+      return;
+    }
 
     try {
+      setButtonLoaderToggle(true);
+
       if (editingProduct) {
         await axios.put(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/updateproduct/${editingProduct.id}`,
           { ...formData, branch_id: selectedBranch.id }
         );
+        toast.success("Product updated successfully!");
       } else {
         await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/saveproduct`,
           { ...formData, branch_id: selectedBranch.id }
         );
+        toast.success("Product saved successfully!");
       }
+
       fetchBranches();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error saving product:", error);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Failed to save product");
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unknown error occurred.");
+      }
     } finally {
       setShowModal(false);
       setEditingProduct(null);
       setFormData({ product_name: "", product_quantity: 0, price: 0 });
+      setButtonLoaderToggle(false);
     }
   };
 
   const deleteProduct = async (id: string) => {
-    if (!selectedBranch) return;
+    if (!selectedBranch) {
+      toast.error("Please select a branch.");
+      return;
+    }
 
     try {
+      setButtonLoaderToggle(true);
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/${id}`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/deleteproduct/${id}`
       );
+
+      toast.success("Product deleted sucessfully");
+
       fetchBranches();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error deleting product:", error);
+
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred while deleting the product.");
+      }
     } finally {
       setShowDeleteConfirm(null);
+      setButtonLoaderToggle(false);
     }
   };
 
-  if (loading) {
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
   }
 
   return (
@@ -459,11 +494,42 @@ const InventoryPage = () => {
 
               <div className="flex gap-4 mt-8">
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: ButtonLoaderToggle ? 1 : 1.05 }}
                   onClick={handleSubmit}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl"
+                  disabled={ButtonLoaderToggle}
+                  className={`flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl ${
+                    ButtonLoaderToggle ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
                 >
-                  {editingProduct ? "Update" : "Create"}
+                  {ButtonLoaderToggle && (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  )}
+                  {editingProduct
+                    ? ButtonLoaderToggle
+                      ? "Updating..."
+                      : "Update"
+                    : ButtonLoaderToggle
+                    ? "Creating..."
+                    : "Create"}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -510,10 +576,33 @@ const InventoryPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => deleteProduct(showDeleteConfirm)}
-                  className="flex-1 bg-red-600 text-white py-3 rounded-xl"
+                  className="flex-1 bg-red-600 text-white py-3 rounded-xl flex items-center justify-center gap-2"
                 >
-                  Delete
+                  {ButtonLoaderToggle && (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  )}
+                  {ButtonLoaderToggle ? "Deleting..." : "Delete"}
                 </motion.button>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setShowDeleteConfirm(null)}

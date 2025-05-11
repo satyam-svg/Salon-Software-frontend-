@@ -12,6 +12,8 @@ import {
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
 import axios from "axios";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 
 interface Feedback {
   id: string;
@@ -44,11 +46,13 @@ const FeedbackManagementPage = () => {
   const [hoveredReviewId, setHoveredReviewId] = useState<string | null>(null);
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
 
   const fetchBranches = useCallback(async () => {
     if (!userid) return;
 
     try {
+      setScreenLoaderToggle(true);
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
@@ -68,6 +72,8 @@ const FeedbackManagementPage = () => {
       }
     } catch (err) {
       console.error("Error fetching branches:", err);
+    } finally {
+      setScreenLoaderToggle(false);
     }
   }, [userid]);
 
@@ -101,6 +107,9 @@ const FeedbackManagementPage = () => {
       ratingDistribution[f.rating - 1]++;
     }
   });
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">

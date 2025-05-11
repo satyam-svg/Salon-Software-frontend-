@@ -61,31 +61,30 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${zillaSlab.className} antialiased`}>
         <ScreenLoaderProvider>
-        <ButtonLoaderProvider>
-        <LoginProvider>
-          <SignupProvider>
-            <ForgetPasswordProvider>
-              <Navbar />
-              {children}
-              <Footer />
-              <Toaster
-                position="top-center"
-                containerStyle={{
-                  position: "fixed",
-                  zIndex: 9999,
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  pointerEvents: "none",
-                }}
-              />
-            </ForgetPasswordProvider>
-          </SignupProvider>
-        </LoginProvider>
-        </ButtonLoaderProvider>
+          <ButtonLoaderProvider>
+            <LoginProvider>
+              <SignupProvider>
+                <ForgetPasswordProvider>
+                  <Navbar />
+                  {children}
+                  <Footer />
+                  <Toaster
+                    position="top-center"
+                    containerStyle={{
+                      position: "fixed",
+                      zIndex: 9999,
+                      top: 16,
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                      pointerEvents: "none",
+                    }}
+                  />
+                </ForgetPasswordProvider>
+              </SignupProvider>
+            </LoginProvider>
+          </ButtonLoaderProvider>
         </ScreenLoaderProvider>
-        
       </body>
     </html>
   );

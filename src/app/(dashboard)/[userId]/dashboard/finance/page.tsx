@@ -22,6 +22,8 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
@@ -60,7 +62,7 @@ const FinancialPage = () => {
   const [financialData, setFinancialData] = useState<FinancialData | null>(
     null
   );
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
 
   const [dateRange, setDateRange] = useState<Range[]>([
     {
@@ -90,7 +92,7 @@ const FinancialPage = () => {
       if (!salonId) return;
 
       try {
-        setLoading(true);
+        setScreenLoaderToggle(true);
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/finance/financialreport`,
           {
@@ -104,7 +106,7 @@ const FinancialPage = () => {
       } catch (error) {
         console.error("Error fetching financial data:", error);
       } finally {
-        setLoading(false);
+        setScreenLoaderToggle(false);
       }
     };
 
@@ -119,12 +121,8 @@ const FinancialPage = () => {
     // Implement export logic using financialData
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
   }
 
   if (!financialData) return null;

@@ -12,6 +12,9 @@ import {
   FiList,
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
+import toast from "react-hot-toast";
 
 interface Service {
   id: string;
@@ -32,7 +35,7 @@ const ServiceManagementPage = () => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [formLoading, setFormLoading] = useState(false);
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
@@ -42,7 +45,7 @@ const ServiceManagementPage = () => {
     if (!userid) return;
 
     try {
-      setLoading(true);
+      setScreenLoaderToggle(true);
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
       );
@@ -63,7 +66,7 @@ const ServiceManagementPage = () => {
     } catch (err) {
       console.error("Error fetching branches:", err);
     } finally {
-      setLoading(false);
+      setScreenLoaderToggle(false);
     }
   }, [userid]);
 
@@ -109,16 +112,22 @@ const ServiceManagementPage = () => {
 
   // Update the handleSubmit function with correct API endpoint
   const handleSubmit = async () => {
-    if (!selectedBranch) return;
+    if (!selectedBranch) {
+      toast.error("Please select a branch.");
+      return;
+    }
 
     setFormLoading(true);
+    const loadingToast = toast.loading(
+      editingService ? "Updating service..." : "Creating new service..."
+    );
+
     try {
       const payload = {
         ...formData,
         branch_id: selectedBranch.id,
       };
 
-      // Use different endpoints for create/update
       const url = editingService
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/updateservices/${editingService.id}`
         : `${process.env.NEXT_PUBLIC_BACKEND_URL}api/inventry/saveservice`;
@@ -126,15 +135,22 @@ const ServiceManagementPage = () => {
       const method = editingService ? "PUT" : "POST";
 
       const response = await fetch(url, {
-        method: method,
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Request failed");
+        throw new Error(errorData.message || "Request failed.");
       }
+
+      toast.success(
+        editingService
+          ? "🎉 Service updated successfully!"
+          : "🚀 New service created successfully!",
+        { id: loadingToast }
+      );
 
       await fetchBranches();
       setShowModal(false);
@@ -142,13 +158,22 @@ const ServiceManagementPage = () => {
       setFormData({ service_name: "", time: 0, service_price: 0 });
     } catch (error) {
       console.error("Operation failed:", error);
+
+      toast.error(
+        error instanceof Error
+          ? `❌ Error: ${error.message}`
+          : "❌ An unknown error occurred.",
+        { id: loadingToast }
+      );
     } finally {
       setFormLoading(false);
+      toast.dismiss(loadingToast);
     }
   };
 
-  if (loading)
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">

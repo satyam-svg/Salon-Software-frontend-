@@ -23,6 +23,8 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import AddStaffModal from "@/Components/AddStaffModal";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 
 ChartJS.register(
   CategoryScale,
@@ -133,7 +135,7 @@ const StaffManagementPage = () => {
   const [salonid, setsalonid] = useState("");
   const [appointment, setappointments] = useState<AppointmentResponse[]>([]);
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [totalsalary, settotalsalary] = useState(0);
 
   const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
@@ -194,7 +196,7 @@ const StaffManagementPage = () => {
     if (!userId || !mounted) return;
 
     try {
-      setLoading(true);
+      setScreenLoaderToggle(true);
       const userResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
       );
@@ -216,7 +218,7 @@ const StaffManagementPage = () => {
     } catch (err) {
       console.error("Error fetching branches:", err);
     } finally {
-      setLoading(false);
+      setScreenLoaderToggle(false);
     }
   }, [userId, mounted]);
 
@@ -262,12 +264,8 @@ const StaffManagementPage = () => {
 
   if (!mounted) return null;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 mb-16 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
   }
 
   return (

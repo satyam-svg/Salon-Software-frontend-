@@ -16,6 +16,8 @@ import {
 import { usePathname } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 
 interface Appointment {
   id: string;
@@ -38,6 +40,7 @@ interface clientresponse {
 }
 
 export default function ClientManagementPage() {
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [filteredClients, setFilteredClients] = useState<clientresponse[]>([]);
@@ -76,6 +79,7 @@ export default function ClientManagementPage() {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
+        setScreenLoaderToggle(true);
         const userResponse = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
         );
@@ -88,6 +92,8 @@ export default function ClientManagementPage() {
         console.log(salonid);
       } catch (err) {
         console.log(err);
+      } finally {
+        setScreenLoaderToggle(false);
       }
     };
     fetchBranches();
@@ -263,7 +269,7 @@ export default function ClientManagementPage() {
   // Add new client
   const handleAddClient = async () => {
     if (!name || !email || !contact) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required field");
       return;
     }
 
@@ -271,13 +277,27 @@ export default function ClientManagementPage() {
       setIsSubmittingClient(true);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/addclients`,
-        { client_name: name, email: email, contact: contact, salon_id: salonid }
+        {
+          client_name: name,
+          email: email,
+          contact: contact,
+          salon_id: salonid,
+        }
       );
+
       console.log(response);
+      toast.success("Client added successfully!");
+
       resetform();
       getclients();
-    } catch (error) {
-      console.error("Error adding client:", error);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Failed to add client");
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
     } finally {
       setIsSubmittingClient(false);
     }
@@ -297,6 +317,10 @@ export default function ClientManagementPage() {
     });
     return price;
   };
+
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">

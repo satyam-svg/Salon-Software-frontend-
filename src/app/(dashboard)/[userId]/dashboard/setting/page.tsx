@@ -12,6 +12,10 @@ import {
 } from "react-icons/fi";
 import axios from "axios";
 import { usePathname } from "next/navigation";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
+import toast from "react-hot-toast";
+import { useButtonLoader } from "@/context/buttonloader";
 
 interface UserDetails {
   id: string;
@@ -34,9 +38,10 @@ interface SalonDetails {
 const GeneralSettingsPage = () => {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { ButtonLoaderToggle, setButtonLoaderToggle } = useButtonLoader();
 
   const [userDetails, setUserDetails] = useState<UserDetails>({
     id: "",
@@ -59,9 +64,17 @@ const GeneralSettingsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setScreenLoaderToggle(true);
+        setError("");
+
         const userResponse = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
+
+        if (!userResponse.data?.user) {
+          throw new Error("User data not found");
+        }
+
         const userData = userResponse.data.user;
         setUserDetails(userData);
 
@@ -70,6 +83,10 @@ const GeneralSettingsPage = () => {
             `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
             { id: userData.salonId }
           );
+
+          if (!salonResponse.data?.salon) {
+            throw new Error("Salon data not found");
+          }
 
           const salonData = salonResponse.data.salon;
           setSalonDetails({
@@ -81,17 +98,21 @@ const GeneralSettingsPage = () => {
             contactNumber: salonData.contact_number,
           });
         }
-
-        setLoading(false);
       } catch (err) {
-        setError("Failed to fetch data");
-        console.log(err);
-        setLoading(false);
+        console.error("Fetch error:", err);
+        setError("Failed to fetch data. Please try again later.");
+        toast.error("Data loading failed!");
+      } finally {
+        setScreenLoaderToggle(false);
       }
     };
 
-    if (userId) fetchData();
-  }, [userId]);
+    if (userId) {
+      fetchData();
+    } else {
+      setError("User ID not available");
+    }
+  }, [userId, setScreenLoaderToggle]);
 
   const handleImageUpload = async (file: File, type: "owner" | "salon") => {
     try {
@@ -141,12 +162,14 @@ const GeneralSettingsPage = () => {
   const handleSubmit = async (e: React.FormEvent, type: "owner" | "salon") => {
     e.preventDefault();
     try {
+      setButtonLoaderToggle(true);
       if (type === "owner") {
         await axios.put(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`,
           userDetails
         );
-        alert("Owner details updated successfully!");
+
+        toast.success("Owner details updated successfully!");
       } else {
         const salonPayload = {
           id: salonDetails.id,
@@ -161,16 +184,17 @@ const GeneralSettingsPage = () => {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/updatesalon`,
           salonPayload
         );
-        alert("Salon details updated successfully!");
+        toast.success("Salon details updated successfully!");
       }
     } catch (err) {
       console.error("Error saving data:", err);
       alert("Error saving changes!");
+    } finally {
+      setButtonLoaderToggle(false);
     }
   };
 
-  if (loading)
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+  if (ScreenLoaderToggle) return <Screenloader />;
   if (error)
     return (
       <div className="min-h-screen bg-gray-50 p-8 text-red-500">{error}</div>
@@ -282,7 +306,11 @@ const GeneralSettingsPage = () => {
                 disabled={uploading}
               >
                 <FiSave />
-                {uploading ? "Uploading..." : "Update Owner"}
+                {uploading
+                  ? "Uploading..."
+                  : !ButtonLoaderToggle
+                  ? "Update Owner"
+                  : "Updating Owner..."}
               </motion.button>
             </div>
           </form>
@@ -407,7 +435,11 @@ const GeneralSettingsPage = () => {
                   disabled={uploading}
                 >
                   <FiSave />
-                  {uploading ? "Uploading..." : "Update Salon"}
+                  {uploading
+                    ? "Uploading..."
+                    : !ButtonLoaderToggle
+                    ? "Update Salon"
+                    : "Updating Salon....."}
                 </motion.button>
               </div>
             </form>

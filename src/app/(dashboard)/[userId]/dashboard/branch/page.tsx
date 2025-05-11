@@ -16,6 +16,9 @@ import {
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
+import { useButtonLoader } from "@/context/buttonloader";
 
 interface Service {
   id: string;
@@ -51,13 +54,14 @@ export default function BranchManagementPage() {
   const [editedBranch, setEditedBranch] = useState<Partial<Branch>>({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [minRevenue, setMinRevenue] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [error, setError] = useState("");
   const tableRef = useRef<HTMLDivElement>(null);
   const [scrollProgress] = useState(0);
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
   const [salonid, setsalonid] = useState("");
+  const { setButtonLoaderToggle } = useButtonLoader();
 
   useEffect(() => {
     const getsalonid = async () => {
@@ -78,17 +82,18 @@ export default function BranchManagementPage() {
   // Fetch branches from API
   const fetchBranches = async () => {
     try {
+      setScreenLoaderToggle(true);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
         { salon_id: salonid }
       );
       setBranches(response.data.branches);
       setFilteredBranches(response.data.branches);
-      setIsLoading(false);
     } catch (err) {
       setError("Failed to fetch branches");
       console.log(err);
-      setIsLoading(false);
+    } finally {
+      setScreenLoaderToggle(false);
     }
   };
   useEffect(() => {
@@ -132,7 +137,8 @@ export default function BranchManagementPage() {
     }
 
     try {
-      const response = await axios.post(
+      setButtonLoaderToggle(true);
+      await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/create`,
         {
           ...newBranch,
@@ -142,13 +148,22 @@ export default function BranchManagementPage() {
         }
       );
 
-      toast.success(response.data.message);
+      toast.success("Branch added successfully");
       fetchBranches();
       setIsAddingBranch(false);
       setNewBranch({});
-    } catch (err) {
+    } catch (err: unknown) {
       alert("Error adding branch");
-      console.log(err);
+
+      if (err instanceof Error) {
+        toast.error(err.message);
+        console.log(err.message);
+      } else {
+        toast.error("An unknown error occurred.");
+        console.log(err);
+      }
+    } finally {
+      setButtonLoaderToggle(false);
     }
   };
 
@@ -157,6 +172,7 @@ export default function BranchManagementPage() {
     if (!editingBranch) return;
 
     try {
+      setButtonLoaderToggle(true);
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/update/${editingBranch.id}`,
         {
@@ -165,6 +181,7 @@ export default function BranchManagementPage() {
           closeings_time: editedBranch.closeings_time,
         }
       );
+      toast.success("Branch update sucessfully");
 
       setBranches(
         branches.map((b) =>
@@ -172,9 +189,18 @@ export default function BranchManagementPage() {
         )
       );
       setEditingBranch(null);
-    } catch (err) {
-      alert("Error updating branch");
-      console.log(err);
+    } catch (err: unknown) {
+      alert("Error adding branch");
+
+      if (err instanceof Error) {
+        toast.error(err.message);
+        console.log(err.message);
+      } else {
+        toast.error("An unknown error occurred.");
+        console.log(err);
+      }
+    } finally {
+      setButtonLoaderToggle(false);
     }
   };
 
@@ -189,13 +215,8 @@ export default function BranchManagementPage() {
     [editingBranch]
   );
 
-  if (isLoading) {
-    return (
-      <div className="p-6 text-center">
-        <div className="animate-spin inline-block w-8 h-8 border-4 rounded-full border-t-indigo-500"></div>
-        <p className="mt-2 text-gray-600">Loading branches...</p>
-      </div>
-    );
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
   }
 
   if (error) {
@@ -507,6 +528,7 @@ const BranchModal = React.memo(function BranchModal({
   isEditing?: boolean;
   onFieldChange: (field: keyof Branch, value: string) => void;
 }) {
+  const { ButtonLoaderToggle } = useButtonLoader();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -619,8 +641,15 @@ const BranchModal = React.memo(function BranchModal({
             <button
               onClick={onSave}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              disabled={ButtonLoaderToggle}
             >
-              {isEditing ? "Save Changes" : "Add Branch"}
+              {isEditing
+                ? !ButtonLoaderToggle
+                  ? "Save Changes"
+                  : "Saving Changes...."
+                : !ButtonLoaderToggle
+                ? "Add Branch"
+                : "Adding Branch...."}
             </button>
           </div>
         </div>

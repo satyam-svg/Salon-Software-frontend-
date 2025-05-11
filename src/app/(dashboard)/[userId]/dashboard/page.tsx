@@ -19,6 +19,8 @@ import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import axios from "axios";
 import { FaRupeeSign } from "react-icons/fa";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
 
 interface StatCardProps {
   icon: ReactNode;
@@ -50,60 +52,69 @@ interface NavCardProps {
 const DashboardPage = () => {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
-  const [revenue, setrevenue] = useState(0);
-  const [salonid, setsalonid] = useState("");
-  const [clients, setclients] = useState(0);
-  const [appointments, setappointments] = useState(0);
+  const [revenue, setRevenue] = useState(0);
+  const [, setSalonId] = useState("");
+  const [clients, setClients] = useState(0);
+  const [appointments, setAppointments] = useState(0);
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
+
+  // Fetch salon ID and initial data
   useEffect(() => {
-    const getsalonid = async () => {
-      const userResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
-      );
-      if (!userResponse.ok) throw new Error("Failed to fetch user data");
-      const userData = await userResponse.json();
-      console.log(userData);
+    const fetchInitialData = async () => {
+      try {
+        setScreenLoaderToggle(true);
 
-      if (!userData.user?.salonId) throw new Error("Salon not found");
-      setsalonid(userData.user.salonId);
-      console.log(userResponse);
-    };
-    getsalonid();
-  }, [userId]);
+        // Get user data
+        const userResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
+        );
 
-  useEffect(() => {
-    const gettotalrevenue = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/totalprice/${salonid}`
-      );
-      setrevenue(response.data.totalRevenue);
-    };
-    const gettotalclients = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/totalclients/${salonid}`
-      );
+        if (!userResponse.ok) {
+          throw new Error(`HTTP error! status: ${userResponse.status}`);
+        }
 
-      setclients(response.data.totalClients);
+        const userData = await userResponse.json();
+
+        if (!userData.user?.salonId) {
+          throw new Error("Salon not found in user data");
+        }
+
+        const salonId = userData.user.salonId;
+        setSalonId(salonId);
+
+        // Fetch all dashboard data in parallel
+        const [chartRes, revenueRes, clientsRes, appointmentsRes] =
+          await Promise.all([
+            axios.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}api/chart/three/${salonId}`
+            ),
+            axios.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/totalprice/${salonId}`
+            ),
+            axios.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/totalclients/${salonId}`
+            ),
+            axios.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/latestappointment/${salonId}`
+            ),
+          ]);
+
+        // Update state with fetched data
+        setChartData(chartRes.data);
+        setRevenue(revenueRes.data.totalRevenue);
+        setClients(clientsRes.data.totalClients);
+        setAppointments(appointmentsRes.data.totalAppointments);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Handle error state here (e.g., show error message)
+      } finally {
+        setScreenLoaderToggle(false);
+      }
     };
 
-    const gettotalappointments = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/latestappointment/${salonid}`
-      );
-      setappointments(response.data.totalAppointments);
-    };
-    const fetchChartData = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/chart/three/${salonid}`
-      );
-
-      setChartData(response.data);
-    };
-    fetchChartData();
-    gettotalrevenue();
-    gettotalclients();
-    gettotalappointments();
-  }, [salonid]);
+    fetchInitialData();
+  }, [userId, setScreenLoaderToggle]);
   const navigationOptions = [
     {
       icon: <FiCalendar className="text-2xl" />,
@@ -181,6 +192,10 @@ const DashboardPage = () => {
       component: <AreaChartComponent data={chartData} />,
     },
   ];
+
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
+  }
 
   return (
     <motion.div

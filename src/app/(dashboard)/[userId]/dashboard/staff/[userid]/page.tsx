@@ -26,6 +26,9 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useScreenLoader } from "@/context/screenloader";
+import Screenloader from "@/Components/Screenloader";
+import { useButtonLoader } from "@/context/buttonloader";
 
 ChartJS.register(
   CategoryScale,
@@ -83,7 +86,7 @@ interface StaffData {
 const StaffDetailsPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [staffData, setStaffData] = useState<StaffData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [error, setError] = useState("");
   const [showAddSalary, setShowAddSalary] = useState(false);
   const [salarydate, setsalarydate] = useState("");
@@ -91,11 +94,13 @@ const StaffDetailsPage = () => {
   const pathname = usePathname();
   const router = useRouter();
   const paths = pathname.split("/");
+  const { ButtonLoaderToggle, setButtonLoaderToggle } = useButtonLoader();
   const staffid = paths[paths.length - 1];
 
   useEffect(() => {
     const fetchStaffData = async () => {
       try {
+        setScreenLoaderToggle(true);
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/getstaff/${staffid}`
         );
@@ -109,7 +114,7 @@ const StaffDetailsPage = () => {
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
       } finally {
-        setLoading(false);
+        setScreenLoaderToggle(false);
       }
     };
 
@@ -117,20 +122,48 @@ const StaffDetailsPage = () => {
   }, [staffid]);
 
   const handleaddsalary = async () => {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/addsallary`,
-      {
-        staff_id: staffid,
-        amount: salaryamount,
-        date: salarydate,
+    try {
+      setButtonLoaderToggle(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/staff/addsallary`,
+        {
+          staff_id: staffid,
+          amount: salaryamount,
+          date: salarydate,
+        }
+      );
+
+      if (response.data.salary) {
+        // Update local state instead of reloading
+        setStaffData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            salary_history: [...prev.salary_history, response.data.salary],
+          };
+        });
+
+        toast.success("Salary added successfully!");
+        setShowAddSalary(false);
+        setsalaryamount(0);
+        setsalarydate("");
+      } else {
+        toast.error(response.data.message);
       }
-    );
-    if (response.data.salary) {
-      toast.success(response.data.message);
-    } else {
-      toast.error(response.data.message);
+    } catch (err: unknown) {
+      console.error("Salary submission error:", err);
+
+      let errorMessage = "Failed to add salary";
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.message || err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setButtonLoaderToggle(false);
     }
-    setShowAddSalary(false);
   };
 
   // Chart data calculation
@@ -150,17 +183,14 @@ const StaffDetailsPage = () => {
             return hours;
           }) || [],
         borderColor: "#7C3AED",
+
         tension: 0.4,
       },
     ],
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
+  if (ScreenLoaderToggle) {
+    return <Screenloader />;
   }
 
   if (error) {
@@ -356,7 +386,7 @@ const StaffDetailsPage = () => {
                     className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
                     onClick={handleaddsalary}
                   >
-                    Add Salary
+                    {ButtonLoaderToggle ? "Processing..." : "Add Salary"}
                   </button>
                 </div>
               </div>
