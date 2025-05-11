@@ -493,7 +493,6 @@ const Signup = () => {
                   type="text"
                   placeholder="Referral Code"
                   className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 rounded-lg focus:ring-2 focus:ring-rose-300 border border-gray-200"
-                  required
                 />
               </div>
             </div>
