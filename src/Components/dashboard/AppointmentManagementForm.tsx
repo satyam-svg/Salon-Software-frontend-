@@ -246,7 +246,7 @@ const AppointmentManagementForm = ({
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [salonDetails, setSalonDetails] = useState<SalonDetails>({
+  const [, setSalonDetails] = useState<SalonDetails>({
     id: "",
     salonName: "",
     salonTag: "",
@@ -517,12 +517,6 @@ const AppointmentManagementForm = ({
             <FiCalendar className="mr-2 text-blue-500" />
             New Appointment
           </motion.h2>
-
-          {errors.fetchError && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-              {errors.fetchError}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

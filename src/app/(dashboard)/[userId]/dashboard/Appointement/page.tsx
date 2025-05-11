@@ -425,6 +425,9 @@ export default function AppointmentsPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [appointment, setappointments] = useState<Appointment[]>([]);
   const [salonid, setsalonid] = useState("");
+  const [originalAppointments, setOriginalAppointments] = useState<
+    Appointment[]
+  >([]);
 
   useEffect(() => {
     const getsalonid = async () => {
@@ -450,23 +453,24 @@ export default function AppointmentsPage() {
       );
       if (response.data.appointments) {
         const data = response.data.appointments;
-        setappointments(
-          data.map((appoiment: AppointmentResponse) => ({
-            id: appoiment.id,
-            client_name: appoiment.client.client_name,
-            client_email: appoiment.client.email,
-            client_contact: appoiment.client.contact,
-            service_name: appoiment.service.service_name,
-            service_time: appoiment.service.time,
-            staff_name: appoiment.staff.fullname,
-            location: appoiment.branch.branch_location,
-            date: appoiment.date,
-            time: appoiment.time,
-            price: appoiment.service.service_price,
-            status: appoiment.status,
-            salon_name: appoiment.salon.salon_name,
-          }))
-        );
+        const mappedData = data.map((appoiment: AppointmentResponse) => ({
+          id: appoiment.id,
+          client_name: appoiment.client.client_name,
+          client_email: appoiment.client.email,
+          client_contact: appoiment.client.contact,
+          service_name: appoiment.service.service_name,
+          service_time: appoiment.service.time,
+          staff_name: appoiment.staff.fullname,
+          location: appoiment.branch.branch_location,
+          date: appoiment.date,
+          time: appoiment.time,
+          price: appoiment.service.service_price,
+          status: appoiment.status,
+          salon_name: appoiment.salon.salon_name,
+        }));
+
+        setOriginalAppointments(mappedData); // Store original data
+        setappointments(mappedData); // Initialize filtered data
       }
     };
     getappointment();
@@ -475,7 +479,8 @@ export default function AppointmentsPage() {
   // Filter appointments with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      const filtered = appointment.filter((appointment) => {
+      const filtered = originalAppointments.filter((appointment) => {
+        // Use originalAppointments here
         const matchesSearch = [
           appointment.client_name.toLowerCase(),
           appointment.client_contact.toLowerCase(),
@@ -507,7 +512,14 @@ export default function AppointmentsPage() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, clientName, serviceName, selectedStatus, selectedDate]);
+  }, [
+    searchQuery,
+    clientName,
+    serviceName,
+    selectedStatus,
+    selectedDate,
+    originalAppointments,
+  ]);
 
   const handleDownloadInvoice = async (appointment: Appointment) => {
     const blob = await pdf(

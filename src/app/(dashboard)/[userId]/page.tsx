@@ -12,7 +12,7 @@ const DashboardPage = () => {
   const pathname = usePathname();
 
   const [hasSalon, setHasSalon] = useState<boolean | null>(null);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(3);
   const [name, setName] = useState("");
 
   // Extract userId from pathname like /1234 or /5678/anything
