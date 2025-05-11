@@ -395,7 +395,7 @@ const AppointmentManagementForm = ({
               to: clentemail, // Should be clientEmail (typo fix recommended)
               customerName: clentname, // Should be clientName (typo fix recommended)
               appointmentDate: date,
-              salonName: salonDetails.salonName,
+              salonName: "Your-salon",
               branchName: branch.branch_name,
               staffName: staff.fullname,
               // Fixed service data format
