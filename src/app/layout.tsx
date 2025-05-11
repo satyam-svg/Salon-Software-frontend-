@@ -7,6 +7,8 @@ import { SignupProvider } from "@/context/SignupContext";
 import { LoginProvider } from "@/context/LoginContext";
 import { ForgetPasswordProvider } from "@/context/ForgetpassContext";
 import { Toaster } from "react-hot-toast";
+import { ScreenLoaderProvider } from "@/context/screenloader";
+import { ButtonLoaderProvider } from "@/context/buttonloader";
 
 const zillaSlab = Zilla_Slab({
   subsets: ["latin"],
@@ -58,6 +60,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${zillaSlab.className} antialiased`}>
+        <ScreenLoaderProvider>
+        <ButtonLoaderProvider>
         <LoginProvider>
           <SignupProvider>
             <ForgetPasswordProvider>
@@ -79,6 +83,9 @@ export default function RootLayout({
             </ForgetPasswordProvider>
           </SignupProvider>
         </LoginProvider>
+        </ButtonLoaderProvider>
+        </ScreenLoaderProvider>
+        
       </body>
     </html>
   );
