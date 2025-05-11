@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FiDollarSign, FiUsers, FiTrendingUp, FiPlus } from "react-icons/fi";
+import { FiDollarSign, FiUsers, FiTrendingUp } from "react-icons/fi";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import { motion } from "framer-motion";

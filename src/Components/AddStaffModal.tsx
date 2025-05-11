@@ -16,6 +16,7 @@ import {
 import { useDropzone } from "react-dropzone";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
+import NextImage from "next/image";
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -234,10 +235,12 @@ const AddStaffModal = ({
                       <input {...getInputProps()} />
                       {preview ? (
                         <div className="relative">
-                          <img
+                          <NextImage
                             src={preview}
                             alt="Profile preview"
-                            className="w-20 h-20 mx-auto rounded-full object-cover border-2 border-white shadow-sm"
+                            width={80}
+                            height={80}
+                            className="mx-auto rounded-full object-cover border-2 border-white shadow-sm"
                           />
                           <button
                             type="button"
