@@ -5,83 +5,133 @@ import { jwtDecode } from 'jwt-decode';
 interface DecodedToken {
   id: string;
   email?: string;
+  exp?: number;
+  role?: string;
 }
+
+// Helper function to validate token structure and expiration
+const validateToken = (token: string): DecodedToken | null => {
+  try {
+    const decoded = jwtDecode<DecodedToken>(token);
+    
+    // Check token expiration
+    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+      throw new Error('Token expired');
+    }
+    
+    // Validate required claims
+    if (!decoded.id) {
+      throw new Error('Missing user ID in token');
+    }
+    
+    return decoded;
+  } catch (error) {
+    console.error('Token validation failed:', error);
+    return null;
+  }
+};
+
+// Extract user ID from path with regex validation
+const getUserIdFromPath = (pathname: string): string | null => {
+  const match = pathname.match(/^\/([a-zA-Z0-9_-]+)\/(dashboard|adashboard|staffpage)/);
+  return match ? match[1] : null;
+};
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const urlParts = pathname.split('/').filter(Boolean);
-  const userIdFromPath = urlParts[0]; // e.g., domain.com/[userId]/dashboard
+  const userIdFromPath = getUserIdFromPath(pathname);
 
-  const authToken = request.cookies.get('authToken')?.value || null;
-  const staffToken = request.cookies.get('staffToken')?.value || null;
+  // Common error response with token cleanup
+  const unauthorizedResponse = (clearCookies: string[] = []) => {
+    const response = NextResponse.redirect(new URL('/unauthorized', request.url));
+    clearCookies.forEach(cookie => response.cookies.delete(cookie));
+    return response;
+  };
 
-  const isDashboardRoute = pathname.includes('/dashboard');
-  const isAdminDashboardRoute = pathname.includes('/adashboard');
-  const isStaffRoute = pathname.includes('/staffpage');
+  // Handle user dashboard routes
+  if (pathname.includes('/dashboard') || pathname.includes('/adashboard')) {
+    const authToken = request.cookies.get('authToken')?.value;
 
-  // 1️⃣ Handle protected user routes (dashboard, adashboard)
-  if (isDashboardRoute || isAdminDashboardRoute) {
+    // Immediate check for token presence
     if (!authToken) {
-      return redirectToUnauthorized(request);
+      return unauthorizedResponse(['authToken']);
     }
 
-    try {
-      const decoded = jwtDecode<DecodedToken>(authToken);
-      const userIdFromToken = decoded.id;
+    // Validate token structure and expiration
+    const decoded = validateToken(authToken);
+    console.log(decoded.id)
+    if (!decoded) {
+      return unauthorizedResponse(['authToken']);
+    }
 
-      // Compare path userId with token userId
-      if (userIdFromToken !== userIdFromPath) {
-        return redirectToUnauthorized(request);
-      }
+    // Validate path user ID match
+    if (!userIdFromPath || decoded.id !== userIdFromPath) {
+      console.error(`User ID mismatch: Token=${decoded.id}, Path=${userIdFromPath}`);
+      return unauthorizedResponse(['authToken']);
+    }
 
-      // Extra check: Only allow specific user email for /adashboard
-      if (isAdminDashboardRoute) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userIdFromToken}`);
+    // Additional checks for admin dashboard
+    if (pathname.includes('/adashboard')) {
+      try {
+        // Verify admin privileges
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${decoded.id}`
+        );
+        
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        
         const data = await res.json();
-
-        const email = data?.user?.email;
-        if (email !== 'Veddikasiingh@gmail.com') {
-          return redirectToUnauthorized(request);
+        const userEmail = data?.user?.email;
+        
+        if (userEmail !== 'praveen96257@gmail.com') {
+          console.error('Admin email mismatch:', userEmail);
+          return unauthorizedResponse(['authToken']);
         }
+      } catch (error) {
+        console.error('Admin verification failed:', error);
+        return unauthorizedResponse(['authToken']);
       }
-    } catch (error) {
-      console.error('Error decoding authToken:', error);
-      return redirectToUnauthorized(request);
+    }
+
+    // Add role-based access control
+    if (decoded.role && pathname.includes('/adashboard') && decoded.role !== 'admin') {
+      console.error('Insufficient role for admin dashboard:', decoded.role);
+      return unauthorizedResponse(['authToken']);
     }
   }
 
-  // 2️⃣ Handle protected staff routes
-  if (isStaffRoute) {
+  // Handle staff routes
+  if (pathname.includes('/staffpage')) {
+    const staffToken = request.cookies.get('staffToken')?.value;
+
     if (!staffToken) {
-      return redirectToUnauthorized(request);
+      return unauthorizedResponse(['staffToken']);
     }
 
-    try {
-      const decoded = jwtDecode<DecodedToken>(staffToken);
-      const staffIdFromToken = decoded.id;
+    const decoded = validateToken(staffToken);
+    if (!decoded) {
+      return unauthorizedResponse(['staffToken']);
+    }
 
-      if (staffIdFromToken !== userIdFromPath) {
-        return redirectToUnauthorized(request);
-      }
-    } catch (error) {
-      console.error('Error decoding staffToken:', error);
-      return redirectToUnauthorized(request);
+    if (!userIdFromPath || decoded.id !== userIdFromPath) {
+      console.error(`Staff ID mismatch: Token=${decoded.id}, Path=${userIdFromPath}`);
+      return unauthorizedResponse(['staffToken']);
+    }
+
+    // Additional staff-specific validations
+    if (decoded.role && decoded.role !== 'staff') {
+      console.error('Invalid role for staff access:', decoded.role);
+      return unauthorizedResponse(['staffToken']);
     }
   }
 
   return NextResponse.next();
 }
 
-// ⛔ Helper to redirect unauthorized access
-function redirectToUnauthorized(request: NextRequest) {
-  return NextResponse.redirect(new URL('/unauthorized', request.url));
-}
-
-// 🔁 Routes to protect
 export const config = {
   matcher: [
     '/:userId/dashboard/:path*',
-    '/:userId/adashboard',
+    '/:userId/adashboard/:path*',
     '/:userId/staffpage/:path*',
   ],
 };
