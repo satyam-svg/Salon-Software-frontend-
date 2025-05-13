@@ -18,6 +18,11 @@ const DashboardPage = () => {
   // Extract userId from pathname like /1234 or /5678/anything
   const userId = pathname.split("/")[1];
   useEffect(() => {
+    if (userId == "unauthorized") {
+      router.push(`/${userId}/error`);
+    }
+  });
+  useEffect(() => {
     const l = userId.length;
     if (userId[l - 1] == "u" && userId[l - 2] == "-") {
       router.push(`/${userId}/clients`);
@@ -25,6 +30,7 @@ const DashboardPage = () => {
       router.push(`/${userId}/clientfeedback`);
     }
   }, [userId]);
+
   useEffect(() => {
     const checkSalonStatus = async () => {
       try {

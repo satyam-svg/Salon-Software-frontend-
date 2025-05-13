@@ -236,7 +236,7 @@ const Signup = () => {
       });
       setSignupToggle(false);
       const userId = responseData.user.id;
-      if (responseData.user.email == "21012003rs@gmail.com") {
+      if (responseData.user.email == "Veddikasiingh@gmail.com") {
         router.push(`/admin/adashboard`);
       } else {
         router.push(`/${userId}`);
