@@ -78,7 +78,7 @@ const LoginPopup = () => {
         }
 
         const userId = data.user.id;
-        if (data.user.email == "Veddikasiingh@gmail.com") {
+        if (data.user.email == "praveen96257@gmail.com") {
           router.push(`/admin/adashboard`);
         } else {
           router.push(`/${userId}`);

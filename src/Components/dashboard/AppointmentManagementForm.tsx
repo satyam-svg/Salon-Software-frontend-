@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, memo, useCallback, useMemo } from "react";
+import { useState, memo, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiCalendar,
@@ -13,8 +13,10 @@ import {
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useClients } from "@/hooks/useClients";
+import { useSalonBranches } from "@/hooks/useSalonBranches";
 
-// Interfaces moved to top level
+// Interfaces
 interface AutocompleteFieldProps {
   label: string;
   icon: React.ReactNode;
@@ -24,22 +26,6 @@ interface AutocompleteFieldProps {
   error: boolean;
   required?: boolean;
   disabled?: boolean;
-}
-
-interface Appointment {
-  id: string;
-  date: string;
-  service: string;
-  price: number;
-}
-
-interface clientresponse {
-  id: string;
-  client_name: string;
-  email: string;
-  contact: string;
-  createdAt: string;
-  appointments: Appointment[];
 }
 
 interface FormErrors {
@@ -54,42 +40,34 @@ interface FormErrors {
 interface StaffResponse {
   id: string;
   fullname: string;
+}
+
+interface ClientOption {
+  label: string;
+  id: string;
   email: string;
-  contact: string;
-  password: string;
-  profile_img: string;
-  staff_id: string;
+  name: string;
 }
 
 interface ServiceResponse {
   id: string;
   service_name: string;
   service_price: number;
-  time: number;
-}
-
-interface SalonDetails {
-  id: string;
-  salonName: string;
-  salonTag: string;
-  salonImgUrl: string;
-  contactEmail: string;
-  contactNumber: string;
 }
 
 interface Branchapiresponse {
   id: string;
   branch_name: string;
-  branch_location: string;
-  contact_email: string;
-  contact_number: string;
-  opning_time: string;
-  closeings_time: string;
   staff: StaffResponse[];
   service: ServiceResponse[];
 }
 
-// Moved AutocompleteField to top level with memo
+interface ClientResponse {
+  id: string;
+  client_name: string;
+  email: string;
+}
+
 const AutocompleteField = memo(
   ({
     label,
@@ -233,116 +211,64 @@ const AppointmentManagementForm = ({
   const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [selectedClient, setSelectedClient] = useState("");
-  const [clentemail, setclientemail] = useState("");
-  const [clentname, setclientname] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientName, setClientName] = useState("");
   const [dateTime, setDateTime] = useState("");
-  const [salonid, setsaloid] = useState("");
-
   const [errors, setErrors] = useState<FormErrors>({});
-  const [branchresponse, setbranchresponse] = useState<Branchapiresponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [client, setclient] = useState<clientresponse[]>([]);
 
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [, setSalonDetails] = useState<SalonDetails>({
-    id: "",
-    salonName: "",
-    salonTag: "",
-    salonImgUrl: "",
-    contactEmail: "",
-    contactNumber: "",
-  });
 
-  // Memoize branch data fetching
-  const fetchBranches = useCallback(async () => {
-    try {
-      setLoading(true);
-      const userResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
-      );
-      if (!userResponse.ok) throw new Error("Failed to fetch user data");
-      const userData = await userResponse.json();
-
-      if (!userData.user?.salonId) throw new Error("Salon not found");
-      setsaloid(userData.user.salonId);
-      console.log(salonid);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/branch/isbranch`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ salon_id: userData.user.salonId }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch branches");
-      const data = await response.json();
-      setbranchresponse(data.branches || []);
-
-      const salonResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/salon/getsalonbyid`,
-        { id: salonid }
-      );
-      console.log(salonResponse, "salon response");
-
-      const salonData = salonResponse.data.salon;
-      console.log(salonData.salon_name, "salondata");
-      setSalonDetails({
-        id: salonData.id,
-        salonName: salonData.salon_name,
-        salonTag: salonData.salon_tag,
-        salonImgUrl: salonData.salon_img_url,
-        contactEmail: salonData.contact_email,
-        contactNumber: salonData.contact_number,
-      });
-    } catch (err) {
-      setErrors((prev) => ({
-        ...prev,
-        fetchError:
-          err instanceof Error ? err.message : "Failed to fetch branches",
-      }));
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+  // Using custom hooks
+  const {
+    data: salonData,
+    error: branchesError,
+    isLoading: branchesLoading,
+  } = useSalonBranches(userId);
+  const { data: clients, error: clientsError } = useClients(salonData?.salonId);
 
   useEffect(() => {
-    fetchBranches();
-  }, [fetchBranches]);
-  useEffect(() => {
-    const getclients = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/clients/gettotalclient/${salonid}`
-        );
-        if (response.data.success) {
-          setclient(response.data.clients);
-        }
-      } catch (error) {
-        toast.error("Failed to fetch clients");
-        console.log(error);
-      }
-    };
-    if (salonid) getclients();
-  }, [salonid]);
-  // Memoize derived data
-  const selectedBranchData = branchresponse.find(
-    (b) => b.branch_name === selectedBranch
+    if (branchesError) toast.error(branchesError.message);
+    if (clientsError) toast.error("Failed to load clients");
+  }, [branchesError, clientsError]);
+
+  // Derived data
+  const selectedBranchData = useMemo(
+    () =>
+      salonData?.branches.find(
+        (b: Branchapiresponse) => b.branch_name === selectedBranch
+      ),
+    [salonData?.branches, selectedBranch]
   );
 
   const staffOptions = useMemo(
-    () => selectedBranchData?.staff.map((s) => s.fullname) || [],
+    () => selectedBranchData?.staff.map((s: StaffResponse) => s.fullname) || [],
     [selectedBranchData]
+  );
+
+  const serviceOptions = useMemo(
+    () =>
+      selectedBranchData?.service.map((s: ServiceResponse) => s.service_name) ||
+      [],
+    [selectedBranchData]
+  );
+
+  const clientOptions = useMemo<ClientOption[]>(
+    () =>
+      clients?.map((c: ClientResponse) => ({
+        label: `${c.client_name} (${c.email})`,
+        id: c.id,
+        email: c.email,
+        name: c.client_name,
+      })) || [],
+    [clients]
   );
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      // Validation logic
       const newErrors = {
         branch: !selectedBranch,
         staff: !selectedStaff,
@@ -354,29 +280,29 @@ const AppointmentManagementForm = ({
       if (Object.values(newErrors).some((error) => error)) return;
 
       try {
-        // Find all required IDs
-        setIsSubmitting(true); // Start loading
-        const branch = branchresponse.find(
-          (b) => b.branch_name === selectedBranch
+        setIsSubmitting(true);
+        const branch = salonData?.branches.find(
+          (b: Branchapiresponse) => b.branch_name === selectedBranch
         );
-        const staff = branch?.staff.find((s) => s.fullname === selectedStaff);
+        const staff = branch?.staff.find(
+          (s: StaffResponse) => s.fullname === selectedStaff
+        );
         const service = branch?.service.find(
-          (s) => s.service_name === selectedService
+          (s: ServiceResponse) => s.service_name === selectedService
         );
 
-        if (!branch || !staff || !service) {
-          throw new Error("Invalid branch, staff, or service selection");
+        if (!branch || !staff || !service || !salonData) {
+          throw new Error("Invalid selection");
         }
 
-        // Split datetime
         const [date, time] = dateTime.split("T");
-        if (!date || !time) throw new Error("Invalid datetime format");
+        if (!date || !time) throw new Error("Invalid datetime");
 
-        // API call
+        // Create appointment
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/appoiment/create`,
           {
-            salon_id: salonid,
+            salon_id: salonData.salonId,
             branch_id: branch.id,
             staff_id: staff.id,
             service_id: service.id,
@@ -388,17 +314,16 @@ const AppointmentManagementForm = ({
         );
 
         if (response.data.message === "Appointment created successfully") {
-          // Changed variable name to avoid conflict
-          const emailResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/appointmentemail`, // Added missing slash
+          // Send confirmation email
+          await axios.post(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/email/appointmentemail`,
             {
-              to: clentemail, // Should be clientEmail (typo fix recommended)
-              customerName: clentname, // Should be clientName (typo fix recommended)
+              to: clientEmail,
+              customerName: clientName,
               appointmentDate: date,
-              salonName: "Your-salon",
+              salonName: salonData.salon.salon_name,
               branchName: branch.branch_name,
               staffName: staff.fullname,
-              // Fixed service data format
               services: [
                 {
                   name: service.service_name,
@@ -409,13 +334,12 @@ const AppointmentManagementForm = ({
             }
           );
 
-          console.log(emailResponse);
           toast.success("Appointment created!");
           setformbtn(false);
         }
       } catch (error) {
         toast.error("Failed to create appointment");
-        console.log(error);
+        console.error(error);
       } finally {
         setIsSubmitting(false);
       }
@@ -426,39 +350,22 @@ const AppointmentManagementForm = ({
       selectedService,
       selectedClient,
       dateTime,
-      salonid,
-      branchresponse,
+      salonData,
+      clientEmail,
+      clientName,
       setformbtn,
     ]
-  );
-
-  const serviceOptions = useMemo(
-    () => selectedBranchData?.service.map((s) => s.service_name) || [],
-    [selectedBranchData]
-  );
-
-  const clientOptions = useMemo(
-    () =>
-      client.map((c) => ({
-        label: `${c.client_name} (${c.email})`,
-        id: c.id,
-        email: c.email,
-        name: c.client_name,
-      })),
-    [client]
   );
 
   const handleClientChange = useCallback(
     (val: string) => {
       const selected = clientOptions.find((opt) => opt.label === val);
       setSelectedClient(selected?.id || "");
-      setclientemail(selected?.email || "");
-      setclientname(selected?.name || "");
+      setClientEmail(selected?.email || "");
+      setClientName(selected?.name || "");
     },
     [clientOptions]
   );
-
-  // Memoize handler functions
 
   const handleBranchChange = useCallback((val: string) => {
     setSelectedBranch(val);
@@ -481,7 +388,7 @@ const AppointmentManagementForm = ({
     []
   );
 
-  if (loading) {
+  if (branchesLoading) {
     return (
       <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-100">
@@ -524,12 +431,15 @@ const AppointmentManagementForm = ({
                 <AutocompleteField
                   label="Branch"
                   icon={<FiArrowRight className="w-4 h-4" />}
-                  options={branchresponse.map((b) => b.branch_name)}
+                  options={
+                    salonData?.branches.map(
+                      (b: Branchapiresponse) => b.branch_name
+                    ) || []
+                  }
                   value={selectedBranch}
                   setValue={handleBranchChange}
                   error={!!errors.branch}
                   required
-                  disabled={false}
                 />
 
                 <AutocompleteField

@@ -162,7 +162,7 @@ const Signup = () => {
 
       if (!isOtpSent) throw new Error("Please verify your email first");
       if (!enteredOtp) throw new Error("Please enter the OTP");
-      if (!profileImageFile) throw new Error("Please upload a profile image");
+      // if (!profileImageFile) throw new Error("Please upload a profile image");
       if (!validateContact(contact))
         throw new Error("Contact number must be 10 digits");
       if (!validatePassword())
@@ -172,16 +172,29 @@ const Signup = () => {
       if (enteredOtp !== otpSent?.toString()) throw new Error("Invalid OTP");
 
       // Upload image to Cloudinary
-      const cloudinaryFormData = new FormData();
-      cloudinaryFormData.append("file", profileImageFile);
-      cloudinaryFormData.append("upload_preset", "salon_preset");
+      let profile_img =
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjhv8n_2sZacewq1nWAz-Qre9bWT7l98q1ph2CdW_r02GjRqrIHTydD6I&s"; // default image
 
-      const cloudinaryResponse = await fetch(
-        `https://api.cloudinary.com/v1_1/dl1lqotns/image/upload`,
-        { method: "POST", body: cloudinaryFormData }
-      );
+      if (profileImageFile) {
+        const cloudinaryFormData = new FormData();
+        cloudinaryFormData.append("file", profileImageFile);
+        cloudinaryFormData.append("upload_preset", "salon_preset");
 
-      if (!cloudinaryResponse.ok) throw new Error("Image upload failed");
+        const cloudinaryResponse = await fetch(
+          `https://api.cloudinary.com/v1_1/dl1lqotns/image/upload`,
+          {
+            method: "POST",
+            body: cloudinaryFormData,
+          }
+        );
+
+        if (!cloudinaryResponse.ok) {
+          throw new Error("Image upload failed");
+        }
+
+        const cloudinaryData = await cloudinaryResponse.json();
+        profile_img = cloudinaryData.secure_url; // overwrite default only if upload is successful
+      }
 
       // Create user account
       const userResponse = await fetch(
@@ -194,7 +207,7 @@ const Signup = () => {
             email,
             contact,
             password,
-            profile_img: (await cloudinaryResponse.json()).secure_url,
+            profile_img,
             referralCode,
           }),
         }
@@ -223,7 +236,7 @@ const Signup = () => {
       });
       setSignupToggle(false);
       const userId = responseData.user.id;
-      if (responseData.user.email == "Veddikasiingh@gmail.com") {
+      if (responseData.user.email == "21012003rs@gmail.com") {
         router.push(`/admin/adashboard`);
       } else {
         router.push(`/${userId}`);
