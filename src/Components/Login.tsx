@@ -79,9 +79,9 @@ const LoginPopup = () => {
 
         const userId = data.user.id;
         if (data.user.email == "Veddikasiingh@gmail.com") {
-          router.push(`/admin/adashboard`);
+          router.replace(`/admin/adashboard`);
         } else {
-          router.push(`/${userId}`);
+          router.replace(`/${userId}/ownerhomepage`);
         }
 
         toast.success("Welcome back, Luxury Owner!", {

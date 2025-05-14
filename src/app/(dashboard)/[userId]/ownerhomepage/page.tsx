@@ -1,9 +1,19 @@
 "use client";
-import { FiShare2, FiCopy, FiCheck } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import {
+  FiShare2,
+  FiCopy,
+  FiCheck,
+  FiUsers,
+  FiScissors,
+  FiClock,
+  FiStar,
+} from "react-icons/fi";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
+import { motion, useAnimation, useInView } from "framer-motion";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Salon {
   salon_name: string;
@@ -20,13 +30,13 @@ const OwnerHomepage = () => {
   const userid = pathname.split("/")[1];
   const router = useRouter();
   const [copySuccess, setCopySuccess] = useState(false);
-  const [daysOperating, setDaysOperating] = useState(0);
-  const [yearsOperating, setYearsOperating] = useState(0);
+  const [daysOperating, setDaysOperating] = useState<number | null>(null);
+  const [yearsOperating, setYearsOperating] = useState<number | null>(null);
   const [salonid, setsalonid] = useState("");
-  const [, setImageLoading] = useState(true);
-  const [totalclients, settotalclient] = useState(0);
-  const [totalstaff, settotalstaff] = useState(0);
-  const [totalservice, settotalservice] = useState(0);
+  const [, setImageLoaded] = useState(false);
+  const [totalclients, settotalclient] = useState<number | null>(null);
+  const [totalstaff, settotalstaff] = useState<number | null>(null);
+  const [totalservice, settotalservice] = useState<number | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const url = window.location.origin;
 
@@ -77,9 +87,11 @@ const OwnerHomepage = () => {
       );
       settotalservice(response.data.totalServices);
     };
-    gettotalclients();
-    gettotalstaff();
-    gettotalservice();
+    if (salonid) {
+      gettotalclients();
+      gettotalstaff();
+      gettotalservice();
+    }
   }, [salonid]);
 
   useEffect(() => {
@@ -99,15 +111,19 @@ const OwnerHomepage = () => {
         share_link: salon.share_link,
       });
     };
-    getsalon();
+    if (salonid) getsalon();
   }, [salonid]);
 
   useEffect(() => {
-    if (salon.salon_img_url) setImageLoading(true);
+    if (salon.salon_img_url) setImageLoaded(true);
   }, [salon.salon_img_url]);
 
   useEffect(() => {
-    if (!salon?.opening_time) return;
+    if (!salon?.opening_time) {
+      setDaysOperating(null);
+      setYearsOperating(null);
+      return;
+    }
     const openedDate = new Date(salon.opening_time);
     const today = new Date();
     const diffTime = today.getTime() - openedDate.getTime();
@@ -136,120 +152,284 @@ const OwnerHomepage = () => {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
+  const controls = useAnimation();
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: false, margin: "-100px" });
+
+  useEffect(() => {
+    if (isInView) {
+      controls.start("visible");
+    } else {
+      controls.start("hidden");
+    }
+  }, [isInView, controls]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.3 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 30, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
-      {/* Main Content Container */}
-      <div className="max-w-7xl mx-auto px-4 py-12 relative z-10 grid gap-8">
+    <div
+      className="min-h-screen bg-[#fff9f7] relative overflow-hidden"
+      style={{
+        backgroundImage: "radial-gradient(#e8c4c0 0.5px, transparent 0.5px)",
+        backgroundSize: "15px 15px",
+      }}
+    >
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-32 overflow-hidden">
+        <svg
+          className="absolute top-0 left-0 w-full h-full"
+          viewBox="0 0 1200 120"
+        >
+          <path
+            d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+            className="fill-[#b76e79] opacity-20"
+          />
+        </svg>
+      </div>
+
+      <motion.div
+        ref={ref}
+        initial="hidden"
+        animate={controls}
+        variants={containerVariants}
+        className="max-w-7xl mx-auto px-4 py-12 relative z-10 mt-8"
+      >
         {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            {salon.salon_img_url && (
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-200">
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col md:flex-row justify-between items-start mb-16 gap-8"
+        >
+          <div className="flex items-center gap-6">
+            {salon.salon_img_url ? (
+              <motion.div
+                whileHover={{ rotate: -2, scale: 1.05 }}
+                className="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-[#e8c4c0] shadow-lg"
+              >
                 <Image
                   src={salon.salon_img_url}
                   alt={salon.salon_name}
                   layout="fill"
                   objectFit="cover"
                   className="bg-gray-100"
+                  onLoadingComplete={() => setImageLoaded(true)}
                 />
-              </div>
+              </motion.div>
+            ) : (
+              <div className="w-24 h-24 bg-gray-200 rounded-2xl animate-pulse" />
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {salon.salon_name}
-              </h1>
-              <p className="text-gray-500">{salon.salon_tag}</p>
+              {salon.salon_name ? (
+                <>
+                  <h1 className="text-4xl font-bold text-[#b76e79] font-dancing">
+                    {salon.salon_name}
+                  </h1>
+                  <p className="text-lg text-[#7a5a57] mt-2">
+                    {salon.salon_tag}
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
+                  <div className="h-4 bg-gray-200 rounded w-64 animate-pulse" />
+                </div>
+              )}
             </div>
           </div>
-          <button
+
+          <AnimatedButton
             onClick={handleDashboardClick}
-            disabled={isNavigating}
-            className={`px-6 py-3 rounded-lg font-medium ${
-              isNavigating
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            } transition-colors`}
+            variant="solid"
+            size="md"
+            hoverEffect="scale"
+            gradient={["#b76e79", "#d8a5a5"]}
+            className="mr-12 rounded-xl shadow-lg hover:shadow-xl" // Added ml-auto
+            icon={<FiStar className="text-lg" />}
+            iconPosition="left"
+            isLoading={isNavigating}
           >
             {isNavigating ? "Loading..." : "Manage Dashboard"}
-          </button>
-        </div>
+          </AnimatedButton>
+        </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <motion.div
+          variants={containerVariants}
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-20"
+        >
           {[
-            { value: yearsOperating, label: "Years Operating", color: "blue" },
-            { value: totalclients, label: "Total Clients", color: "blue" },
-            { value: totalstaff, label: "Staff Members", color: "blue" },
-            { value: totalservice, label: "Services Offered", color: "blue" },
+            { value: yearsOperating, label: "Years Operating", icon: FiClock },
+            { value: totalclients, label: "Loyal Clients", icon: FiUsers },
+            { value: totalstaff, label: "Expert Staff", icon: FiScissors },
+            { value: totalservice, label: "Premium Services", icon: FiStar },
           ].map((stat, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+              variants={itemVariants}
+              className="bg-white p-6 rounded-2xl shadow-xl border border-[#e8c4c0]"
             >
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {stat.value}
-              </div>
-              <div className="text-gray-600 text-sm">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Salon Details Section */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4">Contact Information</h2>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">Email:</span>
-                <span className="font-medium">{salon.contact_email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">Phone:</span>
-                <span className="font-medium">{salon.contact_number}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4">Share Salon Link</h2>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-gray-100 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm text-gray-600">
-                    {salon.share_link}
-                  </span>
-                  <button
-                    onClick={copyToClipboard}
-                    className="text-gray-500 hover:text-blue-600"
-                  >
-                    {copySuccess ? <FiCheck /> : <FiCopy />}
-                  </button>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#fff0ee] rounded-xl">
+                  <stat.icon className="text-2xl text-[#b76e79]" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-[#7a5a57]">
+                    {stat.value !== null ? (
+                      stat.value
+                    ) : (
+                      <div className="h-8 bg-gray-200 rounded w-12 animate-pulse" />
+                    )}
+                  </div>
+                  <div className="text-[#b76e79] font-medium">{stat.label}</div>
                 </div>
               </div>
-              <button className="p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
-                <FiShare2 />
-              </button>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
-        {/* Additional Information Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4">Business Overview</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-500">Operating Since</label>
-              <p className="font-medium">
-                {new Date(salon.opening_time).toLocaleDateString()}
-              </p>
+        {/* Details Section */}
+        <motion.div
+          variants={containerVariants}
+          className="grid md:grid-cols-2 gap-8"
+        >
+          {/* Contact Card */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-white p-8 rounded-2xl shadow-xl border border-[#e8c4c0]"
+          >
+            <h2 className="text-2xl font-dancing text-[#b76e79] mb-6">
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-3 bg-[#fff0ee] rounded-xl">
+                <FiStar className="text-[#b76e79] flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-[#7a5a57]">Email</p>
+                  {salon.contact_email ? (
+                    <p className="font-medium text-[#b76e79]">
+                      {salon.contact_email}
+                    </p>
+                  ) : (
+                    <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-3 bg-[#fff0ee] rounded-xl">
+                <FiStar className="text-[#b76e79] flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-[#7a5a57]">Phone</p>
+                  {salon.contact_number ? (
+                    <p className="font-medium text-[#b76e79]">
+                      {salon.contact_number}
+                    </p>
+                  ) : (
+                    <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-sm text-gray-500">Total Days Active</label>
-              <p className="font-medium">{daysOperating} days</p>
+          </motion.div>
+
+          {/* Share Card */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-white p-8 rounded-2xl shadow-xl border border-[#e8c4c0]"
+          >
+            <h2 className="text-2xl font-dancing text-[#b76e79] mb-6">
+              Share Your Salon
+            </h2>
+            <div className="space-y-6">
+              <div className="bg-[#fff0ee] p-4 rounded-xl flex items-center gap-3">
+                <input
+                  value={salon.share_link}
+                  readOnly
+                  className="flex-1 bg-transparent text-[#7a5a57] font-mono text-sm"
+                />
+                <button
+                  onClick={copyToClipboard}
+                  className="p-2 hover:bg-[#e8c4c0] rounded-lg transition-colors"
+                >
+                  {copySuccess ? (
+                    <FiCheck className="text-[#b76e79] text-xl" />
+                  ) : (
+                    <FiCopy className="text-[#b76e79] text-xl" />
+                  )}
+                </button>
+              </div>
+              <AnimatedButton
+                variant="solid"
+                size="md" // Using md as base size
+                hoverEffect="shine"
+                gradient={["#b76e79", "#d8a5a5"]}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl hover:shadow-lg"
+                icon={<FiShare2 className="text-lg" />}
+                iconPosition="left"
+              >
+                Share on Social Media
+              </AnimatedButton>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* History Section */}
+        <motion.div
+          variants={itemVariants}
+          className="bg-white mt-16 p-8 rounded-2xl shadow-xl border border-[#e8c4c0]"
+        >
+          <h2 className="text-2xl font-dancing text-[#b76e79] mb-6">
+            Salon Legacy
+          </h2>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-[#fff0ee] p-6 rounded-xl">
+              <p className="text-sm text-[#7a5a57]">Established Since</p>
+              {salon.opening_time ? (
+                <p className="text-2xl font-bold text-[#b76e79]">
+                  {new Date(salon.opening_time).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              ) : (
+                <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mt-2" />
+              )}
+            </div>
+            <div className="bg-[#fff0ee] p-6 rounded-xl">
+              <p className="text-sm text-[#7a5a57]">Total Active Days</p>
+              {daysOperating !== null ? (
+                <p className="text-2xl font-bold text-[#b76e79]">
+                  {daysOperating} Days
+                </p>
+              ) : (
+                <div className="h-8 bg-gray-200 rounded w-48 animate-pulse mt-2" />
+              )}
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Floating decorative elements */}
+      <motion.div
+        className="absolute top-1/3 right-10 text-[#e8c4c0] text-4xl"
+        animate={{ y: [0, -20, 0], rotate: [0, 10, -10, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+      >
+        ✦
+      </motion.div>
     </div>
   );
 };

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useLogin } from '@/context/LoginContext';
+import { motion, useMotionValue, useTransform } from "framer-motion";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useLogin } from "@/context/LoginContext";
+import { AnimatedButton } from "./ui/Button";
 
 const HomeHero = () => {
   const [mounted, setMounted] = useState(false);
   const [perspective, setPerspective] = useState(420);
   const [mobileview, setMobileview] = useState(false);
   const { setLoginToggle } = useLogin();
-  
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -20,39 +20,39 @@ const HomeHero = () => {
   const isHovered = false;
 
   const galleryImages = [
-    '/salon.png',
-    '/Client.png',
-    '/Staff.png',
-    '/dashboard.png',
-    '/appointment.png',
-    '/Feedback.png',
-    '/Finance.png',
-    '/branch.png'
+    "/salon.png",
+    "/Client.png",
+    "/Staff.png",
+    "/dashboard.png",
+    "/appointment.png",
+    "/Feedback.png",
+    "/Finance.png",
+    "/branch.png",
   ];
 
   const imageLabels = [
-    'Salon',
-    'Clients',
-    'Team',
-    'Dashboard',
-    'Bookings',
-    'Reviews',
-    'Finance',
-    'Branches'
+    "Salon",
+    "Clients",
+    "Team",
+    "Dashboard",
+    "Bookings",
+    "Reviews",
+    "Finance",
+    "Branches",
   ];
-  const roseGold = '#b76e79';
-  const lightRoseGold = '#d4a373';
+  const roseGold = "#b76e79";
+  const lightRoseGold = "#d4a373";
 
   useEffect(() => {
     setMounted(true);
-    
+
     const updateMousePosition = (e: MouseEvent) => {
       mouseX.set(e.clientX / window.innerWidth);
       mouseY.set(e.clientY / window.innerHeight);
     };
 
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
+    window.addEventListener("mousemove", updateMousePosition);
+    return () => window.removeEventListener("mousemove", updateMousePosition);
   }, []);
 
   useEffect(() => {
@@ -85,27 +85,27 @@ const HomeHero = () => {
   }, [isHovered]);
 
   if (!mounted) return null;
-  
+
   return (
-    <section 
+    <section
       className="relative h-[100dvh] max-h-[900px] flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: 'var(--background)' }}
+      style={{ backgroundColor: "var(--background)" }}
     >
       {/* ANIMATED SCISSORS BACKGROUND */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0.3 }}
-        animate={{ 
+        animate={{
           translateY: [0, -15, 0, 15, 0],
-          rotate: [0, -3, 0, 3, 0]
+          rotate: [0, -3, 0, 3, 0],
         }}
-        transition={{ 
+        transition={{
           duration: 12,
           repeat: Infinity,
           ease: "easeInOut",
         }}
         className="absolute left-10 top-1/2 -translate-y-1/2 z-0 pointer-events-none"
         style={{
-          filter: 'drop-shadow(0 0 40px rgba(183, 110, 121, 0.5))'
+          filter: "drop-shadow(0 0 40px rgba(183, 110, 121, 0.5))",
         }}
       >
         <Image
@@ -133,7 +133,7 @@ const HomeHero = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 h-full">
         <div className="flex flex-col lg:flex-row h-full items-center justify-center gap-4 lg:gap-8 xl:gap-12">
           {/* TEXT CONTENT */}
-          <motion.div 
+          <motion.div
             className="relative w-full lg:w-1/2 flex flex-col justify-center"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -149,8 +149,7 @@ const HomeHero = () => {
                   transition={{ delay: i * 0.2 + 1 }}
                   className="block bg-clip-text text-transparent"
                   style={{
-                    backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`
-
+                    backgroundImage: `linear-gradient(45deg, ${lightRoseGold}, ${roseGold})`,
                   }}
                 >
                   {word}
@@ -162,32 +161,32 @@ const HomeHero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 }}
-              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-foreground mb-4 lg:mb-8 max-w-full lg:max-w-[90%] text-center lg:text-left px-4 lg:px-0">
-              Transform your beauty business with our all-in-one platform integrating 
-              <span className="text-rose-gold-light"> management, bookings, and community</span>. 
-              Elevate your salon to celestial heights.
+              className="text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] text-foreground mb-4 lg:mb-8 max-w-full lg:max-w-[90%] text-center lg:text-left px-4 lg:px-0"
+            >
+              Transform your beauty business with our all-in-one platform
+              integrating
+              <span className="text-rose-gold-light">
+                {" "}
+                management, bookings, and community
+              </span>
+              . Elevate your salon to celestial heights.
             </motion.p>
 
-            <motion.button
-              onClick={()=>{
-                setLoginToggle(true);
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] rounded-full text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] font-semibold transition-all relative overflow-hidden group w-fit mx-auto lg:mx-0"
-              style={{
-                background: `linear-gradient(45deg, ${roseGold}, ${lightRoseGold})`,
-                boxShadow: `0 0 40px ${roseGold}40`
-              }}>
-              <span className="relative z-10">Launch Your Ecosystem</span>
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
-
+            <AnimatedButton
+              onClick={() => setLoginToggle(true)}
+              variant="solid"
+              size="lg"
+              hoverEffect="scale"
+              gradient={[roseGold, lightRoseGold]}
+              className="px-[4vw] py-[1.5vw] lg:px-[2vw] lg:py-[1vw] text-[3vw] sm:text-[2.5vw] md:text-[2vw] lg:text-[1.2vw] lg:mx-0"
+            >
+              Launch Your Ecosystem
+            </AnimatedButton>
           </motion.div>
 
           {/* DESKTOP GALLERY */}
           <div className="hidden lg:block relative w-full lg:w-1/2 h-[50vh]">
-            <motion.div 
+            <motion.div
               className="w-full h-full"
               style={{
                 perspective: `${perspective}px`,
@@ -201,22 +200,24 @@ const HomeHero = () => {
                 transition={{
                   duration: 20,
                   repeat: Infinity,
-                  ease: 'linear',
+                  ease: "linear",
                 }}
-                style={{ transformStyle: 'preserve-3d' }}
+                style={{ transformStyle: "preserve-3d" }}
               >
                 {galleryImages.map((img, i) => (
                   <motion.div
                     key={i}
                     className="gallery-item"
-                    style={{ 
-                      '--i': i+1,
-                      transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        "--i": i + 1,
+                        transform: `rotateY(calc(var(--i) * 45deg)) translateZ(calc(min(20vw, 200px)))`,
+                      } as React.CSSProperties
+                    }
                   >
                     <Image
                       src={img}
-                      alt={`Gallery image ${i+1}`}
+                      alt={`Gallery image ${i + 1}`}
                       className="gallery-image"
                       width={200}
                       height={300}
@@ -233,11 +234,11 @@ const HomeHero = () => {
 
           {/* MOBILE GALLERY */}
           {mobileview && (
-            <div 
+            <div
               className="lg:hidden w-full h-[45vh] overflow-hidden relative mt-8"
-              style={{ backgroundColor: 'var(--background)' }}
+              style={{ backgroundColor: "var(--background)" }}
             >
-              <motion.div 
+              <motion.div
                 className="h-full grid grid-cols-2 gap-4 px-4 overflow-y-auto pb-8 snap-y"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -248,16 +249,16 @@ const HomeHero = () => {
                     key={i}
                     className="relative h-48 snap-center group"
                     initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                    whileInView={{ 
-                      scale: 1, 
+                    whileInView={{
+                      scale: 1,
                       opacity: 1,
                       y: 0,
-                      transition: { 
+                      transition: {
                         type: "spring",
                         stiffness: 80,
                         damping: 15,
-                        delay: i * 0.1
-                      }
+                        delay: i * 0.1,
+                      },
                     }}
                     animate={{
                       y: [0, -10, 0],
@@ -265,8 +266,8 @@ const HomeHero = () => {
                         duration: 4,
                         repeat: Infinity,
                         ease: "easeInOut",
-                        delay: i * 0.3 + 0.5
-                      }
+                        delay: i * 0.3 + 0.5,
+                      },
                     }}
                     whileHover={{ scale: 1.05 }}
                   >
@@ -281,23 +282,23 @@ const HomeHero = () => {
                         quality={90}
                       />
                       <div className="absolute inset-0 bg-gradient-to-b from-foreground/10 via-transparent to-foreground/10" />
-                      <div 
+                      <div
                         className="absolute bottom-3 left-3 text-background text-sm font-bold backdrop-blur-sm px-3 py-1 rounded-full"
-                        style={{ backgroundColor: 'var(--rose-gold)' }}
+                        style={{ backgroundColor: "var(--rose-gold)" }}
                       >
                         {imageLabels[i]}
                       </div>
                     </div>
                     <motion.div
                       className="absolute inset-0 border rounded-3xl pointer-events-none"
-                      style={{ borderColor: 'var(--rose-gold-light)' }}
+                      style={{ borderColor: "var(--rose-gold-light)" }}
                       animate={{
                         opacity: [0.3, 0.6, 0.3],
                         transition: {
                           duration: 2,
                           repeat: Infinity,
-                          delay: i * 0.2
-                        }
+                          delay: i * 0.2,
+                        },
                       }}
                     />
                   </motion.div>
@@ -315,15 +316,15 @@ const HomeHero = () => {
                   <motion.div
                     key={i}
                     className="w-2.5 h-2.5 rounded-full backdrop-blur-sm"
-                    style={{ backgroundColor: 'var(--rose-gold)' }}
-                    animate={{ 
+                    style={{ backgroundColor: "var(--rose-gold)" }}
+                    animate={{
                       scale: [1, 1.6, 1],
-                      opacity: [0.6, 1, 0.6]
+                      opacity: [0.6, 1, 0.6],
                     }}
                     transition={{
                       duration: 1.8,
                       repeat: Infinity,
-                      delay: i * 0.3
+                      delay: i * 0.3,
                     }}
                   />
                 ))}
@@ -336,8 +337,15 @@ const HomeHero = () => {
       {/* GLOBAL STYLES */}
       <style jsx global>{`
         @keyframes pulse-slow {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.05); }
+          0%,
+          100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.05);
+          }
         }
 
         .animate-pulse-slow {
@@ -362,7 +370,7 @@ const HomeHero = () => {
           transition: transform 0.5s ease;
           border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
         .gallery-image {
@@ -375,7 +383,11 @@ const HomeHero = () => {
         .gallery-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 50%);
+          background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.2) 0%,
+            transparent 50%
+          );
           opacity: 0;
           transition: opacity 0.3s ease;
         }

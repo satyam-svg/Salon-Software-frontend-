@@ -14,6 +14,7 @@ import { useSignup } from "@/context/SignupContext";
 import Signup from "./Signup";
 import { useForgetPassword } from "@/context/ForgetpassContext";
 import ForgotPassword from "./Forgotpasswrd";
+import { AnimatedButton } from "./ui/Button";
 
 interface NavLink {
   name: string;
@@ -451,18 +452,16 @@ const StellarNavbar: FC = () => {
                   </AnimatePresence>
                 </motion.div>
               ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <AnimatedButton
                   onClick={() => setLoginToggle(!loginToggle)}
-                  className="px-6 py-2 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl"
-                  style={{
-                    background: `linear-gradient(to right, ${roseGold}, ${lightRoseGold})`,
-                    color: "white",
-                  }}
+                  variant="solid"
+                  size="md"
+                  hoverEffect="scale"
+                  gradient={[roseGold, lightRoseGold]}
+                  className="px-6 py-2 shadow-lg hover:shadow-xl"
                 >
                   Get Started
-                </motion.button>
+                </AnimatedButton>
               )}
             </div>
 

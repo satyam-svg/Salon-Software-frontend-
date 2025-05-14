@@ -28,6 +28,7 @@ import { usePathname } from "next/navigation";
 import axios from "axios";
 import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Appointment {
   id: string;
@@ -584,17 +585,19 @@ export default function AppointmentsPage() {
           } space-y-4`}
         >
           {/* Schedule Appointment Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <AnimatedButton
             onClick={() => setformbtn(true)}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-6 rounded-xl shadow-lg
-              transition-all duration-300 font-semibold text-lg flex items-center justify-center
-              gap-2 hover:shadow-indigo-200 active:scale-95"
+            variant="solid"
+            size="md"
+            hoverEffect="scale"
+            gradient={["#6366f1", "#4f46e5"]} // indigo-600 to indigo-700
+            className="w-full py-4 px-6 rounded-xl shadow-lg hover:shadow-indigo-200 font-semibold text-lg flex items-center justify-center gap-2"
+            icon={<FiCalendar className="text-xl" />}
+            iconPosition="left"
+            whileTap={{ scale: 0.98 }} // Custom tap scale
           >
-            <FiCalendar className="text-xl" />
             Schedule Appointment
-          </motion.button>
+          </AnimatedButton>
 
           {/* Search Section */}
           <div className="relative group">
