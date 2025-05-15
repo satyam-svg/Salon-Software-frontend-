@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-
+import { AnimatedButton } from "@/Components/ui/Button";
 
 export default function DashboardLayout({
   children,
@@ -26,20 +26,17 @@ export default function DashboardLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
- 
   const arrowRef = useRef<HTMLButtonElement>(null);
-  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
   const pathname = usePathname();
+  const userid = pathname.split("/")[1];
 
   const isActiveLink = (href: string) => {
-    // Handle dashboard root path specifically
     if (href === `/${userid}/dashboard/`) {
       return pathname === href || pathname === `/${userid}/dashboard`;
     }
     return pathname === href;
   };
-
-  const userid = pathname.split("/")[1];
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -50,14 +47,18 @@ export default function DashboardLayout({
 
   const handleNavigation = (href: string) => {
     if (pathname !== href) {
-     
       if (isMobile) setIsSidebarOpen(false);
     }
   };
 
-
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div
+      className="flex h-screen bg-[#fff9f7] overflow-hidden"
+      style={{
+        backgroundImage: "radial-gradient(#e8c4c0 0.5px, transparent 0.5px)",
+        backgroundSize: "15px 15px",
+      }}
+    >
       {/* Global scrollbar hide styles */}
       <style jsx global>{`
         ::-webkit-scrollbar {
@@ -70,8 +71,6 @@ export default function DashboardLayout({
           scrollbar-width: none;
         }
       `}</style>
-
-  
 
       {/* Animated Arrow Handle */}
       {isMobile && !isSidebarOpen && (
@@ -91,7 +90,7 @@ export default function DashboardLayout({
           }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 p-3 bg-purple-600 text-white rounded-r-full shadow-lg hover:bg-purple-700 transition-colors"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 p-3 bg-[#b76e79] text-white rounded-r-full shadow-lg hover:bg-[#d8a5a5] transition-colors"
         >
           <FiChevronRight className="text-xl" />
         </motion.button>
@@ -107,61 +106,61 @@ export default function DashboardLayout({
             transition={{ type: "tween", duration: 0.3 }}
             className={`h-full bg-white shadow-xl ${
               isMobile ? "fixed inset-y-0 left-0 w-64 z-40" : "w-64"
-            } overflow-y-auto`}
+            } overflow-y-auto border-r border-[#e8c4c0]`}
           >
             <div className="p-6 space-y-6">
               <div className="space-y-4 mt-10">
                 {[
                   {
-                    icon: <FiBarChart2 />,
+                    icon: <FiBarChart2 className="text-[#b76e79]" />,
                     label: "Dashboard",
                     href: `/${userid}/dashboard/`,
                   },
                   {
-                    icon: <FiCalendar />,
+                    icon: <FiCalendar className="text-[#b76e79]" />,
                     label: "Appointments",
                     href: `/${userid}/dashboard/Appointement`,
                   },
                   {
-                    icon: <FiDollarSign />,
+                    icon: <FiDollarSign className="text-[#b76e79]" />,
                     label: "Finance",
                     href: `/${userid}/dashboard/finance`,
                   },
                   {
-                    icon: <FiUsers />,
+                    icon: <FiUsers className="text-[#b76e79]" />,
                     label: "Clients",
                     href: `/${userid}/dashboard/Clients`,
                   },
                   {
-                    icon: <FiBox />,
+                    icon: <FiBox className="text-[#b76e79]" />,
                     label: "Inventory",
                     href: `/${userid}/dashboard/inventory`,
                   },
                   {
-                    icon: <FiGitBranch />,
+                    icon: <FiGitBranch className="text-[#b76e79]" />,
                     label: "Branch",
                     href: `/${userid}/dashboard/branch`,
                   },
                   {
-                    icon: <FiClipboard />,
+                    icon: <FiClipboard className="text-[#b76e79]" />,
                     label: "Services",
                     href: `/${userid}/dashboard/service`,
                   },
                   {
-                    icon: <FiStar />,
+                    icon: <FiStar className="text-[#b76e79]" />,
                     label: "Feedback",
                     href: `/${userid}/dashboard/feedback`,
                   },
                   {
-                    icon: <FiUsers />,
+                    icon: <FiUsers className="text-[#b76e79]" />,
                     label: "Staffs",
                     href: `/${userid}/dashboard/staff`,
                   },
                   {
-                    icon: <FiSettings />,
+                    icon: <FiSettings className="text-[#b76e79]" />,
                     label: "Settings",
                     href: `/${userid}/dashboard/setting`,
-                  }
+                  },
                 ].map((item) => (
                   <motion.div
                     key={item.label}
@@ -172,8 +171,8 @@ export default function DashboardLayout({
                       href={item.href}
                       className={`flex items-center gap-3 p-3 transition-colors ${
                         isActiveLink(item.href)
-                          ? "bg-blue-100 text-blue-600 border-l-4 border-blue-500"
-                          : "text-gray-600 hover:text-purple-600"
+                          ? "bg-[#fff0ee] text-[#b76e79] border-l-4 border-[#b76e79]"
+                          : "text-[#7a5a57] hover:text-[#b76e79]"
                       }`}
                       onClick={() => handleNavigation(item.href)}
                     >
@@ -183,7 +182,6 @@ export default function DashboardLayout({
                   </motion.div>
                 ))}
 
-                {/* Beautiful Animated Close Button */}
                 {isMobile && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -191,30 +189,17 @@ export default function DashboardLayout({
                     transition={{ delay: 0.3 }}
                     className="pt-10"
                   >
-                    <motion.button
-                      ref={closeBtnRef}
+                    <AnimatedButton
                       onClick={() => setIsSidebarOpen(false)}
-                      whileHover={{
-                        scale: 1.05,
-                        backgroundColor: "#f3f4f6",
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-500 hover:text-red-600 transition-colors"
+                      variant="solid"
+                      hoverEffect="scale"
+                      gradient={["#b76e79", "#d8a5a5"]}
+                      className="w-full flex items-center justify-center gap-2 py-3"
+                      icon={<FiX className="text-sm" />}
+                      iconPosition="left"
                     >
-                      <motion.span
-                        animate={{
-                          rotate: [0, 20, -20, 0],
-                          transition: {
-                            repeat: Infinity,
-                            repeatType: "mirror",
-                            duration: 2,
-                          },
-                        }}
-                      >
-                        <FiX className="text-xl" />
-                      </motion.span>
-                      <span className="font-medium">Close SideBar</span>
-                    </motion.button>
+                      Close Sidebar
+                    </AnimatedButton>
                   </motion.div>
                 )}
               </div>
@@ -225,10 +210,23 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <motion.main
-        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-15 ${
+        className={`flex-1 h-full overflow-auto p-4 lg:p-8 mt-10 ${
           !isMobile && isSidebarOpen ? "ml-64" : ""
         }`}
       >
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-full h-32 overflow-hidden -z-10">
+          <svg
+            className="absolute top-0 right-0 w-full h-full"
+            viewBox="0 0 1200 120"
+          >
+            <path
+              d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+              className="fill-[#b76e79] opacity-20"
+            />
+          </svg>
+        </div>
+
         {children}
       </motion.main>
     </div>

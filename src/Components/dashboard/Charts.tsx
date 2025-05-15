@@ -17,7 +17,14 @@ import {
 import { motion } from "framer-motion";
 import React from "react";
 
-// Define chart data type
+// Theme Colors
+const SALON_THEME = {
+  primary: "#b76e79",
+  secondary: "#e8c4c0",
+  accent: "#7a5a57",
+  background: "#fff0ee",
+};
+
 export interface ChartData {
   day: string;
   revenue: number;
@@ -29,14 +36,12 @@ interface ChartProps {
   data: ChartData[];
 }
 
-// Props for CustomTooltip component
 interface CustomTooltipProps {
   active?: boolean;
   payload?: { name: string; value: number; color: string }[];
   label?: string;
 }
 
-// Custom Tooltip Component
 const CustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
@@ -47,9 +52,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="bg-white p-4 rounded-lg shadow-lg border border-gray-100"
+        className="bg-[#fff0ee] p-4 rounded-lg shadow-lg border border-[#e8c4c0]"
       >
-        <p className="font-medium text-gray-800">{label}</p>
+        <p className="font-medium text-[#7a5a57]">{label}</p>
         <div className="space-y-2 mt-2">
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -57,7 +62,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-sm">
+              <span className="text-sm text-[#7a5a57]">
                 {entry.name}: {entry.value}
               </span>
             </div>
@@ -66,60 +71,95 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
       </motion.div>
     );
   }
-
   return null;
 };
 
-// Line Chart Component
 export const LineChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
     <LineChart data={data}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-      <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
-      <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
+      <CartesianGrid strokeDasharray="3 3" stroke={SALON_THEME.secondary} />
+      <XAxis
+        dataKey="day"
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
+      <YAxis
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
       <Tooltip content={<CustomTooltip />} />
-      <Legend />
+      <Legend
+        wrapperStyle={{ color: SALON_THEME.accent }}
+        formatter={(value) => <span className="text-[#7a5a57]">{value}</span>}
+      />
       <Line
         type="monotone"
         dataKey="revenue"
-        stroke="#8B5CF6"
+        stroke={SALON_THEME.primary}
         strokeWidth={2}
-        dot={{ fill: "#8B5CF6", strokeWidth: 2 }}
-        activeDot={{ r: 6 }}
+        dot={{ fill: SALON_THEME.primary, strokeWidth: 2 }}
+        activeDot={{
+          r: 6,
+          fill: SALON_THEME.primary,
+          stroke: SALON_THEME.secondary,
+        }}
       />
     </LineChart>
   </ResponsiveContainer>
 );
 
-// Bar Chart Component
 export const BarChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
     <BarChart data={data}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-      <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
-      <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
+      <CartesianGrid strokeDasharray="3 3" stroke={SALON_THEME.secondary} />
+      <XAxis
+        dataKey="day"
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
+      <YAxis
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
       <Tooltip content={<CustomTooltip />} />
-      <Legend />
-      <Bar dataKey="newClients" fill="#EC4899" radius={[4, 4, 0, 0]} />
+      <Legend
+        wrapperStyle={{ color: SALON_THEME.accent }}
+        formatter={(value) => <span className="text-[#7a5a57]">{value}</span>}
+      />
+      <Bar
+        dataKey="newClients"
+        fill={SALON_THEME.primary}
+        radius={[4, 4, 0, 0]}
+        gradientTransform="rotate(90)"
+      />
     </BarChart>
   </ResponsiveContainer>
 );
 
-// Area Chart Component
 export const AreaChartComponent: React.FC<ChartProps> = ({ data }) => (
   <ResponsiveContainer width="100%" height="100%">
     <AreaChart data={data}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-      <XAxis dataKey="day" tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
-      <YAxis tick={{ fill: "#6B7280" }} stroke="#E5E7EB" />
+      <CartesianGrid strokeDasharray="3 3" stroke={SALON_THEME.secondary} />
+      <XAxis
+        dataKey="day"
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
+      <YAxis
+        tick={{ fill: SALON_THEME.accent }}
+        stroke={SALON_THEME.secondary}
+      />
       <Tooltip content={<CustomTooltip />} />
-      <Legend />
+      <Legend
+        wrapperStyle={{ color: SALON_THEME.accent }}
+        formatter={(value) => <span className="text-[#7a5a57]">{value}</span>}
+      />
       <Area
         type="monotone"
         dataKey="appointments"
-        stroke="#8B5CF6"
-        fill="#8B5CF6"
-        fillOpacity={0.2}
+        stroke={SALON_THEME.primary}
+        fill={SALON_THEME.primary}
+        fillOpacity={0.15}
         strokeWidth={2}
       />
     </AreaChart>

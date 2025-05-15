@@ -5,16 +5,7 @@ import {
   LineChartComponent,
 } from "@/Components/dashboard/Charts";
 import { motion } from "framer-motion";
-import {
-  FiDollarSign,
-  FiUserPlus,
-  FiCalendar,
-  FiSettings,
-  FiUsers,
-  FiBox,
-  FiClipboard,
-  FiStar,
-} from "react-icons/fi";
+import { FiUserPlus, FiCalendar, FiSettings } from "react-icons/fi";
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import axios from "axios";
@@ -42,13 +33,6 @@ interface ChartCardProps {
   children: ReactNode;
 }
 
-interface NavCardProps {
-  icon: ReactNode;
-  label: string;
-  href: string;
-  description: string;
-}
-
 const DashboardPage = () => {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
@@ -59,31 +43,21 @@ const DashboardPage = () => {
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
 
-  // Fetch salon ID and initial data
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setScreenLoaderToggle(true);
-
-        // Get user data
         const userResponse = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
-
-        if (!userResponse.ok) {
+        if (!userResponse.ok)
           throw new Error(`HTTP error! status: ${userResponse.status}`);
-        }
-
         const userData = await userResponse.json();
-
-        if (!userData.user?.salonId) {
-          throw new Error("Salon not found in user data");
-        }
+        if (!userData.user?.salonId) throw new Error("Salon not found");
 
         const salonId = userData.user.salonId;
         setSalonId(salonId);
 
-        // Fetch all dashboard data in parallel
         const [chartRes, revenueRes, clientsRes, appointmentsRes] =
           await Promise.all([
             axios.get(
@@ -100,14 +74,12 @@ const DashboardPage = () => {
             ),
           ]);
 
-        // Update state with fetched data
         setChartData(chartRes.data);
         setRevenue(revenueRes.data.totalRevenue);
         setClients(clientsRes.data.totalClients);
         setAppointments(appointmentsRes.data.totalAppointments);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        // Handle error state here (e.g., show error message)
       } finally {
         setScreenLoaderToggle(false);
       }
@@ -115,44 +87,6 @@ const DashboardPage = () => {
 
     fetchInitialData();
   }, [userId, setScreenLoaderToggle]);
-  const navigationOptions = [
-    {
-      icon: <FiCalendar className="text-2xl" />,
-      label: "Appointments Management",
-      href: `/${userId}/dashboard/Appointement`,
-      description: "Manage bookings and schedule appointments with clients",
-    },
-    {
-      icon: <FiDollarSign className="text-2xl" />,
-      label: "Finance Management",
-      href: `/${userId}/dashboard/finance`,
-      description: "Track transactions, invoices, and financial reports",
-    },
-    {
-      icon: <FiUsers className="text-2xl" />,
-      label: "Clients Management",
-      href: `/${userId}/dashboard/Clients`,
-      description: "View client profiles and manage relationships",
-    },
-    {
-      icon: <FiBox className="text-2xl" />,
-      label: "Inventory Management",
-      href: `/${userId}/dashboard/inventory`,
-      description: "Monitor stock levels and product management",
-    },
-    {
-      icon: <FiClipboard className="text-2xl" />,
-      label: "Services Management",
-      href: "#",
-      description: "Edit service offerings and pricing structures",
-    },
-    {
-      icon: <FiStar className="text-2xl" />,
-      label: "Feedback Management",
-      href: "#",
-      description: "Analyze customer reviews and ratings",
-    },
-  ];
 
   const statsData = [
     {
@@ -160,21 +94,21 @@ const DashboardPage = () => {
       title: "Monthly Revenue",
       value: revenue,
       trend: "+15% from last month",
-      color: "from-purple-600 to-pink-500",
+      color: "from-[#b76e79] to-[#d8a5a5]",
     },
     {
       icon: <FiUserPlus className="text-white text-xl" />,
       title: "New Clients",
       value: clients,
       trend: "+23% from last month",
-      color: "from-emerald-500 to-cyan-500",
+      color: "from-[#9e6d70] to-[#e8c4c0]",
     },
     {
       icon: <FiCalendar className="text-white text-xl" />,
       title: "Appointments",
       value: appointments,
       trend: "+8% from last month",
-      color: "from-amber-500 to-orange-500",
+      color: "from-[#7a5a57] to-[#b76e79]",
     },
   ];
 
@@ -193,9 +127,7 @@ const DashboardPage = () => {
     },
   ];
 
-  if (ScreenLoaderToggle) {
-    return <Screenloader />;
-  }
+  if (ScreenLoaderToggle) return <Screenloader />;
 
   return (
     <motion.div
@@ -207,16 +139,18 @@ const DashboardPage = () => {
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.2, type: "spring" }}
         className="flex justify-between items-center"
       >
-        <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <h1 className="text-3xl font-bold text-[#7a5a57] font-dancing">
+          Salon Dashboard Overview
+        </h1>
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, rotate: 15 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2 rounded-full bg-white shadow-lg"
+          className="p-3 rounded-full bg-[#fff0ee] border border-[#e8c4c0] shadow-sm"
         >
-          <FiSettings className="text-xl text-gray-600" />
+          <FiSettings className="text-xl text-[#b76e79]" />
         </motion.button>
       </motion.div>
 
@@ -227,7 +161,11 @@ const DashboardPage = () => {
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.2 + 0.3 }}
+            transition={{
+              delay: index * 0.2 + 0.3,
+              type: "spring",
+              stiffness: 100,
+            }}
           >
             <StatCard {...stat} />
           </motion.div>
@@ -241,72 +179,29 @@ const DashboardPage = () => {
             key={chart.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.2 + 0.5 }}
+            transition={{ delay: index * 0.2 + 0.5, type: "spring" }}
           >
             <ChartCard title={chart.title}>{chart.component}</ChartCard>
           </motion.div>
-        ))}
-      </div>
-
-      {/* Navigation Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {navigationOptions.map((item, index) => (
-          <NavCard
-            key={item.label}
-            icon={item.icon}
-            label={item.label}
-            href={item.href}
-            description={item.description}
-            index={index}
-          />
         ))}
       </div>
     </motion.div>
   );
 };
 
-const NavCard = ({
-  icon,
-  label,
-  href,
-  description,
-  index,
-}: NavCardProps & { index: number }) => (
-  <motion.a
-    href={href}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.1 + 0.7 }}
-    whileHover={{ y: -5, scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-  >
-    <div className="flex items-start gap-4">
-      <div className="p-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 group-hover:from-indigo-600 group-hover:to-blue-600 transition-colors">
-        {icon}
-      </div>
-      <div>
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">{label}</h3>
-        <p className="text-gray-600 text-sm">{description}</p>
-      </div>
-    </div>
-    <div className="mt-4 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-      <span className="text-blue-500 text-sm font-medium">Explore →</span>
-    </div>
-  </motion.a>
-);
-
 const StatCard = ({ icon, title, value, trend, color }: StatCardProps) => (
   <motion.div
     whileHover={{ y: -5 }}
-    className="bg-white p-6 rounded-xl shadow-sm"
+    className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]"
   >
     <div className="flex items-center gap-4">
-      <div className={`p-3 rounded-lg bg-gradient-to-r ${color}`}>{icon}</div>
+      <div className={`p-3 rounded-lg bg-gradient-to-r ${color} shadow-md`}>
+        {icon}
+      </div>
       <div>
-        <h3 className="text-gray-500 text-sm">{title}</h3>
-        <p className="text-2xl font-bold text-gray-800">{value}</p>
-        <span className="text-sm text-green-500">{trend}</span>
+        <h3 className="text-[#7a5a57] text-sm font-medium">{title}</h3>
+        <p className="text-2xl font-bold text-[#b76e79]">{value}</p>
+        <span className="text-sm text-[#9e6d70]">{trend}</span>
       </div>
     </div>
   </motion.div>
@@ -315,10 +210,11 @@ const StatCard = ({ icon, title, value, trend, color }: StatCardProps) => (
 const ChartCard = ({ title, children }: ChartCardProps) => (
   <motion.div
     whileHover={{ scale: 1.01 }}
-    className="bg-white p-6 rounded-xl shadow-sm"
+    className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]"
   >
-    <h3 className="text-lg font-semibold mb-4">{title}</h3>
-    <div className="h-64">{children}</div>
+    <h3 className="text-lg font-semibold mb-4 text-[#7a5a57]">{title}</h3>
+    <div className="h-64 [&>canvas]:!text-[#7a5a57]">{children}</div>
   </motion.div>
 );
+
 export default DashboardPage;

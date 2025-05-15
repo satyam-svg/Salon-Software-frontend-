@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
@@ -7,7 +7,6 @@ import {
   FiUser,
   FiScissors,
   FiDollarSign,
-  FiMapPin,
   FiChevronDown,
   FiChevronUp,
   FiDownload,
@@ -126,6 +125,15 @@ interface AppointmentResponse {
   service: ServiceResponse;
   client: ClientResponse;
 }
+
+const SALON_THEME = {
+  primary: "#b76e79",
+  secondary: "#e8c4c0",
+  accent: "#7a5a57",
+  background: "#fff0ee",
+  textPrimary: "#7a5a57",
+  textSecondary: "#9e6d70",
+};
 
 // Sample Data (same as before)
 
@@ -549,11 +557,12 @@ export default function AppointmentsPage() {
   }, []);
 
   // Status colors
+  // Updated Status colors
   const statusColors: Record<string, string> = {
-    confirmed: "bg-emerald-100 text-emerald-800",
-    pending: "bg-amber-100 text-amber-800",
-    completed: "bg-blue-100 text-blue-800",
-    cancelled: "bg-red-100 text-red-800",
+    confirmed: "bg-[#e8c4c0] text-[#7a5a57]",
+    pending: "bg-[#fff0ee] text-[#9e6d70] border border-[#e8c4c0]",
+    completed: "bg-[#d8a5a5] text-[#7a5a57]",
+    cancelled: "bg-[#f8d7da] text-[#dc3545]",
   };
 
   if (ScreenLoaderToggle) {
@@ -562,65 +571,56 @@ export default function AppointmentsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto mb-20">
-      {/* Header */}
+      {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-[#7a5a57] font-dancing">
             Appointment Management
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-[#9e6d70] mt-1">
             Manage and track all salon appointments
           </p>
         </div>
 
-        {/* Modern Search Bar */}
+        {/* Search and Schedule Section */}
         <motion.div
           layout
           className={`relative ${
             isExpanded ? "w-full md:w-96" : "w-full md:w-94"
           } space-y-4`}
         >
-          {/* Schedule Appointment Button */}
           <AnimatedButton
             onClick={() => setformbtn(true)}
             variant="solid"
-            size="md"
-            hoverEffect="scale"
-            gradient={["#6366f1", "#4f46e5"]} // indigo-600 to indigo-700
-            className="w-full py-4 px-6 rounded-xl shadow-lg hover:shadow-indigo-200 font-semibold text-lg flex items-center justify-center gap-2"
-            icon={<FiCalendar className="text-xl" />}
+            gradient={[SALON_THEME.primary, SALON_THEME.secondary]}
+            className="w-full py-4 px-6 rounded-xl shadow-lg hover:shadow-[#e8c4c0] font-semibold text-lg"
+            icon={<FiCalendar className="text-xl text-white" />}
             iconPosition="left"
-            whileTap={{ scale: 0.98 }} // Custom tap scale
           >
             Schedule Appointment
           </AnimatedButton>
 
-          {/* Search Section */}
           <div className="relative group">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 z-10" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#b76e79] z-10" />
             <input
               type="text"
-              placeholder={
-                isExpanded
-                  ? "Search by client, service, staff, branch or price..."
-                  : "Search appointments..."
-              }
-              className="w-full pl-11 pr-12 py-4 rounded-xl border-2 border-indigo-100 bg-white
-               focus:outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100
-               placeholder-gray-400 text-gray-700 transition-all duration-300 shadow-sm
-               hover:border-indigo-200"
+              placeholder={isExpanded ? "Search appointments..." : "Search..."}
+              className="w-full pl-11 pr-12 py-4 rounded-xl border-2 border-[#e8c4c0] bg-white
+               focus:outline-none focus:border-[#b76e79] focus:ring-2 focus:ring-[#e8c4c0]
+               placeholder-[#9e6d70] text-[#7a5a57] transition-all duration-300 shadow-sm
+               hover:border-[#d8a5a5]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsExpanded(!isExpanded)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-indigo-50 rounded-lg
-                text-indigo-600 hover:bg-indigo-100 transition-colors duration-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[#fff0ee] rounded-lg
+                text-[#b76e79] hover:bg-[#e8c4c0] transition-colors duration-200"
             >
               {isExpanded ? (
                 <FiChevronUp className="w-5 h-5" />
@@ -637,21 +637,19 @@ export default function AppointmentsPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ type: "spring", stiffness: 150, damping: 20 }}
-                className="mt-2 bg-white p-6 rounded-xl shadow-lg border border-indigo-50 space-y-6"
+                className="mt-2 bg-white p-6 rounded-xl shadow-lg border border-[#e8c4c0] space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Client Input */}
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
-                      <FiUser className="text-indigo-500" />
+                    <label className="text-sm font-semibold text-[#7a5a57] flex items-center gap-2">
+                      <FiUser className="text-[#b76e79]" />
                       Client Name
                     </label>
                     <input
                       type="text"
-                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
-                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200 placeholder-gray-400"
-                      placeholder="Filter by client"
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-lg focus:border-[#b76e79]
+                       focus:ring-2 focus:ring-[#e8c4c0] placeholder-[#9e6d70] text-[#7a5a57]"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
                     />
@@ -659,15 +657,14 @@ export default function AppointmentsPage() {
 
                   {/* Service Input */}
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
-                      <FiScissors className="text-indigo-500" />
+                    <label className="text-sm font-semibold text-[#7a5a57] flex items-center gap-2">
+                      <FiScissors className="text-[#b76e79]" />
                       Service
                     </label>
                     <input
                       type="text"
-                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
-                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200 placeholder-gray-400"
-                      placeholder="Filter by service"
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-lg focus:border-[#b76e79]
+                       focus:ring-2 focus:ring-[#e8c4c0] placeholder-[#9e6d70] text-[#7a5a57]"
                       value={serviceName}
                       onChange={(e) => setServiceName(e.target.value)}
                     />
@@ -675,14 +672,14 @@ export default function AppointmentsPage() {
 
                   {/* Status Dropdown */}
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
-                      <FiFlag className="text-indigo-500" />
+                    <label className="text-sm font-semibold text-[#7a5a57] flex items-center gap-2">
+                      <FiFlag className="text-[#b76e79]" />
                       Status
                     </label>
                     <select
-                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
-                        focus:ring-2 focus:ring-indigo-100 transition-all duration-200 appearance-none
-                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2MzVmOTAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLWRvd24iPjxwYXRoIGQ9Im02IDkgNiA2IDYtNiIvPjwvc3ZnPg==')] 
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-lg focus:border-[#b76e79]
+                        focus:ring-2 focus:ring-[#e8c4c0] appearance-none
+                        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNiNzZlNzkiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLWRvd24iPjxwYXRoIGQ9Im02IDkgNiA2IDYtNiIvPjwvc3ZnPg==')] 
                         bg-no-repeat bg-[center_right_1rem]"
                       value={selectedStatus}
                       onChange={(e) => setSelectedStatus(e.target.value)}
@@ -696,17 +693,15 @@ export default function AppointmentsPage() {
 
                   {/* Date Input */}
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-indigo-900 flex items-center gap-2">
-                      <FiCalendar className="text-indigo-500" />
+                    <label className="text-sm font-semibold text-[#7a5a57] flex items-center gap-2">
+                      <FiCalendar className="text-[#b76e79]" />
                       Date
                     </label>
                     <input
                       type="date"
-                      className="w-full p-3 border-2 border-indigo-100 rounded-lg focus:border-indigo-300
-                       focus:ring-2 focus:ring-indigo-100 transition-all duration-200
-                       [&::-webkit-calendar-picker-indicator]:bg-indigo-500 
-                       [&::-webkit-calendar-picker-indicator]:rounded-md
-                       [&::-webkit-calendar-picker-indicator]:p-1"
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-lg focus:border-[#b76e79]
+                       focus:ring-2 focus:ring-[#e8c4c0]
+                       [&::-webkit-calendar-picker-indicator]:bg-[#b76e79]"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
                     />
@@ -720,148 +715,118 @@ export default function AppointmentsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Appointments</p>
-              <p className="text-2xl font-bold">{appointment.length}</p>
+        {[
+          {
+            icon: <FiCalendar />,
+            title: "Total Appointments",
+            value: appointment.length,
+            color: SALON_THEME.secondary,
+          },
+          {
+            icon: <FiUser />,
+            title: "Confirmed",
+            value: appointment.filter((a) => a.status === "confirmed").length,
+            color: "#d8a5a5",
+          },
+          {
+            icon: <FiScissors />,
+            title: "Services Booked",
+            value: new Set(appointment.map((a) => a.service_name)).size,
+            color: "#e8c4c0",
+          },
+          {
+            icon: <FiDollarSign />,
+            title: "Total Revenue",
+            value: appointment
+              .filter((a) => a.status === "confirmed")
+              .reduce((sum, a) => sum + a.price, 0)
+              .toFixed(2),
+            color: SALON_THEME.primary,
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={index}
+            whileHover={{ y: -5 }}
+            className="bg-white p-4 rounded-xl shadow-sm border border-[#e8c4c0]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#9e6d70]">{stat.title}</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
+                  {stat.value}
+                </p>
+              </div>
+              <div
+                className="p-3 rounded-lg"
+                style={{ backgroundColor: stat.color }}
+              >
+                {React.cloneElement(stat.icon, {
+                  className: "text-xl text-[#7a5a57]",
+                })}
+              </div>
             </div>
-            <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
-              <FiCalendar className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Confirmed</p>
-              <p className="text-2xl font-bold">
-                {appointment.filter((a) => a.status === "confirmed").length}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-emerald-100 text-emerald-600">
-              <FiUser className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Services Booked</p>
-              <p className="text-2xl font-bold">
-                {new Set(appointment.map((a) => a.service_name)).size}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
-              <FiScissors className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold">
-                $
-                {appointment
-                  .filter((a) => a.status === "confirmed")
-                  .reduce((sum, a) => sum + a.price, 0)
-                  .toFixed(2)}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-              <FiDollarSign className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Modern Table */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
         className="relative"
       >
-        {/* Custom Scrollbar Track */}
-        <div className="absolute right-0 top-0 h-full w-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="absolute right-0 top-0 h-full w-2 bg-[#e8c4c0] rounded-full overflow-hidden">
           <motion.div
-            className="w-full bg-indigo-500 rounded-full"
+            className="w-full bg-[#b76e79] rounded-full"
             animate={{ height: `${scrollProgress}%` }}
-            transition={{ type: "spring", damping: 20 }}
           />
         </div>
 
-        {/* Table Container */}
         <div
           ref={tableRef}
           className="overflow-y-auto max-h-[600px] pr-4 scrollbar-hide"
         >
           <table className="w-full relative">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gradient-to-r from-indigo-50 to-blue-50 backdrop-blur-sm">
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiUser className="inline mr-1" /> Details
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiScissors className="inline mr-1" /> Service
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Staff
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiMapPin className="inline mr-1" /> Location
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiCalendar className="inline mr-1" /> Date/Time
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  <FiDollarSign className="inline mr-1" /> Price
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Status
-                </th>
+              <tr className="bg-gradient-to-r from-[#fff0ee] to-[#e8c4c0] backdrop-blur-sm">
+                {[
+                  "Client",
+                  "Details",
+                  "Service",
+                  "Staff",
+                  "Location",
+                  "Date/Time",
+                  "Price",
+                  "Status",
+                ].map((header, index) => (
+                  <th
+                    key={index}
+                    className="px-6 py-4 text-left text-xs font-medium text-[#7a5a57] uppercase tracking-wider"
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+
+            <tbody className="divide-y divide-[#e8c4c0]">
               <AnimatePresence>
                 {appointment.map((appointment) => (
                   <motion.tr
                     key={appointment.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="hover:bg-indigo-50/50 transition-colors group"
+                    className="hover:bg-[#fff0ee] transition-colors group"
                   >
+                    {/* Table Cells */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                        <div className="bg-[#e8c4c0] text-[#7a5a57] h-10 w-10 rounded-full flex items-center justify-center">
                           {appointment.client_name.charAt(0)}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-[#7a5a57]">
                             {appointment.client_name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-[#9e6d70]">
                             #{appointment.id.split("-")[0]}
                           </div>
                         </div>
@@ -921,15 +886,14 @@ export default function AppointmentsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <div className="text-lg font-bold text-indigo-600">
+                        <div className="text-lg font-bold text-[#b76e79]">
                           ${appointment.price.toFixed(2)}
                         </div>
                         <button
                           onClick={() => handleDownloadInvoice(appointment)}
-                          className="p-1 hover:bg-indigo-100 rounded-lg transition-colors"
-                          title="Download Invoice"
+                          className="p-1 hover:bg-[#e8c4c0] rounded-lg"
                         >
-                          <FiDownload className="text-indigo-600" />
+                          <FiDownload className="text-[#b76e79]" />
                         </button>
                       </div>
                     </td>
@@ -982,17 +946,10 @@ export default function AppointmentsPage() {
 
         {formbtn && (
           <AnimatePresence>
-            {/* Backdrop with blur effect */}
             <motion.div
-              key="backdrop"
-              initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-              animate={{ opacity: 1, backdropFilter: "blur(4px)" }}
-              exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-              transition={{ duration: 0.3 }}
               className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center"
               onClick={() => setformbtn(false)}
             >
-              {/* Form Container - Prevent click propagation */}
               <div onClick={(e) => e.stopPropagation()}>
                 <AppointmentManagementForm setformbtn={setformbtn} />
               </div>
@@ -1002,4 +959,8 @@ export default function AppointmentsPage() {
       </motion.div>
     </div>
   );
+}
+
+{
+  /* Appointment Form Modal */
 }

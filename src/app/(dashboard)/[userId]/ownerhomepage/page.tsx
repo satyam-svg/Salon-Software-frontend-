@@ -254,15 +254,14 @@ const OwnerHomepage = () => {
           <AnimatedButton
             onClick={handleDashboardClick}
             variant="solid"
-            size="md"
             hoverEffect="scale"
             gradient={["#b76e79", "#d8a5a5"]}
-            className="mr-12 rounded-xl shadow-lg hover:shadow-xl" // Added ml-auto
-            icon={<FiStar className="text-lg" />}
+            className="mr-6 px-2 py-1 text-sm rounded-lg shadow-md hover:shadow-lg max-w-[200px] h-12"
+            icon={<FiStar className="text-xs" />}
             iconPosition="left"
             isLoading={isNavigating}
           >
-            {isNavigating ? "Loading..." : "Manage Dashboard"}
+            {isNavigating ? "Loading..." : "Dashboard"}
           </AnimatedButton>
         </motion.div>
 

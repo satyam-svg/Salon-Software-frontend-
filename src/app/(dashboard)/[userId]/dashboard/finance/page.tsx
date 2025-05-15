@@ -1,4 +1,3 @@
-// app/dashboard/finance/page.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -11,6 +10,7 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import axios from "axios";
 import { usePathname } from "next/navigation";
+import { saveAs } from "file-saver";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,6 +24,17 @@ import {
 import { Line } from "react-chartjs-2";
 import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
+
+// Salon Theme Config
+const SALON_THEME = {
+  primary: "#b76e79",
+  secondary: "#e8c4c0",
+  accent: "#7a5a57",
+  background: "#fff0ee",
+  textPrimary: "#7a5a57",
+  textSecondary: "#9e6d70",
+};
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
@@ -34,6 +45,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
 interface FinancialData {
   branches: Array<{
     branchId: string;
@@ -118,28 +130,38 @@ const FinancialPage = () => {
   };
 
   const exportReport = () => {
-    // Implement export logic using financialData
+    if (!financialData) return;
+
+    // CSV Export Logic
+    const csvContent = [
+      "Branch Name,Earnings,Staff Salaries,Product Costs,Net Profit",
+      ...financialData.branches.map(
+        (branch) =>
+          `${branch.branchName},${branch.earnings},${branch.staffSalaries},${branch.productCosts},${branch.netProfit}`
+      ),
+      `TOTAL,,${financialData.totals.staffSalaries},${financialData.totals.productCosts},${financialData.totals.netProfit}`,
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `salon-financial-report-${new Date().toISOString()}.csv`);
   };
 
-  if (ScreenLoaderToggle) {
-    return <Screenloader />;
-  }
-
+  if (ScreenLoaderToggle) return <Screenloader />;
   if (!financialData) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-8 mb-14"
+      className="space-y-8 mb-14 px-4"
     >
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-3xl font-bold text-[#7a5a57] font-dancing">
             Financial Overview
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-[#9e6d70] mt-2">
             {format(dateRange[0].startDate || 0, "MMM dd, yyyy")} -{" "}
             {format(dateRange[0].endDate || 0, "MMM dd, yyyy")}
           </p>
@@ -148,17 +170,17 @@ const FinancialPage = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           onClick={exportReport}
-          className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg"
+          className="flex items-center gap-2 bg-[#b76e79] text-white px-6 py-3 rounded-lg hover:bg-[#9e6d70] transition-colors"
         >
           <FiDownload className="text-lg" />
           Export Report
         </motion.button>
       </div>
 
-      {/* Total Earnings Card */}
+      {/* Net Profit Card */}
       <motion.div
         whileHover={{ y: -5 }}
-        className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 rounded-2xl text-white"
+        className="bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] p-6 rounded-2xl text-white shadow-lg"
       >
         <div className="flex justify-between items-center">
           <div>
@@ -174,9 +196,11 @@ const FinancialPage = () => {
         </div>
       </motion.div>
 
-      {/* Date Picker & Graph Section */}
-      <div className="bg-white p-6 rounded-xl shadow-sm overflow-hidden">
-        <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
+      {/* Date Picker Section */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]">
+        <h3 className="text-lg font-semibold mb-4 text-[#7a5a57]">
+          Select Date Range
+        </h3>
         <div className="[&_.rdrMonth]:w-full [&_.rdrCalendarWrapper]:bg-white">
           <DateRange
             editableDateInputs={true}
@@ -184,13 +208,16 @@ const FinancialPage = () => {
             moveRangeOnFirstSelection={false}
             ranges={dateRange}
             className="w-full"
-            rangeColors={["#8B5CF6"]}
+            rangeColors={[SALON_THEME.primary]}
           />
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h3 className="text-lg font-semibold mb-4">Earnings Trend</h3>
+      {/* Earnings Trend Chart */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]">
+        <h3 className="text-lg font-semibold mb-4 text-[#7a5a57]">
+          Earnings Trend
+        </h3>
         <div className="h-64">
           <LineChartComponent data={financialData.trendData} />
         </div>
@@ -198,39 +225,45 @@ const FinancialPage = () => {
 
       {/* Branch-wise Breakdown */}
       <div className="space-y-6">
-        <h3 className="text-2xl font-bold text-gray-800">Branch Performance</h3>
+        <h3 className="text-2xl font-bold text-[#7a5a57] font-dancing">
+          Branch Performance
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {financialData.branches.map((branch) => (
             <motion.div
               key={branch.branchId}
               whileHover={{ y: -5 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="text-xl font-semibold">{branch.branchName}</h4>
+                  <h4 className="text-xl font-semibold text-[#7a5a57]">
+                    {branch.branchName}
+                  </h4>
                   <div className="space-y-2 mt-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Earnings:</span>
-                      <span className="font-medium">
+                      <span className="text-[#9e6d70]">Earnings:</span>
+                      <span className="font-medium text-[#7a5a57]">
                         ${branch.earnings.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Staff Salaries:</span>
+                      <span className="text-[#9e6d70]">Staff Salaries:</span>
                       <span className="text-red-500">
                         -${branch.staffSalaries.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Product Costs:</span>
+                      <span className="text-[#9e6d70]">Product Costs:</span>
                       <span className="text-red-500">
                         -${branch.productCosts.toLocaleString()}
                       </span>
                     </div>
-                    <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
-                      <span className="font-semibold">Net Profit:</span>
-                      <span className="font-bold text-purple-600">
+                    <div className="flex justify-between mt-3 pt-3 border-t border-[#e8c4c0]">
+                      <span className="font-semibold text-[#7a5a57]">
+                        Net Profit:
+                      </span>
+                      <span className="font-bold text-[#b76e79]">
                         ${branch.netProfit.toLocaleString()}
                       </span>
                     </div>
@@ -242,40 +275,42 @@ const FinancialPage = () => {
         </div>
       </div>
 
-      {/* Detailed Expense Breakdown */}
-      <div className="bg-white p-6 rounded-xl shadow-sm">
-        <h3 className="text-xl font-semibold mb-6">Expense Breakdown</h3>
+      {/* Expense Breakdown */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-[#e8c4c0]">
+        <h3 className="text-xl font-semibold mb-6 text-[#7a5a57]">
+          Expense Breakdown
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-4 bg-purple-50 rounded-lg">
+          <div className="p-4 bg-[#fff0ee] rounded-lg">
             <div className="flex items-center gap-3">
-              <FiUsers className="text-2xl text-purple-600" />
+              <FiUsers className="text-2xl text-[#b76e79]" />
               <div>
-                <p className="text-gray-600">Total Staff Salaries</p>
-                <p className="text-2xl font-bold">
+                <p className="text-[#9e6d70]">Total Staff Salaries</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
                   ${financialData.totals.staffSalaries.toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="p-4 bg-pink-50 rounded-lg">
+          <div className="p-4 bg-[#fff0ee] rounded-lg">
             <div className="flex items-center gap-3">
-              <FiBox className="text-2xl text-pink-600" />
+              <FiBox className="text-2xl text-[#b76e79]" />
               <div>
-                <p className="text-gray-600">Product Costs</p>
-                <p className="text-2xl font-bold">
+                <p className="text-[#9e6d70]">Product Costs</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
                   ${financialData.totals.productCosts.toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="p-4 bg-emerald-50 rounded-lg">
+          <div className="p-4 bg-[#fff0ee] rounded-lg">
             <div className="flex items-center gap-3">
-              <FiDollarSign className="text-2xl text-emerald-600" />
+              <FiDollarSign className="text-2xl text-[#b76e79]" />
               <div>
-                <p className="text-gray-600">Net Profit Margin</p>
-                <p className="text-2xl font-bold">
+                <p className="text-[#9e6d70]">Net Profit Margin</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
                   {(
                     (financialData.totals.netProfit /
                       financialData.totals.earnings) *
@@ -303,8 +338,8 @@ const LineChartComponent = ({
       {
         label: "Daily Earnings",
         data: data.map((item) => item.amount),
-        borderColor: "#8B5CF6",
-        backgroundColor: "rgba(139, 92, 246, 0.1)",
+        borderColor: SALON_THEME.primary,
+        backgroundColor: "#e8c4c040",
         tension: 0.4,
         borderWidth: 2,
         pointRadius: 3,
@@ -313,7 +348,6 @@ const LineChartComponent = ({
     ],
   };
 
-  // Fixed options with proper Chart.js types
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -321,18 +355,15 @@ const LineChartComponent = ({
       legend: {
         position: "top" as const,
         labels: {
-          color: "#374151",
-          font: {
-            size: 14,
-            weight: 600 as number,
-          },
+          color: SALON_THEME.textPrimary,
+          font: { size: 14, weight: 600 },
         },
       },
       tooltip: {
-        backgroundColor: "#1F2937",
-        titleColor: "#F9FAFB",
-        bodyColor: "#E5E7EB",
-        borderColor: "#4B5563",
+        backgroundColor: SALON_THEME.background,
+        titleColor: SALON_THEME.textPrimary,
+        bodyColor: SALON_THEME.textSecondary,
+        borderColor: SALON_THEME.secondary,
         borderWidth: 1,
         padding: 12,
       },
@@ -340,36 +371,24 @@ const LineChartComponent = ({
     scales: {
       x: {
         type: "category" as const,
-        grid: {
-          display: false,
-          color: "#E5E7EB",
-        },
-        ticks: {
-          color: "#6B7280",
-          maxRotation: 0,
-          autoSkip: true,
-          maxTicksLimit: 7,
-        },
+        grid: { display: false, color: SALON_THEME.secondary },
+        ticks: { color: SALON_THEME.textSecondary },
       },
       y: {
         type: "linear" as const,
-        grid: {
-          color: "#E5E7EB",
-          drawBorder: false,
-        },
+        grid: { color: SALON_THEME.secondary },
         ticks: {
-          color: "#6B7280",
+          color: SALON_THEME.textSecondary,
           callback: (value: number | string) =>
             `$${Number(value).toLocaleString()}`,
         },
-        beginAtZero: true,
       },
     },
   };
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-[#9e6d70]">
         No data available for the selected period
       </div>
     );

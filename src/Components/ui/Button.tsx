@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
   variant?: "solid" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "custom";
   hoverEffect?: "shine" | "scale" | "slide";
   gradient?: [string, string];
   icon?: ReactNode;
@@ -22,7 +22,7 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "solid",
       size = "md",
       hoverEffect = "shine",
-      gradient = ["#B76E79", "#E8C4C0"],
+      gradient = ["#b76e79", "#d8a5a5"], // Updated default to rose gold
       className,
       children,
       icon,
@@ -36,6 +36,7 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
       sm: "px-6 py-2 text-sm",
       md: "px-8 py-3 text-base",
       lg: "px-10 py-4 text-lg",
+      custom: "", // For fully custom sizing via className
     };
 
     const variantClasses = {
@@ -50,10 +51,10 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
         whileHover={hoverEffect === "scale" ? { scale: 1.05 } : {}}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          "relative rounded-full font-semibold transition-all",
-          "group mx-auto w-fit overflow-hidden",
+          "relative rounded-xl font-semibold transition-all", // Changed from rounded-full to rounded-xl
+          "group w-full flex items-center justify-center gap-2 overflow-hidden", // Updated layout classes
           variantClasses[variant],
-          sizeClasses[size],
+          size !== "custom" && sizeClasses[size], // Only apply size classes if not custom
           className
         )}
         style={{
@@ -63,7 +64,7 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
               : "transparent",
           borderColor: variant === "outline" ? gradient[0] : "transparent",
           color: variant === "solid" ? "white" : gradient[0],
-          boxShadow: `0 0 40px ${gradient[0]}40`,
+          boxShadow: `0 0 20px ${gradient[0]}40`, // More subtle shadow
         }}
         disabled={isLoading}
         {...props}
