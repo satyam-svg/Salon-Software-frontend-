@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
 import { useButtonLoader } from "@/context/buttonloader";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Service {
   id: string;
@@ -70,16 +71,12 @@ export default function BranchManagementPage() {
       );
       if (!userResponse.ok) throw new Error("Failed to fetch user data");
       const userData = await userResponse.json();
-      console.log(userData);
-
       if (!userData.user?.salonId) throw new Error("Salon not found");
       setsalonid(userData.user.salonId);
-      console.log(userResponse);
     };
     getsalonid();
   }, [userid]);
 
-  // Fetch branches from API
   const fetchBranches = async () => {
     try {
       setScreenLoaderToggle(true);
@@ -96,11 +93,11 @@ export default function BranchManagementPage() {
       setScreenLoaderToggle(false);
     }
   };
+
   useEffect(() => {
     fetchBranches();
   }, [salonid]);
 
-  // Filter branches
   useEffect(() => {
     const filtered = branches.filter((branch) => {
       const matchesSearch = [
@@ -124,7 +121,6 @@ export default function BranchManagementPage() {
     setFilteredBranches(filtered);
   }, [searchQuery, branches, minRevenue]);
 
-  // Add new branch
   const handleAddBranch = async () => {
     if (
       !newBranch.branch_name ||
@@ -132,7 +128,7 @@ export default function BranchManagementPage() {
       !newBranch.contact_email ||
       !newBranch.contact_number
     ) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
 
@@ -153,21 +149,16 @@ export default function BranchManagementPage() {
       setIsAddingBranch(false);
       setNewBranch({});
     } catch (err: unknown) {
-      alert("Error adding branch");
-
       if (err instanceof Error) {
         toast.error(err.message);
-        console.log(err.message);
       } else {
         toast.error("An unknown error occurred.");
-        console.log(err);
       }
     } finally {
       setButtonLoaderToggle(false);
     }
   };
 
-  // Update branch
   const handleUpdateBranch = async () => {
     if (!editingBranch) return;
 
@@ -181,7 +172,7 @@ export default function BranchManagementPage() {
           closeings_time: editedBranch.closeings_time,
         }
       );
-      toast.success("Branch update sucessfully");
+      toast.success("Branch updated successfully");
 
       setBranches(
         branches.map((b) =>
@@ -190,14 +181,10 @@ export default function BranchManagementPage() {
       );
       setEditingBranch(null);
     } catch (err: unknown) {
-      alert("Error adding branch");
-
       if (err instanceof Error) {
         toast.error(err.message);
-        console.log(err.message);
       } else {
         toast.error("An unknown error occurred.");
-        console.log(err);
       }
     } finally {
       setButtonLoaderToggle(false);
@@ -221,7 +208,7 @@ export default function BranchManagementPage() {
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-500">
+      <div className="p-6 text-center text-[#b76e79]">
         <FiMapPin className="w-16 h-16 mx-auto mb-4" />
         <p>{error}</p>
       </div>
@@ -233,7 +220,7 @@ export default function BranchManagementPage() {
       <AnimatePresence>
         {isAddingBranch && (
           <BranchModal
-            key="add-branch" // Unique key for add mode
+            key="add-branch"
             branch={newBranch}
             onSave={handleAddBranch}
             onClose={() => setIsAddingBranch(false)}
@@ -243,7 +230,7 @@ export default function BranchManagementPage() {
 
         {editingBranch && (
           <BranchModal
-            key={`edit-branch-${editingBranch.id}`} // Unique key for edit mode
+            key={`edit-branch-${editingBranch.id}`}
             branch={editedBranch}
             onSave={handleUpdateBranch}
             onClose={() => setEditingBranch(null)}
@@ -255,36 +242,41 @@ export default function BranchManagementPage() {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-[#7a5a57] font-dancing">
             Branch Management
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-[#9e6d70] mt-1">
             Manage salon branches and their operations
           </p>
         </div>
 
         <div className="flex gap-4">
-          <button
+          <AnimatedButton
             onClick={() => setIsAddingBranch(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700"
+            variant="solid"
+            gradient={["#b76e79", "#d8a5a5"]}
+            hoverScale={1.05}
+            tapScale={0.95}
+            className="px-6 py-3 rounded-xl shadow-lg hover:shadow-xl w-40"
+            icon={<FiPlus className="text-lg" />}
+            iconPosition="left"
           >
-            <FiPlus className="text-lg" />
-            <span>Add Branch</span>
-          </button>
+            Add Branch
+          </AnimatedButton>
 
           <div className="relative">
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#9e6d70]" />
               <input
                 type="text"
                 placeholder="Search branches..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-[#e8c4c0] focus:outline-none focus:border-[#b76e79] text-[#7a5a57] bg-[#fff0ee]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#9e6d70] hover:text-[#b76e79]"
               >
                 {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
               </button>
@@ -296,15 +288,15 @@ export default function BranchManagementPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 bg-white p-4 rounded-xl shadow-lg border border-gray-100"
+                  className="mt-2 bg-white p-4 rounded-xl shadow-lg border border-[#e8c4c0]"
                 >
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                       Min Revenue
                     </label>
                     <input
                       type="number"
-                      className="w-full p-2 border rounded-lg"
+                      className="w-full p-2 border-2 border-[#e8c4c0] rounded-lg focus:border-[#b76e79] text-[#7a5a57]"
                       placeholder="Minimum revenue"
                       value={minRevenue}
                       onChange={(e) => setMinRevenue(e.target.value)}
@@ -319,66 +311,67 @@ export default function BranchManagementPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Branches</p>
-              <p className="text-2xl font-bold">{filteredBranches.length}</p>
+        {[
+          {
+            icon: FiMapPin,
+            title: "Total Branches",
+            value: filteredBranches.length,
+            bg: "#fff0ee",
+            color: "#b76e79",
+          },
+          {
+            icon: FiPlus,
+            title: "Total Staff",
+            value: filteredBranches.reduce((sum, b) => sum + b.staffCount, 0),
+            bg: "#fff0ee",
+            color: "#d8a5a5",
+          },
+          {
+            icon: FiPlus,
+            title: "Total Services",
+            value: filteredBranches.reduce((sum, b) => sum + b.serviceCount, 0),
+            bg: "#fff0ee",
+            color: "#9e6d70",
+          },
+          {
+            icon: FiPlus,
+            title: "Total Inventory",
+            value: filteredBranches.reduce(
+              (sum, b) => sum + b.inventoryCount,
+              0
+            ),
+            bg: "#fff0ee",
+            color: "#7a5a57",
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={index}
+            className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-[#b76e79]"
+            whileHover={{ y: -2 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#9e6d70]">{stat.title}</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
+                  {stat.value}
+                </p>
+              </div>
+              <div
+                className="p-3 rounded-xl"
+                style={{ backgroundColor: stat.bg }}
+              >
+                <stat.icon className="text-xl" style={{ color: stat.color }} />
+              </div>
             </div>
-            <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
-              <FiMapPin className="text-xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Staff</p>
-              <p className="text-2xl font-bold">
-                {filteredBranches.reduce((sum, b) => sum + b.staffCount, 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-green-100 text-green-600">
-              <FiPlus className="text-xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Services</p>
-              <p className="text-2xl font-bold">
-                {filteredBranches.reduce((sum, b) => sum + b.serviceCount, 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
-              <FiPlus className="text-xl" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Inventory</p>
-              <p className="text-2xl font-bold">
-                {filteredBranches.reduce((sum, b) => sum + b.inventoryCount, 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
-              <FiPlus className="text-xl" />
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Branch Table */}
       <div className="relative">
-        <div className="absolute right-0 top-0 h-full w-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="absolute right-0 top-0 h-full w-2 bg-[#fff0ee] rounded-full overflow-hidden">
           <motion.div
-            className="w-full bg-indigo-500 rounded-full"
+            className="w-full bg-[#b76e79] rounded-full"
             style={{ height: `${scrollProgress}%` }}
           />
         </div>
@@ -389,43 +382,40 @@ export default function BranchManagementPage() {
         >
           <table className="w-full relative">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gradient-to-r from-indigo-50 to-blue-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Branch Name
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Location
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Services
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Contact
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Hours
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Stats
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase">
-                  Actions
-                </th>
+              <tr className="bg-[#fff0ee]">
+                {[
+                  "Branch Name",
+                  "Location",
+                  "Services",
+                  "Contact",
+                  "Hours",
+                  "Stats",
+                  "Actions",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="px-6 py-4 text-left text-sm font-medium text-[#7a5a57] uppercase"
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e8c4c0]">
               {filteredBranches.map((branch) => (
                 <motion.tr
                   key={branch.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="hover:bg-indigo-50/50"
+                  className="hover:bg-[#fff0ee]"
                 >
                   <td className="px-6 py-4">
-                    <div className="font-medium">{branch.branch_name}</div>
+                    <div className="font-medium text-[#7a5a57]">
+                      {branch.branch_name}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-[#9e6d70]">
                       <FiMapPin className="text-sm" />
                       {branch.branch_location}
                     </div>
@@ -435,7 +425,7 @@ export default function BranchManagementPage() {
                       {branch.service.map((service) => (
                         <span
                           key={service.id}
-                          className="bg-purple-100 text-purple-800 px-2 py-1 text-xs rounded-full"
+                          className="bg-[#e8c4c0] text-[#7a5a57] px-2 py-1 text-xs rounded-full"
                         >
                           {service.service_name} (${service.service_price})
                         </span>
@@ -445,23 +435,23 @@ export default function BranchManagementPage() {
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1">
-                        <FiMail className="text-sm text-gray-500" />
+                        <FiMail className="text-sm text-[#9e6d70]" />
                         <span className="text-sm">{branch.contact_email}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <FiPhone className="text-sm text-gray-500" />
+                        <FiPhone className="text-sm text-[#9e6d70]" />
                         <span className="text-sm">{branch.contact_number}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 text-sm">
-                      <FiClock className="text-gray-500" />
+                    <div className="flex items-center gap-1 text-sm text-[#9e6d70]">
+                      <FiClock className="text-[#9e6d70]" />
                       {branch.opning_time} - {branch.closeings_time}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col text-[#7a5a57]">
                       <span className="text-sm">
                         <strong>{branch.staffCount}</strong> Staff
                       </span>
@@ -484,7 +474,7 @@ export default function BranchManagementPage() {
                             closeings_time: branch.closeings_time,
                           });
                         }}
-                        className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-600"
+                        className="p-2 hover:bg-[#fff0ee] rounded-lg text-[#b76e79]"
                       >
                         <FiEdit />
                       </button>
@@ -497,13 +487,13 @@ export default function BranchManagementPage() {
 
           {filteredBranches.length === 0 && (
             <div className="p-8 text-center">
-              <div className="text-gray-400 mb-4">
+              <div className="text-[#e8c4c0] mb-4">
                 <FiMapPin className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-lg font-medium text-gray-700">
+              <h3 className="text-lg font-medium text-[#7a5a57]">
                 No branches found
               </h3>
-              <p className="text-gray-500 mt-1">
+              <p className="text-[#9e6d70] mt-1">
                 Try adjusting your search criteria
               </p>
             </div>
@@ -514,7 +504,6 @@ export default function BranchManagementPage() {
   );
 }
 
-// Branch Modal Component
 const BranchModal = React.memo(function BranchModal({
   branch,
   onSave,
@@ -542,31 +531,31 @@ const BranchModal = React.memo(function BranchModal({
         exit={{ y: 20, opacity: 0, scale: 0.95 }}
         className="flex items-center justify-center min-h-screen"
       >
-        <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-          <h2 className="text-3xl font-bold mb-6">
+        <div className="bg-white p-6 rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-[#e8c4c0]">
+          <h2 className="text-3xl font-bold mb-6 text-[#7a5a57] font-dancing">
             {isEditing ? "Edit Branch" : "Add New Branch"}
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                 Branch Name*
               </label>
               <input
                 type="text"
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                 value={branch.branch_name || ""}
                 onChange={(e) => onFieldChange("branch_name", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                 Location*
               </label>
               <input
                 type="text"
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                 value={branch.branch_location || ""}
                 onChange={(e) =>
                   onFieldChange("branch_location", e.target.value)
@@ -576,23 +565,23 @@ const BranchModal = React.memo(function BranchModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                   Opening Time
                 </label>
                 <input
                   type="time"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={branch.opning_time || "09:00"}
                   onChange={(e) => onFieldChange("opning_time", e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                   Closing Time
                 </label>
                 <input
                   type="time"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={branch.closeings_time || "18:00"}
                   onChange={(e) =>
                     onFieldChange("closeings_time", e.target.value)
@@ -603,12 +592,12 @@ const BranchModal = React.memo(function BranchModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                   Contact Email*
                 </label>
                 <input
                   type="email"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={branch.contact_email || ""}
                   onChange={(e) =>
                     onFieldChange("contact_email", e.target.value)
@@ -616,12 +605,12 @@ const BranchModal = React.memo(function BranchModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                   Contact Number*
                 </label>
                 <input
                   type="tel"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={branch.contact_number || ""}
                   onChange={(e) =>
                     onFieldChange("contact_number", e.target.value)
@@ -632,25 +621,33 @@ const BranchModal = React.memo(function BranchModal({
           </div>
 
           <div className="mt-6 flex gap-3 justify-end">
-            <button
+            <AnimatedButton
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+              variant="outline"
+              className="px-6 py-3 text-[#7a5a57] hover:bg-[#fff0ee]"
+              hoverScale={1.05}
+              tapScale={0.95}
             >
               Cancel
-            </button>
-            <button
+            </AnimatedButton>
+
+            <AnimatedButton
               onClick={onSave}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              disabled={ButtonLoaderToggle}
+              isLoading={ButtonLoaderToggle}
+              variant="solid"
+              gradient={["#b76e79", "#d8a5a5"]}
+              className="px-6 py-3"
+              hoverScale={1.05}
+              tapScale={0.95}
             >
               {isEditing
-                ? !ButtonLoaderToggle
-                  ? "Save Changes"
-                  : "Saving Changes...."
-                : !ButtonLoaderToggle
-                ? "Add Branch"
-                : "Adding Branch...."}
-            </button>
+                ? ButtonLoaderToggle
+                  ? "Saving..."
+                  : "Save Changes"
+                : ButtonLoaderToggle
+                ? "Adding..."
+                : "Add Branch"}
+            </AnimatedButton>
           </div>
         </div>
       </motion.div>
