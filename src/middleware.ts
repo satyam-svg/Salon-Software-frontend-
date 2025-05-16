@@ -14,10 +14,6 @@ const validateToken = (token: string): DecodedToken | null => {
   try {
     const decoded = jwtDecode<DecodedToken>(token);
     
-    // Check token expiration
-    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-      throw new Error('Token expired');
-    }
     
     // Validate required claims
     if (!decoded.id) {
@@ -33,8 +29,7 @@ const validateToken = (token: string): DecodedToken | null => {
 
 // Extract user ID from path with regex validation
 const getUserIdFromPath = (pathname: string): string | null => {
-  const match = pathname.match(/^\/([a-zA-Z0-9_-]+)\/(dashboard|adashboard|staffpage)/);
-  return match ? match[1] : null;
+  return pathname.split("/")[1]
 };
 
 export async function middleware(request: NextRequest) {
@@ -44,12 +39,12 @@ export async function middleware(request: NextRequest) {
   // Common error response with token cleanup
   const unauthorizedResponse = (clearCookies: string[] = []) => {
     const response = NextResponse.redirect(new URL('/unauthorized', request.url));
-    clearCookies.forEach(cookie => response.cookies.delete(cookie));
+    console.log(clearCookies)
     return response;
   };
 
   // Handle user dashboard routes
-  if (pathname.includes('/dashboard') || pathname.includes('/adashboard')) {
+  if (pathname.includes('/dashboard')||pathname.includes('/ownerhomepage') ) {
     const authToken = request.cookies.get('authToken')?.value;
 
     // Immediate check for token presence
@@ -59,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
     // Validate token structure and expiration
     const decoded = validateToken(authToken);
-    console.log(decoded.id)
+   
     if (!decoded) {
       return unauthorizedResponse(['authToken']);
     }
@@ -69,10 +64,22 @@ export async function middleware(request: NextRequest) {
       console.error(`User ID mismatch: Token=${decoded.id}, Path=${userIdFromPath}`);
       return unauthorizedResponse(['authToken']);
     }
+  }
+   if(pathname.includes('/adashboard')){
+      const authToken = request.cookies.get('authToken')?.value;
 
-    // Additional checks for admin dashboard
-    if (pathname.includes('/adashboard')) {
-      try {
+    // Immediate check for token presence
+    if (!authToken) {
+      return unauthorizedResponse(['authToken']);
+    }
+
+    // Validate token structure and expiration
+    const decoded = validateToken(authToken);
+   
+    if (!decoded) {
+      return unauthorizedResponse(['authToken']);
+    }
+     try {
         // Verify admin privileges
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${decoded.id}`
@@ -83,7 +90,7 @@ export async function middleware(request: NextRequest) {
         const data = await res.json();
         const userEmail = data?.user?.email;
         
-        if (userEmail !== 'praveen96257@gmail.com') {
+        if (userEmail !== '21012003rs@gmail.com') {
           console.error('Admin email mismatch:', userEmail);
           return unauthorizedResponse(['authToken']);
         }
@@ -91,15 +98,7 @@ export async function middleware(request: NextRequest) {
         console.error('Admin verification failed:', error);
         return unauthorizedResponse(['authToken']);
       }
-    }
-
-    // Add role-based access control
-    if (decoded.role && pathname.includes('/adashboard') && decoded.role !== 'admin') {
-      console.error('Insufficient role for admin dashboard:', decoded.role);
-      return unauthorizedResponse(['authToken']);
-    }
-  }
-
+   }
   // Handle staff routes
   if (pathname.includes('/staffpage')) {
     const staffToken = request.cookies.get('staffToken')?.value;

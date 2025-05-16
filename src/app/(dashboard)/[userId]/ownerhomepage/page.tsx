@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import { motion, useAnimation, useInView } from "framer-motion";
 import { AnimatedButton } from "@/Components/ui/Button";
+import Plans from "@/Components/ui/Pakage";
 
 interface Salon {
   salon_name: string;
@@ -29,6 +30,8 @@ const OwnerHomepage = () => {
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
   const router = useRouter();
+  const [showPlans, setShowPlans] = useState(false);
+  const [userData, setUserData] = useState<{ activePlanId?: string | null }>({});
   const [copySuccess, setCopySuccess] = useState(false);
   const [daysOperating, setDaysOperating] = useState<number | null>(null);
   const [yearsOperating, setYearsOperating] = useState<number | null>(null);
@@ -66,6 +69,24 @@ const OwnerHomepage = () => {
       setsalonid(userData.user.salonId);
     };
     getsalonid();
+  }, [userid]);
+
+  useEffect(() => {
+    const checkActivePlan = async () => {
+      try {
+        const userResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
+        );
+        const userData = await userResponse.json();
+        setUserData(userData.user);
+        if (!userData.user?.activePlanId) {
+          setShowPlans(true);
+        }
+      } catch (error) {
+        console.error("Error checking active plan:", error);
+      }
+    };
+    checkActivePlan();
   }, [userid]);
 
   useEffect(() => {
@@ -180,6 +201,9 @@ const OwnerHomepage = () => {
       transition: { type: "spring", stiffness: 100 },
     },
   };
+   const handleSelectPlan = async () => {
+  
+};
 
   return (
     <div
@@ -201,6 +225,14 @@ const OwnerHomepage = () => {
           />
         </svg>
       </div>
+
+      
+{showPlans && (
+  <Plans 
+    userid={userid}
+    onSelectPlan={handleSelectPlan}
+  />
+)}
 
       <motion.div
         ref={ref}
@@ -434,3 +466,14 @@ const OwnerHomepage = () => {
 };
 
 export default OwnerHomepage;
+
+
+
+
+
+
+
+
+
+ 
+
