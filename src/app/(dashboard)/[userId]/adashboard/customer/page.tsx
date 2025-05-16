@@ -195,9 +195,9 @@ const CustomersPage = () => {
                       <span>Plan Type</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {selectedUser.activePlan.name +
+                      {/* {selectedUser.activePlan.name +
                         "-" +
-                        selectedUser.activePlan.price}
+                        selectedUser.activePlan.price} */}
                     </div>
                   </div>
 

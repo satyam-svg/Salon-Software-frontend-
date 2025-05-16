@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
   };
 
   // Handle user dashboard routes
-  if (pathname.includes('/dashboard') || pathname.includes('/adashboard')) {
+  if (pathname.includes('/dashboard') ) {
     const authToken = request.cookies.get('authToken')?.value;
 
     // Immediate check for token presence
