@@ -9,11 +9,14 @@ import {
   FiPhone,
   FiFilter,
   FiChevronDown,
+  FiCheckSquare,
+  FiSearch,
 } from "react-icons/fi";
 import { usePathname } from "next/navigation";
 import axios from "axios";
 import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Feedback {
   id: string;
@@ -43,6 +46,7 @@ const FeedbackManagementPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
   const [selectedDate, setSelectedDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [hoveredReviewId, setHoveredReviewId] = useState<string | null>(null);
   const pathname = usePathname();
   const userid = pathname.split("/")[1];
@@ -91,14 +95,23 @@ const FeedbackManagementPage = () => {
   const filteredFeedbacks = branchFeedbacks.filter(
     (feedback) =>
       feedback.rating >= minRating &&
-      (selectedDate ? feedback.date.startsWith(selectedDate) : true)
+      (selectedDate ? feedback.date.startsWith(selectedDate) : true) &&
+      (feedback.client.client_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+        feedback.review.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        feedback.staff.fullname
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()))
   );
+
   // Statistics Calculations
   const totalFeedbacks = filteredFeedbacks.length;
   const averageRating =
     totalFeedbacks > 0
       ? filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFeedbacks
       : 0;
+  const featuredCount = filteredFeedbacks.filter((f) => f.feature).length;
 
   // Rating Distribution
   const ratingDistribution = [0, 0, 0, 0, 0];
@@ -107,19 +120,20 @@ const FeedbackManagementPage = () => {
       ratingDistribution[f.rating - 1]++;
     }
   });
+
   if (ScreenLoaderToggle) {
     return <Screenloader />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {/* Branch Selection */}
+    <main className="min-h-screen p-8 mb-14">
+      {/* Branch Selection and Search */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
           <select
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
-            className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-0"
+            className="w-full pl-4 pr-8 py-3 bg-white border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] focus:ring-0 text-[#7a5a57]"
           >
             {branches.map((branch) => (
               <option key={branch.branch_name} value={branch.branch_name}>
@@ -127,17 +141,34 @@ const FeedbackManagementPage = () => {
               </option>
             ))}
           </select>
-          <FiChevronDown className="absolute right-3 top-4 text-gray-400" />
+          <FiChevronDown className="absolute right-3 top-4 text-[#9e6d70]" />
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 bg-white text-gray-600 px-6 py-3 rounded-xl border-2 border-gray-200"
-        >
-          <FiFilter className="text-lg" />
-          Filter Feedbacks
-        </motion.button>
+        <div className="flex-1 flex gap-4">
+          <div className="flex items-center gap-2 bg-[#fff0ee] p-3 rounded-xl max-w-md w-full">
+            <FiSearch className="text-[#9e6d70]" />
+            <input
+              type="text"
+              placeholder="Search feedbacks..."
+              className="bg-transparent w-full focus:outline-none text-[#7a5a57] placeholder-[#9e6d70]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <AnimatedButton
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            gradient={["#b76e79", "#d8a5a5"]}
+            hoverScale={1.05}
+            tapScale={0.95}
+            className="px-6 py-3 rounded-xl"
+            icon={<FiFilter className="text-lg" />}
+            iconPosition="left"
+          >
+            Filter
+          </AnimatedButton>
+        </div>
       </div>
 
       {/* Filters Section */}
@@ -147,15 +178,15 @@ const FeedbackManagementPage = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white p-6 rounded-xl shadow-sm mb-8"
+            className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-[#e8c4c0]"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-[#9e6d70]">
                   Minimum Rating
                 </label>
                 <select
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={minRating}
                   onChange={(e) => setMinRating(Number(e.target.value))}
                 >
@@ -167,10 +198,12 @@ const FeedbackManagementPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Date</label>
+                <label className="block text-sm font-medium mb-2 text-[#9e6d70]">
+                  Date
+                </label>
                 <input
                   type="date"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                 />
@@ -181,149 +214,168 @@ const FeedbackManagementPage = () => {
       </AnimatePresence>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <motion.div
-          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#b76e79]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <FiStar className="text-2xl text-purple-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiStar className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Average Rating</p>
-              <p className="text-2xl font-bold">{averageRating.toFixed(1)}/5</p>
+              <p className="text-[#9e6d70]">Average Rating</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
+                {averageRating.toFixed(1)}/5
+              </p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#d8a5a5]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FiUser className="text-2xl text-blue-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiUser className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Total Feedbacks</p>
-              <p className="text-2xl font-bold">{totalFeedbacks}</p>
+              <p className="text-[#9e6d70]">Total Feedbacks</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
+                {totalFeedbacks}
+              </p>
             </div>
           </div>
         </motion.div>
 
-        {/* <motion.div
-          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"
+        <motion.div
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#9e6d70]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <FiCheckSquare className="text-2xl text-green-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiCheckSquare className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Featured Feedbacks</p>
-              <p className="text-2xl font-bold">{featuredCount}</p>
+              <p className="text-[#9e6d70]">Featured Feedbacks</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
+                {featuredCount}
+              </p>
             </div>
           </div>
-        </motion.div> */}
+        </motion.div>
       </div>
 
       {/* Feedback Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-2xl font-semibold">Client Feedback</h2>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8 border border-[#e8c4c0]">
+        <div className="p-6 border-b border-[#e8c4c0]">
+          <h2 className="text-2xl font-semibold text-[#7a5a57] font-dancing">
+            Client Feedback
+          </h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#fff0ee]">
               <tr>
-                <th className="p-4 text-left">Client</th>
-                <th className="p-4 text-left">Contact</th>
-                <th className="p-4 text-left">Date</th>
-                <th className="p-4 text-left">Rating</th>
-                <th className="p-4 text-left">Review</th>
-
-                <th className="p-4 text-left">Staff</th>
-                {/* <th className="p-4 text-left">Featured</th> */}
+                {["Client", "Contact", "Date", "Rating", "Review", "Staff"].map(
+                  (header) => (
+                    <th
+                      key={header}
+                      className="p-4 text-left text-[#7a5a57] font-medium"
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>
-              {filteredFeedbacks.map((feedback) => (
-                <tr
-                  key={feedback.id}
-                  className="border-t border-gray-100 hover:bg-gray-50"
-                >
-                  <td className="p-4 font-medium">
-                    {feedback.client.client_name}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1">
-                        <FiPhone className="text-gray-500" />
-                        <span>{feedback.client.contact}</span>
+              {filteredFeedbacks.length > 0 ? (
+                filteredFeedbacks.map((feedback) => (
+                  <tr
+                    key={feedback.id}
+                    className="border-t border-[#e8c4c0] hover:bg-[#fff0ee] transition-colors"
+                  >
+                    <td className="p-4 font-medium text-[#7a5a57]">
+                      {feedback.client.client_name}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1 text-[#9e6d70]">
+                          <FiPhone />
+                          <span>{feedback.client.contact}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[#9e6d70]">
+                          <FiMail />
+                          <span>{feedback.client.email}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <FiMail className="text-gray-500" />
-                        <span>{feedback.client.email}</span>
+                    </td>
+                    <td className="p-4 text-[#9e6d70]">
+                      {new Date(feedback.date).toLocaleDateString()}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-1 text-[#ffc107]">
+                        {[...Array(5)].map((_, i) => (
+                          <FiStar
+                            key={i}
+                            className={
+                              i < feedback.rating ? "fill-current" : ""
+                            }
+                          />
+                        ))}
                       </div>
+                    </td>
+                    <td className="p-4 max-w-xs relative">
+                      <div
+                        className="line-clamp-2 cursor-default relative text-[#7a5a57]"
+                        onMouseEnter={() => setHoveredReviewId(feedback.id)}
+                        onMouseLeave={() => setHoveredReviewId(null)}
+                      >
+                        {feedback.review}
+                        <AnimatePresence>
+                          {hoveredReviewId === feedback.id && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 10 }}
+                              className="absolute left-0 top-full z-50 mt-2 w-full bg-white shadow-lg rounded-lg p-4 border border-[#e8c4c0]"
+                            >
+                              <p className="text-sm text-[#7a5a57]">
+                                {feedback.review}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </td>
+                    <td className="p-4 text-[#9e6d70]">
+                      {feedback.staff.fullname}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center">
+                    <div className="text-[#9e6d70] mb-4">
+                      <FiStar className="w-16 h-16 mx-auto" />
                     </div>
+                    <h3 className="text-lg font-medium text-[#7a5a57]">
+                      No feedbacks found
+                    </h3>
+                    <p className="text-[#9e6d70] mt-1">
+                      Try adjusting your search criteria
+                    </p>
                   </td>
-                  <td className="p-4">
-                    {new Date(feedback.date).toLocaleDateString()}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-1 text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <FiStar
-                          key={i}
-                          className={i < feedback.rating ? "fill-current" : ""}
-                        />
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-4 max-w-xs relative">
-                    <div
-                      className="line-clamp-2 cursor-default relative"
-                      onMouseEnter={() => setHoveredReviewId(feedback.id)}
-                      onMouseLeave={() => setHoveredReviewId(null)}
-                    >
-                      {feedback.review}
-                      <AnimatePresence>
-                        {hoveredReviewId === feedback.id && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute left-0 top-full z-50 mt-2 w-full bg-white shadow-lg rounded-lg p-4 border border-gray-200"
-                          >
-                            <p className="text-sm text-gray-700">
-                              {feedback.review}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </td>
-
-                  <td className="p-4">{feedback.staff.fullname}</td>
-                  {/* <td className="p-4">
-                    <input
-                      type="checkbox"
-                      checked={feedback.feature}
-                      onChange={() =>
-                        toggleFeature(feedback.id, feedback.feature)
-                      }
-                      className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                    />
-                  </td> */}
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
