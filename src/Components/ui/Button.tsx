@@ -14,6 +14,8 @@ export interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
   iconPosition?: "left" | "right";
   isLoading?: boolean;
   children?: ReactNode | MotionValue<number> | MotionValue<string>;
+  hoverScale?: number;
+  tapScale?: number;
 }
 
 const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -28,6 +30,8 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
       icon,
       iconPosition = "left",
       isLoading = false,
+      hoverScale = 1.05,
+      tapScale = 0.95,
       ...props
     },
     ref
@@ -48,8 +52,8 @@ const AnimatedButton = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <motion.button
         ref={ref}
-        whileHover={hoverEffect === "scale" ? { scale: 1.05 } : {}}
-        whileTap={{ scale: 0.95 }}
+        whileHover={hoverEffect === "scale" ? { scale: hoverScale } : {}}
+        whileTap={{ scale: tapScale }}
         className={cn(
           "relative rounded-xl font-semibold transition-all", // Changed from rounded-full to rounded-xl
           "group w-full flex items-center justify-center gap-2 overflow-hidden", // Updated layout classes

@@ -1,13 +1,11 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
   FiUser,
   FiCalendar,
   FiDollarSign,
-  FiChevronDown,
-  FiChevronUp,
   FiEdit,
   FiPlus,
   FiX,
@@ -18,6 +16,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Appointment {
   id: string;
@@ -39,10 +38,19 @@ interface clientresponse {
   appointments: Appointment[];
 }
 
+const SALON_THEME = {
+  primary: "#b76e79",
+  secondary: "#e8c4c0",
+  accent: "#7a5a57",
+  background: "#fff0ee",
+  textPrimary: "#7a5a57",
+  textSecondary: "#9e6d70",
+};
+
 export default function ClientManagementPage() {
   const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+
   const [filteredClients, setFilteredClients] = useState<clientresponse[]>([]);
 
   const [client, setclient] = useState<clientresponse[]>([]);
@@ -66,8 +74,8 @@ export default function ClientManagementPage() {
   } | null>(null);
 
   // Filters
-  const [minAppointments, setMinAppointments] = useState("");
-  const [registrationDate, setRegistrationDate] = useState("");
+  const [minAppointments] = useState("");
+  const [registrationDate] = useState("");
   const [isSubmiitingClient, setIsSubmittingClient] = useState(false);
 
   // Fetch dummy data
@@ -213,15 +221,15 @@ export default function ClientManagementPage() {
             type={field === "email" ? "email" : "text"}
             value={editing.value}
             onChange={(e) => setEditing({ ...editing, value: e.target.value })}
-            className="border-b-2 border-indigo-500 px-1 py-0.5 focus:outline-none"
+            className="border-b-2 border-[#b76e79] px-1 py-0.5 focus:outline-none text-[#7a5a57]"
             autoFocus
           />
         ) : (
           <>
-            <span>{value}</span>
+            <span className="text-[#7a5a57]">{value}</span>
             <button
               onClick={() => setEditing({ clientId: client.id, field, value })}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500 hover:text-indigo-700"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-[#b76e79] hover:text-[#9e6d70]"
             >
               <FiEdit className="w-4 h-4" />
             </button>
@@ -470,38 +478,30 @@ export default function ClientManagementPage() {
                     >
                       Cancel
                     </button>
-                    <button
+                    <AnimatedButton
                       onClick={handleAddClient}
                       disabled={isSubmiitingClient}
-                      className={`px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 ${
+                      variant="solid"
+                      className={` py-2.5 px-6 rounded-xl shadow-lg text-base font-medium  w-40 ${
                         isSubmiitingClient
-                          ? "opacity-75 cursor-not-allowed"
-                          : "hover:scale-[1.02] active:scale-95"
-                      } font-medium relative overflow-hidden`}
+                          ? "opacity-75 cursor-not-allowed bg-[#b76e79]"
+                          : "hover:shadow-[#e8c4c0] bg-[#b76e79] hover:bg-[#c9838d]"
+                      } transition-all duration-200`}
+                      icon={
+                        isSubmiitingClient ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1 }}
+                            className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
+                          />
+                        ) : null
+                      }
+                      iconPosition="left"
+                      hoverScale={1.02}
+                      tapScale={0.95}
                     >
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {isSubmiitingClient ? (
-                          <>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ repeat: Infinity, duration: 1 }}
-                              className="h-5 w-5 border-2 border-white border-t-transparent rounded-full"
-                            />
-                            Adding...
-                          </>
-                        ) : (
-                          "Add Client"
-                        )}
-                      </span>
-                      {!isSubmiitingClient && (
-                        <motion.div
-                          className="absolute inset-0 bg-white/10"
-                          initial={{ x: "-100%" }}
-                          whileHover={{ x: "0%" }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      )}
-                    </button>
+                      {isSubmiitingClient ? "Adding..." : "Add Client"}
+                    </AnimatedButton>
                   </motion.div>
                 </motion.div>
               </motion.div>
@@ -509,172 +509,95 @@ export default function ClientManagementPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
-      >
+      <motion.div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-[#7a5a57] font-dancing">
             Client Management
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-[#9e6d70] mt-1">
             Manage and analyze client information
           </p>
         </div>
 
         <div className="flex gap-4">
           {/* Add Client Button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <AnimatedButton
             onClick={() => setIsAddingClient(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors group relative"
+            variant="solid"
+            gradient={[SALON_THEME.primary, SALON_THEME.secondary]}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-lg hover:shadow-[#e8c4c0] font-semibold text-base w-40"
+            icon={<FiPlus className="text-lg text-white" />}
+            iconPosition="left"
           >
-            <FiPlus className="text-lg" />
-            <span>Add Client</span>
-
-            {/* Animated Tooltip */}
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 w-28">
-              <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
-                <span>Add New Client</span>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-              </div>
-            </div>
-          </motion.button>
+            Add Client
+          </AnimatedButton>
 
           {/* Search Bar */}
-          <motion.div
-            layout
-            className={`relative ${
-              isExpanded ? "w-full md:w-96" : "w-full md:w-80"
-            }`}
-          >
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder={
-                  isExpanded
-                    ? "Search clients by name, email, or contact..."
-                    : "Search clients..."
-                }
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500 transition-colors"
-              >
-                {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
-              </button>
-            </div>
-
-            {/* Advanced Search */}
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 bg-white p-4 rounded-xl shadow-lg border border-gray-100"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Registration Date
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full p-2 border border-gray-200 rounded-lg"
-                        value={registrationDate}
-                        onChange={(e) => setRegistrationDate(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Min Appointments
-                      </label>
-                      <input
-                        type="number"
-                        className="w-full p-2 border border-gray-200 rounded-lg"
-                        placeholder="Minimum appointments"
-                        value={minAppointments}
-                        onChange={(e) => setMinAppointments(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <motion.div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#9e6d70]" />
+            <input
+              type="text"
+              placeholder="Search clients..."
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#e8c4c0] focus:outline-none focus:ring-2 focus:ring-[#b76e79] text-[#7a5a57]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </motion.div>
         </div>
       </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Clients</p>
-              <p className="text-2xl font-bold">{clientcount}</p>
+        {[
+          {
+            icon: <FiUser />,
+            title: "Total Clients",
+            value: clientcount,
+            color: SALON_THEME.primary,
+          },
+          {
+            icon: <FiCalendar />,
+            title: "Avg Appointments",
+            value: avgappointments.toFixed(2),
+            color: "#d8a5a5",
+          },
+          {
+            icon: <FiDollarSign />,
+            title: "Total Revenue",
+            value: revenue,
+            color: "#9e6d70",
+          },
+          {
+            icon: <FiDollarSign />,
+            title: "Average Revenue",
+            value: avgrevenue.toFixed(2),
+            color: SALON_THEME.secondary,
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={index}
+            whileHover={{ y: -5 }}
+            className="bg-white p-4 rounded-xl shadow-sm border border-[#e8c4c0]"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#9e6d70]">{stat.title}</p>
+                <p className="text-2xl font-bold text-[#7a5a57]">
+                  {stat.value}
+                </p>
+              </div>
+              <div
+                className="p-3 rounded-lg"
+                style={{ backgroundColor: stat.color }}
+              >
+                {React.cloneElement(stat.icon, {
+                  className: "text-xl text-white",
+                })}
+              </div>
             </div>
-            <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
-              <FiUser className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Avg Appointments</p>
-              <p className="text-2xl font-bold">{avgappointments.toFixed(2)}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-amber-100 text-amber-600">
-              <FiCalendar className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-2xl font-bold">${revenue}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-              <FiDollarSign className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ y: -5 }}
-          className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Average Revenue</p>
-              <p className="text-2xl font-bold">${avgrevenue.toFixed(2)}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-              <FiDollarSign className="text-xl" />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Client Table */}
@@ -685,11 +608,10 @@ export default function ClientManagementPage() {
         className="relative"
       >
         {/* Scroll Progress */}
-        <div className="absolute right-0 top-0 h-full w-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="absolute right-0 top-0 h-full w-2 bg-[#e8c4c0] rounded-full overflow-hidden">
           <motion.div
-            className="w-full bg-indigo-500 rounded-full"
+            className="w-full bg-[#b76e79] rounded-full"
             animate={{ height: `${scrollProgress}%` }}
-            transition={{ type: "spring", damping: 20 }}
           />
         </div>
 
@@ -700,104 +622,80 @@ export default function ClientManagementPage() {
         >
           <table className="w-full relative">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gradient-to-r from-indigo-50 to-blue-50 backdrop-blur-sm">
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Registered
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Appointments
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                  Total Spent
-                </th>
-
-                {editing && (
-                  <th className="px-6 py-4 text-left text-xs font-medium text-indigo-600 uppercase tracking-wider">
-                    Actions
+              <tr className="bg-gradient-to-r from-[#fff0ee] to-[#e8c4c0]">
+                {[
+                  "Client",
+                  "Contact",
+                  "Registered",
+                  "Appointments",
+                  "Total Spent",
+                  "Actions",
+                ].map((header, index) => (
+                  <th
+                    key={index}
+                    className="px-6 py-4 text-left text-xs font-medium text-[#7a5a57] uppercase"
+                  >
+                    {header}
                   </th>
-                )}
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              <AnimatePresence>
-                {filteredClients.map((client) => (
-                  <motion.tr
-                    key={client.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="hover:bg-indigo-50/50 transition-colors group"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                          {client.client_name.charAt(0)}
-                        </div>
-                        <div className="ml-4 space-y-2">
-                          {renderEditableField(
-                            client,
-                            "client_name",
-                            client.client_name
-                          )}
-                          {renderEditableField(client, "email", client.email)}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {renderEditableField(client, "contact", client.contact)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {new Date(client.createdAt).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {client.appointments.length}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-indigo-600">
-                        ${getclientrevenue(client).toFixed(2)}
-                      </div>
-                    </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-2">
-                        {editing?.clientId === client.id ? (
-                          <>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              onClick={handleSave}
-                              className="p-2 hover:bg-green-100 rounded-lg text-green-600 tooltip"
-                              data-tip="Save Changes"
-                            >
-                              <FiSave className="text-lg" />
-                            </motion.button>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              onClick={() => setEditing(null)}
-                              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 tooltip"
-                              data-tip="Cancel"
-                            >
-                              <FiX className="text-lg" />
-                            </motion.button>
-                          </>
-                        ) : (
-                          <></>
-                        )}
+            <tbody className="divide-y divide-[#e8c4c0]">
+              {filteredClients.map((client) => (
+                <motion.tr
+                  key={client.id}
+                  className="hover:bg-[#fff0ee] transition-colors group"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-[#e8c4c0] flex items-center justify-center text-[#7a5a57]">
+                        {client.client_name.charAt(0)}
                       </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
+                      <div className="ml-4 space-y-2">
+                        {renderEditableField(
+                          client,
+                          "client_name",
+                          client.client_name
+                        )}
+                        {renderEditableField(client, "email", client.email)}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {renderEditableField(client, "contact", client.contact)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-[#7a5a57]">
+                    {new Date(client.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-[#7a5a57]">
+                    {client.appointments.length}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-[#b76e79] font-bold">
+                    ${getclientrevenue(client).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex gap-2">
+                      {editing?.clientId === client.id && (
+                        <>
+                          <button
+                            onClick={handleSave}
+                            className="text-[#7a5a57] hover:text-[#b76e79]"
+                          >
+                            <FiSave className="text-lg" />
+                          </button>
+                          <button
+                            onClick={() => setEditing(null)}
+                            className="text-[#7a5a57] hover:text-[#b76e79]"
+                          >
+                            <FiX className="text-lg" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
             </tbody>
           </table>
 
@@ -807,7 +705,7 @@ export default function ClientManagementPage() {
               animate={{ opacity: 1 }}
               className="p-8 text-center"
             >
-              <div className="text-gray-400 mb-4">
+              <div className="text-[#e8c4c0] mb-4">
                 <svg
                   className="w-16 h-16 mx-auto"
                   fill="none"
@@ -822,10 +720,10 @@ export default function ClientManagementPage() {
                   ></path>
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-700">
+              <h3 className="text-lg font-medium text-[#7a5a57]">
                 No clients found
               </h3>
-              <p className="text-gray-500 mt-1">
+              <p className="text-[#9e6d70] mt-1">
                 Try adjusting your search or filter criteria
               </p>
             </motion.div>

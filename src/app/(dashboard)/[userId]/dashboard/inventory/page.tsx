@@ -19,6 +19,7 @@ import { useScreenLoader } from "@/context/screenloader";
 import Screenloader from "@/Components/Screenloader";
 import { useButtonLoader } from "@/context/buttonloader";
 import toast from "react-hot-toast";
+import { AnimatedButton } from "@/Components/ui/Button";
 
 interface Product {
   id: string;
@@ -221,7 +222,7 @@ const InventoryPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8 mb-14">
+    <main className="min-h-screen  p-8 mb-14">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1 max-w-xs">
@@ -231,7 +232,7 @@ const InventoryPage = () => {
               const branch = branches.find((b) => b.id === e.target.value);
               if (branch) setSelectedBranch(branch);
             }}
-            className="w-full pl-4 pr-8 py-3 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-purple-500 focus:ring-0"
+            className="w-full pl-4 pr-8 py-3 bg-white border-2 border-[#e8c4c0] rounded-xl appearance-none focus:border-[#b76e79] focus:ring-0 text-[#7a5a57]"
           >
             {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
@@ -239,49 +240,55 @@ const InventoryPage = () => {
               </option>
             ))}
           </select>
-          <FiChevronDown className="absolute right-3 top-4 text-gray-400" />
+          <FiChevronDown className="absolute right-3 top-4 text-[#9e6d70]" />
         </div>
 
         <div className="flex gap-4">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
+          <AnimatedButton
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+            variant="solid"
+            gradient={["#b76e79", "#d8a5a5"]}
+            hoverScale={1.05}
+            tapScale={0.95}
+            className="px-6 py-3 rounded-xl shadow-lg hover:shadow-xl"
+            icon={<FiPlus className="text-lg" />}
+            iconPosition="left"
           >
-            <FiPlus className="text-lg" />
             Add Product
-          </motion.button>
+          </AnimatedButton>
         </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <motion.div
-          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-purple-500"
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#b76e79]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <FiBox className="text-2xl text-purple-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiBox className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Total Products</p>
-              <p className="text-2xl font-bold">{totalProducts}</p>
+              <p className="text-[#9e6d70]">Total Products</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
+                {totalProducts}
+              </p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500"
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#d8a5a5]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <FiDollarSign className="text-2xl text-blue-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiDollarSign className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Total Value</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[#9e6d70]">Total Value</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
                 ${totalValue.toLocaleString()}
               </p>
             </div>
@@ -289,16 +296,16 @@ const InventoryPage = () => {
         </motion.div>
 
         <motion.div
-          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500"
+          className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-[#9e6d70]"
           whileHover={{ y: -2 }}
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <FiDollarSign className="text-2xl text-green-600" />
+            <div className="p-3 bg-[#fff0ee] rounded-xl">
+              <FiDollarSign className="text-2xl text-[#b76e79]" />
             </div>
             <div>
-              <p className="text-gray-500">Used Items Cost</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[#9e6d70]">Used Items Cost</p>
+              <p className="text-2xl font-bold text-[#7a5a57]">
                 ${usedItemsCost.toLocaleString()}
               </p>
             </div>
@@ -307,18 +314,18 @@ const InventoryPage = () => {
       </div>
 
       {/* All Products Section */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
-        <div className="p-6 border-b border-gray-100">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8 border border-[#e8c4c0]">
+        <div className="p-6 border-b border-[#e8c4c0]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-            <h2 className="text-2xl font-semibold">
+            <h2 className="text-2xl font-semibold text-[#7a5a57] font-dancing">
               Product Management - All Products
             </h2>
-            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-xl max-w-md w-full">
-              <FiSearch className="text-gray-400" />
+            <div className="flex items-center gap-2 bg-[#fff0ee] p-3 rounded-xl max-w-md w-full">
+              <FiSearch className="text-[#9e6d70]" />
               <input
                 type="text"
                 placeholder="Search products..."
-                className="bg-transparent w-full focus:outline-none"
+                className="bg-transparent w-full focus:outline-none text-[#7a5a57] placeholder-[#9e6d70]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -328,33 +335,45 @@ const InventoryPage = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#fff0ee]">
               <tr>
-                <th className="p-4 text-left">Product Name</th>
-                <th className="p-4 text-left">Quantity</th>
-                <th className="p-4 text-left">Price</th>
-                <th className="p-4 text-left">Actions</th>
+                {["Product Name", "Quantity", "Price", "Actions"].map(
+                  (header) => (
+                    <th
+                      key={header}
+                      className="p-4 text-left text-[#7a5a57] font-medium"
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>
               {filteredProducts.map((product) => (
                 <tr
                   key={product.id}
-                  className="border-t border-gray-100 hover:bg-gray-50 group"
+                  className="border-t border-[#e8c4c0] hover:bg-[#fff0ee] group transition-colors"
                 >
-                  <td className="p-4 font-medium">{product.product_name}</td>
-                  <td className="p-4">{product.product_quantity}</td>
-                  <td className="p-4">${product.price.toFixed(2)}</td>
+                  <td className="p-4 font-medium text-[#7a5a57]">
+                    {product.product_name}
+                  </td>
+                  <td className="p-4 text-[#9e6d70]">
+                    {product.product_quantity}
+                  </td>
+                  <td className="p-4 text-[#b76e79] font-bold">
+                    ${product.price.toFixed(2)}
+                  </td>
                   <td className="p-4 flex gap-3">
                     <button
                       onClick={() => handleEdit(product)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-[#7a5a57] hover:text-[#b76e79] transition-colors"
                     >
                       <FiEdit size={18} />
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(product.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-[#7a5a57] hover:text-[#d8a5a5] transition-colors"
                     >
                       <FiTrash size={18} />
                     </button>
@@ -367,15 +386,17 @@ const InventoryPage = () => {
       </div>
 
       {/* Used Products Section */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-[#e8c4c0]">
+        <div className="p-6 border-b border-[#e8c4c0]">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h2 className="text-2xl font-semibold">Used Product History</h2>
-            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-xl">
-              <FiCalendar className="text-gray-400" />
+            <h2 className="text-2xl font-semibold text-[#7a5a57] font-dancing">
+              Used Product History
+            </h2>
+            <div className="flex items-center gap-2 bg-[#fff0ee] p-3 rounded-xl">
+              <FiCalendar className="text-[#9e6d70]" />
               <input
                 type="date"
-                className="bg-transparent focus:outline-none"
+                className="bg-transparent focus:outline-none text-[#7a5a57]"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
               />
@@ -385,35 +406,50 @@ const InventoryPage = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#fff0ee]">
               <tr>
-                <th className="p-4 text-left">Product Name</th>
-                <th className="p-4 text-left">Service</th>
-                <th className="p-4 text-left">Staff</th>
-                <th className="p-4 text-left">Quantity Used</th>
-                <th className="p-4 text-left">Date Used</th>
-                <th className="p-4 text-left">Client</th>
+                {[
+                  "Product Name",
+                  "Service",
+                  "Staff",
+                  "Quantity Used",
+                  "Date Used",
+                  "Client",
+                ].map((header) => (
+                  <th
+                    key={header}
+                    className="p-4 text-left text-[#7a5a57] font-medium"
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filteredUsedProducts.map((product) => (
                 <tr
                   key={product.id}
-                  className="border-t border-gray-100 hover:bg-gray-50"
+                  className="border-t border-[#e8c4c0] hover:bg-[#fff0ee] transition-colors"
                 >
-                  <td className="p-4 font-medium">{product.product_name}</td>
+                  <td className="p-4 font-medium text-[#7a5a57]">
+                    {product.product_name}
+                  </td>
                   <td className="p-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <span className="px-3 py-1 bg-[#e8c4c0] text-[#7a5a57] rounded-full text-sm">
                       {product.appointment.service.service_name}
                     </span>
                   </td>
-                  <td className="p-4">{product.staff.fullname}</td>
-                  <td className="p-4">{product.quantity_used}</td>
-                  <td className="p-4">
+                  <td className="p-4 text-[#9e6d70]">
+                    {product.staff.fullname}
+                  </td>
+                  <td className="p-4 text-[#b76e79] font-bold">
+                    {product.quantity_used}
+                  </td>
+                  <td className="p-4 text-[#9e6d70]">
                     {new Date(product.date).toLocaleDateString()}
                   </td>
                   <td className="p-4">
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    <span className="px-3 py-1 bg-[#d8a5a5] text-white rounded-full text-sm">
                       {product.appointment.client.client_name}
                     </span>
                   </td>
@@ -436,22 +472,23 @@ const InventoryPage = () => {
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
-              className="bg-white p-8 rounded-2xl w-full max-w-md"
+              className="bg-white p-8 rounded-2xl w-full max-w-md border border-[#e8c4c0]"
             >
-              <h3 className="text-2xl font-semibold mb-6">
+              <h3 className="text-2xl font-semibold mb-6 text-[#7a5a57] font-dancing">
                 {editingProduct ? "Edit Product" : "New Product"}
               </h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
+                  <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                     Product Name
                   </label>
                   <input
                     type="text"
                     placeholder="Enter product name"
-                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
+                    className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                     value={formData.product_name}
+                    required
                     onChange={(e) =>
                       setFormData({ ...formData, product_name: e.target.value })
                     }
@@ -460,13 +497,14 @@ const InventoryPage = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                       Quantity
                     </label>
                     <input
                       type="number"
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                       value={formData.product_quantity || ""}
+                      required
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -476,14 +514,15 @@ const InventoryPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
+                    <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
                       Price
                     </label>
                     <input
                       type="number"
                       step="0.01"
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500"
+                      className="w-full p-3 border-2 border-[#e8c4c0] rounded-xl focus:border-[#b76e79] text-[#7a5a57]"
                       value={formData.price || ""}
+                      required
                       onChange={(e) =>
                         setFormData({ ...formData, price: +e.target.value })
                       }
@@ -493,36 +532,40 @@ const InventoryPage = () => {
               </div>
 
               <div className="flex gap-4 mt-8">
-                <motion.button
-                  whileHover={{ scale: ButtonLoaderToggle ? 1 : 1.05 }}
+                <AnimatedButton
                   onClick={handleSubmit}
-                  disabled={ButtonLoaderToggle}
-                  className={`flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl ${
-                    ButtonLoaderToggle ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
+                  isLoading={ButtonLoaderToggle}
+                  variant="solid"
+                  gradient={["#b76e79", "#d8a5a5"]}
+                  hoverScale={ButtonLoaderToggle ? 1 : 1.05}
+                  tapScale={0.95}
+                  className="flex-1 py-3 rounded-xl"
+                  iconPosition="left"
+                  icon={
+                    ButtonLoaderToggle ? (
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                    ) : null
+                  }
                 >
-                  {ButtonLoaderToggle && (
-                    <svg
-                      className="animate-spin h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
-                  )}
                   {editingProduct
                     ? ButtonLoaderToggle
                       ? "Updating..."
@@ -530,7 +573,7 @@ const InventoryPage = () => {
                     : ButtonLoaderToggle
                     ? "Creating..."
                     : "Create"}
-                </motion.button>
+                </AnimatedButton>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => {
@@ -542,7 +585,7 @@ const InventoryPage = () => {
                       price: 0,
                     });
                   }}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl"
+                  className="flex-1 bg-[#fff0ee] text-[#7a5a57] py-3 rounded-xl"
                 >
                   Cancel
                 </motion.button>
@@ -564,10 +607,12 @@ const InventoryPage = () => {
             <motion.div
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
-              className="bg-white p-8 rounded-2xl w-full max-w-md"
+              className="bg-white p-8 rounded-2xl w-full max-w-md border border-[#e8c4c0]"
             >
-              <h3 className="text-2xl font-semibold mb-6">Confirm Delete</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-2xl font-semibold mb-6 text-[#7a5a57] font-dancing">
+                Confirm Delete
+              </h3>
+              <p className="text-[#9e6d70] mb-6">
                 Are you sure you want to delete this product? This action cannot
                 be undone.
               </p>
@@ -576,7 +621,7 @@ const InventoryPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => deleteProduct(showDeleteConfirm)}
-                  className="flex-1 bg-red-600 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#b76e79] text-white py-3 rounded-xl flex items-center justify-center gap-2"
                 >
                   {ButtonLoaderToggle && (
                     <svg
@@ -606,7 +651,7 @@ const InventoryPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setShowDeleteConfirm(null)}
-                  className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl"
+                  className="flex-1 bg-[#fff0ee] text-[#7a5a57] py-3 rounded-xl"
                 >
                   Cancel
                 </motion.button>
