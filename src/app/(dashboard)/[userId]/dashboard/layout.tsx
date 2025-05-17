@@ -63,14 +63,13 @@ export default function DashboardLayout({
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
         );
         const activePlanId = userRes.data.user?.activePlanId;
-
+        console.log("paln id", activePlanId)
         if (activePlanId) {
           const planRes = await axios.get(
             `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/${activePlanId}`
           );
-          console.log(planRes.data);
-          setActivePlan(planRes.data);
-          console.log(planRes);
+          console.log("plan res",planRes.data.data);
+          setActivePlan(planRes.data.data);
         }
       } catch (error) {
         console.error("Error fetching plan:", error);
