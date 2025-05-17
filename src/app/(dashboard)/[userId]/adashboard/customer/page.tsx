@@ -189,29 +189,35 @@ const CustomersPage = () => {
             {activeTab === "profile" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Plan Type Card */}
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2 text-gray-600">
                       <FiCalendar />
                       <span>Plan Type</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {/* {selectedUser.activePlan.name +
-                        "-" +
-                        selectedUser.activePlan.price} */}
+                      {selectedUser.activePlan ? (
+                        `${selectedUser.activePlan.name} - ₹${selectedUser.activePlan.price}`
+                      ) : (
+                        <span className="text-red-500">No Active Plan</span>
+                      )}
                     </div>
                   </div>
 
+                  {/* Renewals Card */}
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-2 mb-2 text-gray-600">
                       <FiDollarSign />
                       <span>Renewals</span>
                     </div>
                     <div className="text-xl font-semibold">
-                      {selectedUser.purchasedPlans.length} Successful Renewals
+                      {selectedUser.purchasedPlans?.length ?? 0} Successful
+                      Renewals
                     </div>
                   </div>
                 </div>
 
+                {/* Contact Information */}
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Contact Information</h3>
                   <div className="flex gap-4">
@@ -222,7 +228,14 @@ const CustomersPage = () => {
                     <div className="flex-1 p-4 border rounded-lg">
                       <p className="font-medium">Join Date</p>
                       <p className="text-gray-600">
-                        {new Date(selectedUser.created_at).toLocaleDateString()}
+                        {new Date(selectedUser.created_at).toLocaleDateString(
+                          "en-IN",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
                       </p>
                     </div>
                   </div>

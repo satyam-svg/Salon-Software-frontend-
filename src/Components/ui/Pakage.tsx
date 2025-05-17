@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, JSX } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import {
   FiStar,
   FiCheck,
 } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 declare global {
   interface Window {
@@ -97,7 +98,8 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
       setActivePlanId(pkgId);
       onSelectPlan(pkgId);
 
-      alert("Free plan activated successfully!");
+      toast.success("🎊Plan activated sucessfuuly");
+      window.location.reload();
     } catch (error) {
       console.error("Free plan activation failed:", error);
       alert("Error activating free plan. Please try again.");
@@ -127,7 +129,7 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
       if (!scriptLoaded) throw new Error("Failed to load Razorpay SDK");
 
       const options = {
-        key: "rzp_live_xqIA5b66QZO5JV",
+        key: process.env.NEXT_PUBLIC_RAXORPAY_KEY,
         amount: order.amount,
         currency: "INR",
         name: "Salon Management System",

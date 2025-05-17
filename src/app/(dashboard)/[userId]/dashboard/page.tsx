@@ -5,7 +5,7 @@ import {
   LineChartComponent,
 } from "@/Components/dashboard/Charts";
 import { motion } from "framer-motion";
-import { FiUserPlus, FiCalendar, FiSettings } from "react-icons/fi";
+import { FiUserPlus, FiCalendar, FiSettings, FiCheck } from "react-icons/fi";
 import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import axios from "axios";
@@ -33,6 +33,92 @@ interface ChartCardProps {
   children: ReactNode;
 }
 
+interface SubscriptionPackage {
+  id: string;
+  name: string;
+  price: number;
+  features: string[];
+}
+
+const featureMap: { [key: string]: string } = {
+  appointments: "Appointments Management",
+  finance: "Financial Tracking",
+  clients: "Client Management",
+  inventory: "Inventory Tracking",
+  branch: "Multiple Branches",
+  services: "Services Management",
+  feedback: "Customer Feedback",
+  staff: "Staff Management",
+};
+
+const ActivePlanCard = ({
+  activePlan,
+}: {
+  activePlan: SubscriptionPackage | null;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.7, type: "spring" }}
+      className="col-span-1"
+    >
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        className="bg-gradient-to-r from-[#b76e79] to-[#d8a5a5] p-6 rounded-xl shadow-lg text-white relative overflow-hidden"
+      >
+        <div className="absolute w-32 h-32 bg-white/10 -top-16 -right-16 rounded-full" />
+        <div className="absolute w-24 h-24 bg-white/10 -bottom-12 -left-12 rounded-full" />
+
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">
+              {activePlan?.name || "No Active Plan"}
+            </h3>
+            <span className="text-2xl font-bold">
+              {activePlan ? `₹${activePlan?.price}/mo` : "Free Tier"}
+            </span>
+          </div>
+
+          <p className="mb-4 opacity-90">Your current plan includes:</p>
+
+          <ul className="space-y-2">
+            {activePlan?.features.map((feature) => (
+              <li key={feature} className="flex items-center gap-2">
+                <FiCheck className="text-white" />
+                <span className="text-sm">
+                  {featureMap[feature] || feature}
+                </span>
+              </li>
+            ))}
+
+            {!activePlan && (
+              <>
+                <li className="flex items-center gap-2 opacity-50">
+                  <FiCheck className="text-white" />
+                  <span className="text-sm">Basic Appointments</span>
+                </li>
+                <li className="flex items-center gap-2 opacity-50">
+                  <FiCheck className="text-white" />
+                  <span className="text-sm">Limited Clients</span>
+                </li>
+              </>
+            )}
+          </ul>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="mt-6 w-full bg-white text-[#b76e79] py-2 rounded-lg font-semibold shadow-md hover:bg-opacity-90 transition-all"
+          >
+            {activePlan ? "Manage Plan" : "Upgrade Now"}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const DashboardPage = () => {
   const pathname = usePathname();
   const userId = pathname.split("/")[1];
@@ -41,23 +127,37 @@ const DashboardPage = () => {
   const [clients, setClients] = useState(0);
   const [appointments, setAppointments] = useState(0);
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [activePlan, setActivePlan] = useState<SubscriptionPackage | null>(
+    null
+  );
   const { ScreenLoaderToggle, setScreenLoaderToggle } = useScreenLoader();
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setScreenLoaderToggle(true);
+
+        // Fetch user data
         const userResponse = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userId}`
         );
-        if (!userResponse.ok)
-          throw new Error(`HTTP error! status: ${userResponse.status}`);
+        if (!userResponse.ok) throw new Error("Failed to fetch user data");
         const userData = await userResponse.json();
-        if (!userData.user?.salonId) throw new Error("Salon not found");
 
+        // Fetch active plan
+        if (userData.user?.activePlanId) {
+          const planRes = await axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/${userData.user.activePlanId}`
+          );
+          setActivePlan(planRes.data.data);
+        }
+
+        // Fetch salon data
+        if (!userData.user?.salonId) throw new Error("Salon not found");
         const salonId = userData.user.salonId;
         setSalonId(salonId);
 
+        // Fetch other data
         const [chartRes, revenueRes, clientsRes, appointmentsRes] =
           await Promise.all([
             axios.get(
@@ -184,6 +284,22 @@ const DashboardPage = () => {
             <ChartCard title={chart.title}>{chart.component}</ChartCard>
           </motion.div>
         ))}
+      </div>
+
+      {/* Active Plan Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, type: "spring" }}
+          className="col-span-1"
+        >
+          <ChartCard title="Performance Metrics">
+            <BarChartComponent data={chartData} />
+          </ChartCard>
+        </motion.div>
+
+        <ActivePlanCard activePlan={activePlan} />
       </div>
     </motion.div>
   );
