@@ -1,4 +1,3 @@
-// Components/Plans.tsx
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -11,9 +10,14 @@ import {
   FiGitBranch,
   FiClipboard,
   FiStar,
-  FiX,
-  FiCreditCard,
+  FiCheck,
 } from "react-icons/fi";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface SubscriptionPackage {
   id: string;
@@ -24,98 +28,16 @@ interface SubscriptionPackage {
   features: string[];
 }
 
-
-interface PaymentDialogProps {
-  plan: SubscriptionPackage;
-  onClose: () => void;
-  onProceed: () => void;
-}
-const PaymentDialog = ({ plan, onClose, onProceed }: PaymentDialogProps) => (
-  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[10000]">
-    <motion.div 
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8"
-      style={{ border: "2px solid #e8c4c0" }}
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-dancing text-[#b76e79]">Payment Details</h3>
-        <button onClick={onClose} className="text-[#7a5a57] hover:text-[#b76e79]">
-          <FiX className="text-2xl" />
-        </button>
-      </div>
-
-      <div className="bg-[#fff0ee] p-4 rounded-xl mb-6">
-        <div className="flex justify-between text-[#7a5a57] mb-2">
-          <span>Plan:</span>
-          <span className="font-medium">{plan.name}</span>
-        </div>
-        <div className="flex justify-between text-[#7a5a57]">
-          <span>Amount:</span>
-          <span className="font-medium text-[#b76e79]">
-            {new Intl.NumberFormat("en-IN", {
-              style: "currency",
-              currency: "INR",
-              maximumFractionDigits: 0,
-            }).format(plan.price)}
-          </span>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="border border-[#e8c4c0] rounded-xl p-3">
-          <label className="text-sm text-[#7a5a57]">Card Number</label>
-          <div className="flex items-center gap-2 mt-1">
-            <FiCreditCard className="text-[#b76e79]" />
-            <input
-              type="text"
-              placeholder="4242 4242 4242 4242"
-              className="flex-1 bg-transparent outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="border border-[#e8c4c0] rounded-xl p-3">
-            <label className="text-sm text-[#7a5a57]">Expiry</label>
-            <input
-              type="text"
-              placeholder="MM/YY"
-              className="w-full bg-transparent outline-none"
-            />
-          </div>
-          <div className="border border-[#e8c4c0] rounded-xl p-3">
-            <label className="text-sm text-[#7a5a57]">CVC</label>
-            <input
-              type="text"
-              placeholder="123"
-              className="w-full bg-transparent outline-none"
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={onProceed}
-          className="w-full bg-[#b76e79] hover:bg-[#a55d68] text-white py-3 rounded-xl transition-colors"
-        >
-          Proceed to Payment
-        </button>
-      </div>
-    </motion.div>
-  </div>
-);
-
 interface PlansProps {
   userid: string;
   onSelectPlan: (planId: string) => void;
 }
 
 const Plans = ({ userid, onSelectPlan }: PlansProps) => {
-  
   const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPackage | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
 
   const featureIcons: { [key: string]: JSX.Element } = {
     appointments: <FiCalendar />,
@@ -129,20 +51,123 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
   };
 
   useEffect(() => {
-    const fetchPackages = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/getall`
-        );
-        setPackages(response.data.data);
+        const [userResponse, packagesResponse] = await Promise.all([
+          axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/${userid}`
+          ),
+          axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/getall`
+          ),
+        ]);
+
+        setActivePlanId(userResponse.data.user.activePlanId);
+        setPackages(packagesResponse.data.data);
       } catch (error) {
-        console.error("Error fetching packages:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPackages();
-  }, []);
+    fetchData();
+  }, [userid]);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleFreePlanActivation = async (pkgId: string) => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/buy`,
+        {
+          userId: userid,
+          packageId: pkgId,
+        }
+      );
+
+      // Update local state and parent component
+      setActivePlanId(pkgId);
+      onSelectPlan(pkgId);
+
+      alert("Free plan activated successfully!");
+    } catch (error) {
+      console.error("Free plan activation failed:", error);
+      alert("Error activating free plan. Please try again.");
+    }
+  };
+
+  const handlePlanSelect = async (pkg: SubscriptionPackage) => {
+    try {
+      setProcessingPlan(pkg.id);
+
+      if (pkg.price === 0) {
+        await handleFreePlanActivation(pkg.id);
+        return;
+      }
+
+      // Paid plan logic
+      const orderResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/buy`,
+        {
+          userId: userid,
+          packageId: pkg.id,
+        }
+      );
+
+      const order = orderResponse.data.data.order;
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) throw new Error("Failed to load Razorpay SDK");
+
+      const options = {
+        key: "rzp_live_xqIA5b66QZO5JV",
+        amount: order.amount,
+        currency: "INR",
+        name: "Salon Management System",
+        description: pkg.name,
+        order_id: order.id,
+        handler: async (response: any) => {
+          try {
+            await axios.post(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/verify-payment`,
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }
+            );
+            setActivePlanId(pkg.id);
+            onSelectPlan(pkg.id);
+            alert("Payment successful! Plan activated.");
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            alert("Payment verification failed. Please contact support.");
+          }
+        },
+        prefill: { email: "", contact: "" },
+        theme: { color: "#b76e79" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Plan activation failed:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error processing request. Please try again."
+      );
+    } finally {
+      setProcessingPlan(null);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -151,32 +176,12 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
       maximumFractionDigits: 0,
     }).format(price);
   };
-  const handlePlanSelect = async (pkg: SubscriptionPackage) => {
-  if (pkg.price === 0) {
-    setIsProcessing(true);
-    try {
-      // Directly activate free plan
-      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}api/plans/purchase`, {
-        userId: userid,
-        packageId: pkg.id
-      });
-      window.location.reload(); // Force refresh to update UI
-    } catch (error) {
-      console.error('Activation failed:', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  } else {
-    // Only show payment dialog for paid plans
-    setSelectedPlan(pkg);
-  }
-};
 
   if (loading) return <div className="text-center p-8">Loading plans...</div>;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
@@ -193,62 +198,91 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {packages.map((pkg) => (
-              <motion.div
-                key={pkg.id}
-                whileHover={{ scale: 1.05 }}
-                className="bg-[#fff9f7] rounded-2xl p-6 border-2 border-[#e8c4c0]"
-              >
-                <div className="mb-4">
-                  <h3 className="text-xl font-semibold text-[#b76e79]">
-                    {pkg.name}
-                  </h3>
-                  <p className="text-2xl font-bold text-[#7a5a57] my-3">
-                    {formatPrice(pkg.price)}
-                    <span className="text-sm font-normal">/month</span>
-                  </p>
-                  <p className="text-sm text-[#7a5a57]">{pkg.description}</p>
-                </div>
+            {packages.map((pkg) => {
+              const isCurrentPlan = activePlanId === pkg.id;
+              const isProcessing = processingPlan === pkg.id;
 
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 text-sm text-[#7a5a57] mb-3">
-                    <FiGitBranch className="text-[#b76e79]" />
-                    <span>
-                      {pkg.branchLimit === 9999 ? "Unlimited" : pkg.branchLimit} Branches
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {pkg.features.map((featureId) => (
-                    <div key={featureId} className="flex items-center gap-2 text-sm text-[#7a5a57]">
-                      <span className="text-[#b76e79]">
-                        {featureIcons[featureId]}
-                      </span>
-                      {featureId.charAt(0).toUpperCase() + featureId.slice(1)}
+              return (
+                <motion.div
+                  key={pkg.id}
+                  whileHover={{ scale: 1.05 }}
+                  className={`bg-[#fff9f7] rounded-2xl p-6 border-2 relative overflow-hidden ${
+                    isCurrentPlan
+                      ? "border-[#b76e79] ring-2 ring-[#b76e79]/20"
+                      : "border-[#e8c4c0]"
+                  }`}
+                >
+                  {isCurrentPlan && (
+                    <div className="absolute top-0 right-0 bg-[#b76e79] text-white px-3 py-1 text-xs font-medium rounded-bl-lg rounded-tr-lg flex items-center gap-1">
+                      <FiCheck className="text-sm" />
+                      <span>Current Plan</span>
                     </div>
-                  ))}
-                </div>
+                  )}
 
-                <button
-            onClick={() => handlePlanSelect(pkg)}
-            disabled={isProcessing}
-            className={`w-full mt-6 ${
-              pkg.price === 0 
-                ? 'bg-[#e8c4c0] hover:bg-[#d8b4b0] text-[#7a5a57]' 
-                : 'bg-[#b76e79] hover:bg-[#a55d68] text-white'
-            } py-2 rounded-xl transition-colors`}
-          >
-            {isProcessing && pkg.price === 0 ? (
-              'Activating...'
-            ) : pkg.price === 0 ? (
-              'Activate Free Plan'
-            ) : (
-              'Choose Plan'
-            )}
-          </button>
-              </motion.div>
-            ))}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-semibold text-[#b76e79]">
+                      {pkg.name}
+                    </h3>
+                    <p className="text-2xl font-bold text-[#7a5a57] my-3">
+                      {formatPrice(pkg.price)}
+                      <span className="text-sm font-normal">/month</span>
+                    </p>
+                    <p className="text-sm text-[#7a5a57]">{pkg.description}</p>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 text-sm text-[#7a5a57] mb-3">
+                      <FiGitBranch className="text-[#b76e79]" />
+                      <span>
+                        {pkg.branchLimit === 9999
+                          ? "Unlimited"
+                          : pkg.branchLimit}{" "}
+                        Branches
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {pkg.features.map((featureId) => (
+                      <div
+                        key={featureId}
+                        className="flex items-center gap-2 text-sm text-[#7a5a57]"
+                      >
+                        <span className="text-[#b76e79]">
+                          {featureIcons[featureId]}
+                        </span>
+                        {featureId.charAt(0).toUpperCase() + featureId.slice(1)}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePlanSelect(pkg)}
+                    disabled={isProcessing || isCurrentPlan}
+                    className={`w-full mt-6 ${
+                      isCurrentPlan
+                        ? "bg-green-100 text-green-700 cursor-not-allowed"
+                        : pkg.price === 0
+                        ? "bg-[#e8c4c0] hover:bg-[#d8b4b0] text-[#7a5a57]"
+                        : "bg-[#b76e79] hover:bg-[#a55d68] text-white"
+                    } py-2 rounded-xl transition-colors flex items-center justify-center gap-2`}
+                  >
+                    {isCurrentPlan ? (
+                      <>
+                        <FiCheck />
+                        <span>Activated</span>
+                      </>
+                    ) : isProcessing ? (
+                      "Processing..."
+                    ) : pkg.price === 0 ? (
+                      "Activate Free Plan"
+                    ) : (
+                      "Choose Plan"
+                    )}
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="mt-8 text-center text-sm text-[#7a5a57]">
@@ -256,22 +290,8 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
           </div>
         </div>
       </motion.div>
-       {selectedPlan && selectedPlan.price > 0 && (
-  <PaymentDialog
-    plan={selectedPlan}
-    onClose={() => setSelectedPlan(null)}
-    onProceed={() => {
-      // Empty for now, just close dialog
-      setSelectedPlan(null);
-    }}
-  />
-)}
     </div>
   );
 };
 
 export default Plans;
-
-
-
-

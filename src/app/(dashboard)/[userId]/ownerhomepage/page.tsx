@@ -31,7 +31,9 @@ const OwnerHomepage = () => {
   const userid = pathname.split("/")[1];
   const router = useRouter();
   const [showPlans, setShowPlans] = useState(false);
-  const [userData, setUserData] = useState<{ activePlanId?: string | null }>({});
+  const [userData, setUserData] = useState<{ activePlanId?: string | null }>(
+    {}
+  );
   const [copySuccess, setCopySuccess] = useState(false);
   const [daysOperating, setDaysOperating] = useState<number | null>(null);
   const [yearsOperating, setYearsOperating] = useState<number | null>(null);
@@ -201,9 +203,11 @@ const OwnerHomepage = () => {
       transition: { type: "spring", stiffness: 100 },
     },
   };
-   const handleSelectPlan = async () => {
-  
-};
+  const handleSelectPlan = async () => {};
+
+  const handleUpdatePlan = () => {
+    setShowPlans(true);
+  };
 
   return (
     <div
@@ -226,13 +230,7 @@ const OwnerHomepage = () => {
         </svg>
       </div>
 
-      
-{showPlans && (
-  <Plans 
-    userid={userid}
-    onSelectPlan={handleSelectPlan}
-  />
-)}
+      {showPlans && <Plans userid={userid} onSelectPlan={handleSelectPlan} />}
 
       <motion.div
         ref={ref}
@@ -282,19 +280,31 @@ const OwnerHomepage = () => {
               )}
             </div>
           </div>
-
-          <AnimatedButton
-            onClick={handleDashboardClick}
-            variant="solid"
-            hoverEffect="scale"
-            gradient={["#b76e79", "#d8a5a5"]}
-            className="mr-6 px-2 py-1 text-sm rounded-lg shadow-md hover:shadow-lg max-w-[200px] h-12"
-            icon={<FiStar className="text-xs" />}
-            iconPosition="left"
-            isLoading={isNavigating}
-          >
-            {isNavigating ? "Loading..." : "Dashboard"}
-          </AnimatedButton>
+          <div className="flex gap-5">
+            <AnimatedButton
+              onClick={handleDashboardClick}
+              variant="solid"
+              hoverEffect="scale"
+              gradient={["#b76e79", "#d8a5a5"]}
+              className="mr-6 px-2 py-1 text-sm rounded-lg shadow-md hover:shadow-lg max-w-[200px] h-12 w-40"
+              icon={<FiStar className="text-xs" />}
+              iconPosition="left"
+              isLoading={isNavigating}
+            >
+              {isNavigating ? "Loading..." : "Dashboard"}
+            </AnimatedButton>
+            <AnimatedButton
+              onClick={handleUpdatePlan}
+              variant="solid"
+              hoverEffect="scale"
+              gradient={["#b76e79", "#d8a5a5"]}
+              className="mr-6 px-2 py-1 text-sm rounded-lg shadow-md hover:shadow-lg max-w-[200px] h-12 w-40"
+              icon={<FiStar className="text-xs" />}
+              iconPosition="left"
+            >
+              Updating Plans
+            </AnimatedButton>
+          </div>
         </motion.div>
 
         {/* Stats Grid */}
@@ -466,14 +476,3 @@ const OwnerHomepage = () => {
 };
 
 export default OwnerHomepage;
-
-
-
-
-
-
-
-
-
- 
-
