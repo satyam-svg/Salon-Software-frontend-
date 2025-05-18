@@ -78,7 +78,7 @@ const LoginPopup = () => {
         }
 
         const userId = data.user.id;
-        if (data.user.email == "Veddikasiingh@gmail.com") {
+        if (data.user.email == process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
           router.replace(`/admin/adashboard`);
         } else {
           router.replace(`/${userId}/ownerhomepage`);

@@ -90,7 +90,7 @@ export async function middleware(request: NextRequest) {
         const data = await res.json();
         const userEmail = data?.user?.email;
         
-        if (userEmail !== 'praveen96257@gmail.com') {
+        if (userEmail !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
           console.error('Admin email mismatch:', userEmail);
           return unauthorizedResponse(['authToken']);
         }
