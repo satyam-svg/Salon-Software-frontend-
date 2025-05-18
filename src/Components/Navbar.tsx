@@ -111,7 +111,10 @@ const StellarNavbar: FC = () => {
         const data = response.data;
         const userId = decoded.id;
         console.log(data.user.step);
-        if (data.user.step == 0) {
+        if(data.user.email == process.env.NEXT_PUBLIC_ADMIN_EMAIL){
+          router.push('/admin/adashboard')
+        }
+        else if (data.user.step == 0) {
           router.push(`/${userId}/salon/not_created`);
         } else if (data.user.step == 6) {
           setHasSalon(true);
