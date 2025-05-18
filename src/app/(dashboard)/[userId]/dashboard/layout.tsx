@@ -101,13 +101,19 @@ export default function DashboardLayout({
   };
 
   const isFeatureAllowed = (featureName: string) => {
-    if (featureConfig[featureName as keyof typeof featureConfig]?.alwaysAllowed)
-      return true;
+  const key = featureName as keyof typeof featureConfig;
+  const entry = featureConfig[key];
 
-    const featureId =
-      featureConfig[featureName as keyof typeof featureConfig]?.featureId;
-    return activePlan?.features.includes(featureId);
-  };
+  if (!entry) return false; // Handle undefined entries
+
+  // Type guard checks
+  if ('alwaysAllowed' in entry) {
+    return true;
+  } else {
+    const featureId = 'featureId' in entry ? entry.featureId : null;
+    return featureId ? activePlan?.features.includes(featureId) || false : false;
+  }
+};
 
   const navItems = [
     {

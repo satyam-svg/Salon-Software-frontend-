@@ -15,11 +15,34 @@ import {
 import toast from "react-hot-toast";
 
 declare global {
+  interface RazorpayOptions {
+    key: string | undefined;
+    amount: number;
+    currency: string;
+    name: string;
+    description: string;
+    order_id: string;
+    handler: (response: RazorpayPaymentResponse) => void;
+    prefill: { email: string; contact: string };
+    theme: { color: string };
+  }
+
+  interface Razorpay {
+    new (options: RazorpayOptions): {
+      open: () => void;
+    };
+  }
+
   interface Window {
-    Razorpay: any;
+    Razorpay: Razorpay;
   }
 }
 
+interface RazorpayPaymentResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 interface SubscriptionPackage {
   id: string;
   name: string;
@@ -135,7 +158,7 @@ const Plans = ({ userid, onSelectPlan }: PlansProps) => {
         name: "Salon Management System",
         description: pkg.name,
         order_id: order.id,
-        handler: async (response: any) => {
+        handler: async (response: RazorpayPaymentResponse) => {
           try {
             await axios.post(
               `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/verify-payment`,

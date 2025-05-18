@@ -31,9 +31,7 @@ const OwnerHomepage = () => {
   const userid = pathname.split("/")[1];
   const router = useRouter();
   const [showPlans, setShowPlans] = useState(false);
-  const [userData, setUserData] = useState<{ activePlanId?: string | null }>(
-    {}
-  );
+  const [, setUserData] = useState<{ activePlanId?: string | null }>({});
   const [copySuccess, setCopySuccess] = useState(false);
   const [daysOperating, setDaysOperating] = useState<number | null>(null);
   const [yearsOperating, setYearsOperating] = useState<number | null>(null);
