@@ -7,8 +7,8 @@ import {
   FaFacebookF,
   FaTwitter,
   FaPinterestP,
-  FaMapMarkerAlt,
-  FaPhone,
+  // FaMapMarkerAlt,
+  // FaPhone,
   FaEnvelope,
   FaClock,
 } from "react-icons/fa";
