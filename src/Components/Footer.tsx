@@ -309,7 +309,7 @@ const LuxuryFooter = () => {
                   },
                 }}
               >
-                <motion.div
+                {/* <motion.div
                   className="flex items-start"
                   variants={itemVariants}
                   whileHover={{ x: 3 }}
@@ -326,14 +326,14 @@ const LuxuryFooter = () => {
                 >
                   <FaPhone className="text-[#b76e79] mt-1 mr-3 flex-shrink-0" />
                   <span className="text-gray-600">+1 (555) 123-4567</span>
-                </motion.div>
+                </motion.div> */}
                 <motion.div
                   className="flex items-start"
                   variants={itemVariants}
                   whileHover={{ x: 3 }}
                 >
                   <FaEnvelope className="text-[#b76e79] mt-1 mr-3 flex-shrink-0" />
-                  <span className="text-gray-600">hello@eclatsalon.com</span>
+                  <span className="text-gray-600">marketing@movestrongly.com</span>
                 </motion.div>
                 <motion.div
                   className="flex items-start"
@@ -341,7 +341,7 @@ const LuxuryFooter = () => {
                   whileHover={{ x: 3 }}
                 >
                   <FaClock className="text-[#b76e79] mt-1 mr-3 flex-shrink-0" />
-                  <span className="text-gray-600">Mon-Sat: 9AM - 8PM</span>
+                  <span className="text-gray-600">24 x 7 support</span>
                 </motion.div>
               </motion.div>
 
