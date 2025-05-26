@@ -357,7 +357,7 @@ const StaffManagementPage = () => {
             <div>
               <p className="text-[#9e6d70]">Total Revenue</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                ${revenue.toLocaleString()}
+                ₹{revenue.toLocaleString()}
               </p>
             </div>
           </div>
@@ -374,7 +374,7 @@ const StaffManagementPage = () => {
             <div>
               <p className="text-[#9e6d70]">Total Salary</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                ${totalsalary}
+                ₹{totalsalary}
               </p>
             </div>
           </div>
@@ -391,7 +391,7 @@ const StaffManagementPage = () => {
             <div>
               <p className="text-[#9e6d70]">Avg. Revenue/Staff</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                $
+                ₹
                 {avgrevenue.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
                 })}
@@ -465,12 +465,12 @@ const StaffManagementPage = () => {
                     </td>
                     <td className="p-4">
                       <span className="font-medium text-[#b76e79]">
-                        ${getrevenuegenrated(staff.id).toLocaleString()}
+                        ₹{getrevenuegenrated(staff.id).toLocaleString()}
                       </span>
                     </td>
                     <td className="p-4">
                       <span className="font-medium text-[#b76e79]">
-                        ${salaryrecieve(staff.id).toFixed(2)}
+                        ₹{salaryrecieve(staff.id).toFixed(2)}
                       </span>
                     </td>
                     <td className="p-4">

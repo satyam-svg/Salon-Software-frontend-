@@ -289,7 +289,7 @@ const InventoryPage = () => {
             <div>
               <p className="text-[#9e6d70]">Total Value</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                ${totalValue.toLocaleString()}
+                ₹{totalValue.toLocaleString()}
               </p>
             </div>
           </div>
@@ -306,7 +306,7 @@ const InventoryPage = () => {
             <div>
               <p className="text-[#9e6d70]">Used Items Cost</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                ${usedItemsCost.toLocaleString()}
+                ₹{usedItemsCost.toLocaleString()}
               </p>
             </div>
           </div>
@@ -362,7 +362,7 @@ const InventoryPage = () => {
                     {product.product_quantity}
                   </td>
                   <td className="p-4 text-[#b76e79] font-bold">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </td>
                   <td className="p-4 flex gap-3">
                     <button

@@ -427,7 +427,7 @@ export default function BranchManagementPage() {
                           key={service.id}
                           className="bg-[#e8c4c0] text-[#7a5a57] px-2 py-1 text-xs rounded-full"
                         >
-                          {service.service_name} (${service.service_price})
+                          {service.service_name} (₹{service.service_price})
                         </span>
                       ))}
                     </div>

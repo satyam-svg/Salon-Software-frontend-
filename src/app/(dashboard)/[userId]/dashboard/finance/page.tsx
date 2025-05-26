@@ -186,7 +186,7 @@ const FinancialPage = () => {
           <div>
             <h2 className="text-2xl font-bold">Net Profit After Deductions</h2>
             <p className="text-4xl font-bold mt-2">
-              ${financialData.totals.netProfit.toLocaleString()}
+              ₹{financialData.totals.netProfit.toLocaleString()}
             </p>
             <p className="mt-2 opacity-90">
               (Total Earnings - Staff Salaries - Product Costs)
@@ -244,19 +244,19 @@ const FinancialPage = () => {
                     <div className="flex justify-between">
                       <span className="text-[#9e6d70]">Earnings:</span>
                       <span className="font-medium text-[#7a5a57]">
-                        ${branch.earnings.toLocaleString()}
+                        ₹{branch.earnings.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#9e6d70]">Staff Salaries:</span>
                       <span className="text-red-500">
-                        -${branch.staffSalaries.toLocaleString()}
+                        -₹{branch.staffSalaries.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#9e6d70]">Product Costs:</span>
                       <span className="text-red-500">
-                        -${branch.productCosts.toLocaleString()}
+                        -₹{branch.productCosts.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between mt-3 pt-3 border-t border-[#e8c4c0]">
@@ -264,7 +264,7 @@ const FinancialPage = () => {
                         Net Profit:
                       </span>
                       <span className="font-bold text-[#b76e79]">
-                        ${branch.netProfit.toLocaleString()}
+                        ₹{branch.netProfit.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -287,7 +287,7 @@ const FinancialPage = () => {
               <div>
                 <p className="text-[#9e6d70]">Total Staff Salaries</p>
                 <p className="text-2xl font-bold text-[#7a5a57]">
-                  ${financialData.totals.staffSalaries.toLocaleString()}
+                  ₹{financialData.totals.staffSalaries.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -299,7 +299,7 @@ const FinancialPage = () => {
               <div>
                 <p className="text-[#9e6d70]">Product Costs</p>
                 <p className="text-2xl font-bold text-[#7a5a57]">
-                  ${financialData.totals.productCosts.toLocaleString()}
+                  ₹{financialData.totals.productCosts.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -380,7 +380,7 @@ const LineChartComponent = ({
         ticks: {
           color: SALON_THEME.textSecondary,
           callback: (value: number | string) =>
-            `$${Number(value).toLocaleString()}`,
+            `₹${Number(value).toLocaleString()}`,
         },
       },
     },

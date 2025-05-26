@@ -672,7 +672,7 @@ export default function ClientManagementPage() {
                     {client.appointments.length}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-[#b76e79] font-bold">
-                    ${getclientrevenue(client).toFixed(2)}
+                    ₹{getclientrevenue(client).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex gap-2">

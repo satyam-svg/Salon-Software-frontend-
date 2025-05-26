@@ -326,7 +326,7 @@ const StaffAppointmentsPage = () => {
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
               <p className="text-2xl font-bold">
-                $
+                ₹
                 {staffData?.appointments
                   ?.filter((a) => a.status === "confirmed")
                   .reduce((sum, a) => sum + (a.service?.service_price || 0), 0)

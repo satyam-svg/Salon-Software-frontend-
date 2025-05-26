@@ -478,7 +478,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
                               {service.service_name}
                             </span>
                             <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm">
-                              ${service.service_price}
+                                 ₹{service.service_price}
                             </span>
                           </div>
                         ))}
@@ -504,7 +504,7 @@ const SalonPage = ({ setStep }: { setStep: (step: number) => void }) => {
                                 Qty: {product.product_quantity}
                               </span>
                               <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-sm">
-                                ${product.price}
+                                 ₹{product.price}
                               </span>
                             </div>
                           </div>

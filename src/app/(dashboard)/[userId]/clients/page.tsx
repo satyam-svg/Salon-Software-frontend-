@@ -437,7 +437,7 @@ export default function ClientPage() {
                       <option value="">Choose Service</option>
                       {bookingForm.branch?.service.map((service) => (
                         <option key={service.id} value={service.id}>
-                          {service.service_name} - ${service.service_price}
+                          {service.service_name} - ₹{service.service_price}
                         </option>
                       ))}
                     </select>
@@ -488,7 +488,7 @@ export default function ClientPage() {
                     hoverScale={1.05}
                     tapScale={0.95}
                   >
-                    Continue Booking (${bookingForm.service?.service_price || 0}
+                    Continue Booking (₹{bookingForm.service?.service_price || 0}
                     )
                   </AnimatedButton>
                 </form>

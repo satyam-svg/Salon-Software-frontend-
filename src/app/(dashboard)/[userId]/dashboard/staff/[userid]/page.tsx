@@ -394,7 +394,7 @@ const StaffDetailsPage = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-[#9e6d70]">
-                        Amount ($)
+                        Amount (₹)
                       </label>
                       <input
                         type="number"
@@ -452,7 +452,7 @@ const StaffDetailsPage = () => {
                       {new Date(payment.date).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-[#7a5a57] font-medium">
-                      ${payment.amount.toLocaleString()}
+                      ₹{payment.amount.toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -491,7 +491,7 @@ const StaffDetailsPage = () => {
                       {appointment.service}
                     </td>
                     <td className="p-4 text-[#7a5a57] font-medium">
-                      ${appointment.service_price}
+                      ₹{appointment.service_price}
                     </td>
                     <td className="p-4 text-[#9e6d70]">
                       {new Date(appointment.date).toLocaleDateString()}

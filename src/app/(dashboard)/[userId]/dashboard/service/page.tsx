@@ -257,7 +257,7 @@ const ServiceManagementPage = () => {
             <div>
               <p className="text-[#9e6d70]">Total Value</p>
               <p className="text-2xl font-bold text-[#7a5a57]">
-                ${totalRevenue.toFixed(2)}
+                ₹{totalRevenue.toFixed(2)}
               </p>
             </div>
           </div>
@@ -301,7 +301,7 @@ const ServiceManagementPage = () => {
                   </td>
                   <td className="p-4 text-[#9e6d70]">{service.time} min</td>
                   <td className="p-4 text-[#b76e79] font-bold">
-                    ${service.service_price.toFixed(2)}
+                    ₹{service.service_price.toFixed(2)}
                   </td>
                   <td className="p-4">
                     <button

@@ -8,7 +8,7 @@ import {
   FaTwitter,
   FaPinterestP,
   // FaMapMarkerAlt,
-  // FaPhone,
+  FaPhone,
   FaEnvelope,
   FaClock,
 } from "react-icons/fa";
@@ -309,7 +309,7 @@ const LuxuryFooter = () => {
                   },
                 }}
               >
-                {/* <motion.div
+              {/* <motion.div
                   className="flex items-start"
                   variants={itemVariants}
                   whileHover={{ x: 3 }}
@@ -318,15 +318,15 @@ const LuxuryFooter = () => {
                   <span className="text-gray-600">
                     123 Beauty Ave, Glamour City
                   </span>
-                </motion.div>
+                </motion.div> */}
                 <motion.div
                   className="flex items-start"
                   variants={itemVariants}
                   whileHover={{ x: 3 }}
                 >
                   <FaPhone className="text-[#b76e79] mt-1 mr-3 flex-shrink-0" />
-                  <span className="text-gray-600">+1 (555) 123-4567</span>
-                </motion.div> */}
+                  <span className="text-gray-600">+91 7291031315</span>
+                </motion.div>
                 <motion.div
                   className="flex items-start"
                   variants={itemVariants}

@@ -187,7 +187,7 @@ export default function StatsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-blue-600">
-                        ${salary.amount.toFixed(2)}
+                      ₹{salary.amount.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -226,7 +226,7 @@ export default function StatsPage() {
             <div>
               <p className="text-sm text-gray-600">Total Earnings</p>
               <p className="text-2xl font-bold">
-                $
+                ₹
                 {staffData?.salaries
                   .reduce((sum, s) => sum + s.amount, 0)
                   .toFixed(2) || "0.00"}

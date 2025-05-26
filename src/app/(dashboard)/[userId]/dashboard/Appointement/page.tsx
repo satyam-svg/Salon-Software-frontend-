@@ -373,7 +373,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
               </Text>
               <Text style={styles.tableCell}>{appointment.staff_name}</Text>
               <Text style={styles.tableCell}>
-                ${appointment.price.toFixed(2)}
+                ₹{appointment.price.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -388,7 +388,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
             >
               <Text style={styles.priceText}>Subtotal:</Text>
               <Text style={styles.priceText}>
-                ${appointment.price.toFixed(2)}
+                ₹{appointment.price.toFixed(2)}
               </Text>
             </View>
             <View
@@ -398,7 +398,7 @@ const InvoiceDocument = ({ appointment }: { appointment: Appointment }) => {
               <Text
                 style={[styles.priceText, { color: "#4f46e5", fontSize: 16 }]}
               >
-                ${appointment.price.toFixed(2)}
+                ₹{appointment.price.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -887,7 +887,7 @@ export default function AppointmentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="text-lg font-bold text-[#b76e79]">
-                          ${appointment.price.toFixed(2)}
+                          ₹{appointment.price.toFixed(2)}
                         </div>
                         <button
                           onClick={() => handleDownloadInvoice(appointment)}
