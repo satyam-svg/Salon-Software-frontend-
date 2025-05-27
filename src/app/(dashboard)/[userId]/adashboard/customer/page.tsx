@@ -8,6 +8,7 @@ import {
   FiDollarSign,
   FiX,
   FiLoader,
+  FiPackage,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -19,11 +20,13 @@ import {
 } from "recharts";
 
 interface Activeplan {
+  id: string;
   name: string;
   price: number;
   description: string;
   branchLimit: number;
 }
+
 interface Feedback {
   feedback: string;
   date: string;
@@ -42,15 +45,28 @@ interface User {
   ownerFeedback: Feedback[];
 }
 
+interface SubscriptionPackage {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  branchLimit: number;
+  features: string[];
+}
+
 const CustomersPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showPackages, setShowPackages] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
+  const [assignLoading, setAssignLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
     "profile" | "feedback" | "loyalty"
   >("profile");
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const filteredUsers = users.filter(
     (user) =>
@@ -60,19 +76,25 @@ const CustomersPage = () => {
   );
 
   useEffect(() => {
-    const getcontactinfo = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/getallusercontactinfo`
-        );
-        setUsers(response.data.data);
+        const [usersRes, packagesRes] = await Promise.all([
+          axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/users/getallusercontactinfo`
+          ),
+          axios.get(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/getall`
+          ),
+        ]);
+        setUsers(usersRes.data.data);
+        setPackages(packagesRes.data.data);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    getcontactinfo();
+    fetchData();
   }, []);
 
   const calculateLoyaltyPoints = (customer: User) => {
@@ -85,8 +107,94 @@ const CustomersPage = () => {
     return basePoints + renewalPoints;
   };
 
+  const handleAssignPackage = async (packageId: string) => {
+    if (!selectedUserId) return;
+
+    try {
+      setAssignLoading(true);
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}api/packages/admin/assign`,
+        { userId: selectedUserId, packageId }
+      );
+
+      // Update local state
+      setUsers(
+        users.map((user) => {
+          if (user.id === selectedUserId) {
+            const pkg = packages.find((p) => p.id === packageId);
+            return {
+              ...user,
+              activePlan: pkg
+                ? {
+                    id: pkg.id,
+                    name: pkg.name,
+                    price: pkg.price,
+                    description: pkg.description,
+                    branchLimit: pkg.branchLimit,
+                  }
+                : user.activePlan,
+            };
+          }
+          return user;
+        })
+      );
+
+      setShowPackages(false);
+    } catch (error) {
+      console.error("Package assignment failed:", error);
+      alert("Package assignment failed");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Package Assignment Modal */}
+      {showPackages && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Select Package</h3>
+              <button
+                onClick={() => setShowPackages(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="text-2xl" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {packages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  onClick={() => !assignLoading && handleAssignPackage(pkg.id)}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    assignLoading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="font-semibold">{pkg.name}</div>
+                  <div className="text-gray-600">₹{pkg.price}/month</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {pkg.description}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {assignLoading && (
+              <div className="mt-4 text-center">
+                <FiLoader className="animate-spin inline-block mr-2" />
+                Assigning Package...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rest of the existing UI */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
           Customer Management
@@ -112,15 +220,28 @@ const CustomersPage = () => {
           {filteredUsers.map((user) => (
             <div
               key={user.id}
-              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedUser(user)}
+              className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
-                <div>
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => setSelectedUser(user)}
+                >
                   <h3 className="font-medium text-gray-800">{user.name}</h3>
                   <p className="text-sm text-gray-500">{user.email}</p>
                 </div>
                 <div className="flex items-center gap-4">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedUserId(user.id);
+                      setShowPackages(true);
+                    }}
+                    className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors"
+                  >
+                    <FiPackage className="text-sm" />
+                    Assign Package
+                  </button>
                   <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
                     {user.salon || "No Salon"}
                   </span>
